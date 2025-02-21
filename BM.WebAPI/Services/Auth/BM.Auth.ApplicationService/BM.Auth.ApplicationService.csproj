@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\BM.Constant\BM.Constant.csproj" />
+    <ProjectReference Include="..\..\Shared\BM.Shared.ApplicationService\BM.Shared.ApplicationService.csproj" />
+    <ProjectReference Include="..\BM.Auth.Dtos\BM.Auth.Dtos.csproj" />
+    <ProjectReference Include="..\BM.Auth.Infrastructure\BM.Auth.Infrastructure.csproj" />
+  </ItemGroup>
+		<ItemGroup>
+		<PackageReference Include="DotNetEnv" Version="3.1.1" />
+		<PackageReference Include="Google.Apis.Auth" Version="1.68.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.0" />
+	  <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.10" />
+	</ItemGroup>	
+	<ItemGroup>
+		<PackageReference Include="DotNetEnv" Version="3.1.1" />
+		<PackageReference Include="Google.Apis.Auth" Version="1.68.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.0" />
+	</ItemGroup>
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+</Project>

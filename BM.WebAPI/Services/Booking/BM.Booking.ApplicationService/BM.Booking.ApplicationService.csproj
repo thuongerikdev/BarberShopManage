@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Shared\BM.Constant\BM.Constant.csproj" />
+		<ProjectReference Include="..\..\Shared\BM.Shared.ApplicationService\BM.Shared.ApplicationService.csproj" />
+		<ProjectReference Include="..\BM.Booking.Dtos\BM.Booking.Dtos.csproj" />
+		<ProjectReference Include="..\BM.Booking.Infrastructure\BM.Booking.Infrastructure.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0" />
+	</ItemGroup>
+
+</Project>

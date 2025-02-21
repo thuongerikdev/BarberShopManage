@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="DotNetEnv" Version="3.1.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.10" />
+		<PackageReference Include="Microsoft.AspNetCore.Cors" Version="2.2.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.10">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.10" />
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.20.1" />
+		<PackageReference Include="RestSharp" Version="112.1.0" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Services\Auth\BM.Auth.ApplicationService\BM.Auth.ApplicationService.csproj" />
+    <ProjectReference Include="..\Services\Auth\BM.Auth.Dtos\BM.Auth.Dtos.csproj" />
+    <ProjectReference Include="..\Services\Booking\BM.Booking.ApplicationService\BM.Booking.ApplicationService.csproj" />
+    <ProjectReference Include="..\Services\Booking\BM.Booking.Dtos\BM.Booking.Dtos.csproj" />
+    <ProjectReference Include="..\Services\Shared\BM.Constant\BM.Constant.csproj" />
+    <ProjectReference Include="..\Services\Shared\BM.Shared.ApplicationService\BM.Shared.ApplicationService.csproj" />
+    <ProjectReference Include="..\Services\Social\BM.Social.ApplicationService\BM.Social.ApplicationService.csproj" />
+    <ProjectReference Include="..\Services\Social\BM.Social.Dtos\BM.Social.Dtos.csproj" />
+  </ItemGroup>
+	<ItemGroup>
+		<None Include="appsettings.json" />
+	</ItemGroup>
+
+</Project>
