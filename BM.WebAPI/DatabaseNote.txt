@@ -1,0 +1,237 @@
+// Use DBML to define your database structure
+// Docs: https://dbml.dbdiagram.io/docs
+
+Table AuthPosition {
+  positionID integer [primary key, increment]
+  positionName varchar(50)
+  description varchar(50)
+  note varchar(50)
+  status varchar(50)
+  DefaultSalary double
+}
+
+Table AuthSchedule {
+  scheduleID integer [primary key, increment]
+  scheduleName varchar
+  description varchar
+  note varchar
+  percent integer
+  status varchar
+  startDate timestamp
+  endDate timestamp
+}
+
+Table AuthSpecialty {
+  specialtyID integer [primary key, increment]
+  specialtyName varchar(50)
+  description varchar(50)
+  note varchar(50)
+  status varchar(50)
+  percent integer
+}
+
+Table AuthScheEmp {
+  scheEmpID integer [primary key, increment]
+  empID integer
+  scheduleID integer
+  startDate timestamp
+  endDate timestamp
+  status varchar
+  note varchar
+}
+
+Table AuthRole {
+  roleID integer [primary key, increment]
+  roleName varchar(50)
+  roleDes varchar(50)
+  status varchar(50)
+  startDate timestamp
+  updateAt timestamp
+}
+
+Table AuthRolePermission {
+  rolePermissionID integer [primary key, increment]
+  roleID integer
+  permissionID integer
+  status varchar
+  startDate timestamp
+  updateAt timestamp
+}
+
+Table AuthPermission {
+  permissionID integer [primary key, increment]
+  permissionName varchar(50)
+  permissionDes varchar(50)
+  status varchar(50)
+  startDate timestamp
+  updateAt timestamp
+}
+
+Table AuthUser {
+  userID integer [primary key, increment]
+  roleID integer
+  userName varchar(50)
+  password varchar(50)
+  email varchar(50)
+  phoneNumber varchar(20)
+  fullName varchar(50)
+  avatar varchar
+  dateOfBirth timestamp
+  gender varchar(10)
+}
+
+Table AuthEmp {
+  empID integer [primary key, increment]
+  userID integer
+  positionID integer
+  specialtyID integer
+  empCode varchar
+  salary double
+  rate double
+  status varchar
+  startDate timestamp
+}
+
+Table AuthCustomer {
+  customerID integer [primary key, increment]
+  userID integer
+  loyaltyPoints integer
+  customerType varchar
+  customerStatus varchar
+}
+
+// Define relationships
+Ref: AuthScheEmp.empID > AuthEmp.empID // many-to-one
+Ref: AuthScheEmp.scheduleID > AuthSchedule.scheduleID // many-to-one
+Ref: AuthEmp.positionID > AuthPosition.positionID // many-to-one
+Ref: AuthEmp.specialtyID > AuthSpecialty.specialtyID // many-to-one
+Ref: AuthRolePermission.roleID > AuthRole.roleID // many-to-one
+Ref: AuthRolePermission.permissionID > AuthPermission.permissionID // many-to-one
+Ref: AuthUser.roleID > AuthRole.roleID // many-to-one
+Ref: AuthCustomer.userID > AuthUser.userID // many-to-one
+Ref: AuthEmp.userID > AuthUser.userID // many-to-one
+
+
+
+// Use DBML to define your database structure
+// Docs: https://dbml.dbdiagram.io/docs
+
+Table BookingAppointment {
+  appID integer [primary key, increment]
+  servID integer
+  empID integer
+  orderID integer
+  appStatus varchar(50)
+}
+
+Table BookingOrder {
+  orderID integer [primary key, increment]
+  custID integer
+  orderTotal double
+  orderStatus varchar(50)
+  createAt timestamp
+  orderDate timestamp
+}
+
+Table BookingPromotion {
+  promoID integer [primary key, increment]
+  promoName varchar(50)
+  promoDescription varchar(50)
+  promoDiscount double
+  promoStart timestamp
+  promoEnd timestamp
+  promoStatus varchar
+}
+
+Table BookingReview {
+  reviewID integer [primary key, increment]
+  appID integer
+  rating integer
+  reviewContent varchar(50)
+  reviewDate timestamp
+  reviewStatus varchar(50)
+}
+
+Table BookingService {
+  servID integer [primary key, increment]
+  servName varchar(50)
+  servDescription varchar(50)
+  servPrice double
+  servStatus varchar(50)
+  servImage varchar
+}
+
+Table BookingServPro {
+  servProID integer [primary key, increment]
+  servID integer
+  promoID integer
+}
+Table BookingInvoice {
+  invoiceID integer [primary key , increment]
+  orderID integer
+  invoiceDate datetime
+  totalAmount double
+  paymentTerms varchar(50)
+  status varchar(50)
+  paymentMethod varchar(50)
+}
+
+// Define relationships
+Ref: BookingInvoice.orderID - BookingOrder.orderID
+Ref: BookingAppointment.servID > BookingService.servID // many-to-one
+Ref: BookingAppointment.appID > BookingReview.appID // many-to-one
+Ref: BookingOrder.orderID > BookingAppointment.orderID // many-to-one
+// Ref: BookingOrder.custID > BookingCustomer.custID // many-to-one (assuming BookingCustomer exists)
+Ref: BookingServPro.servID > BookingService.servID // many-to-one
+Ref: BookingServPro.promoID > BookingPromotion.promoID // many-to-one
+// Ref: BookingAppointment.empID > AuthEmp.empID
+// Ref: BookingOrder.custID > AuthCustomer.customerID
+Table SocialBlog {
+  blogID integer [primary key , increment]
+  blogTitle varchar(50)
+  blogContent varchar 
+  like integer
+  blogStatus varchar
+  blogDate datetime
+  updateAt datetime
+}
+Table SocialMessage {
+  messageID integer [primary key , increment]
+  senderID interger 
+  receiverID interger 
+  content varchar(500)
+  groupName varchar(50)
+  messageDate datetime
+}
+Table SocialSrc {
+  srcID integer [primary key , increment]
+  imageSrc varchar 
+  videoSrc varchar
+  srcDate datetime
+}
+Table SocialSrcBlog {
+  srcBlogID interger [primary key, increment]
+  srcID interger 
+  blogID interger
+}
+Table SocialSrcMessage{
+  srcMessageID interger [primary key, increment]
+  srcID interger 
+  messID integer
+}
+Table SocialComment {
+  commentID interger [primary key, increment]
+  blogID interger 
+  userID interger
+  commentContent varchar (200)
+  commentStatus varchar (200)
+  commentLike interger
+  commentDate datetime
+  updateAt datetime
+ 
+}
+Ref: SocialBlog.blogID < SocialSrcBlog.blogID
+Ref: SocialSrc.srcID < SocialSrcBlog.srcID
+Ref: SocialComment.blogID > SocialBlog.blogID
+Ref: SocialMessage.messageID < SocialSrcMessage.messID
+Ref: SocialSrcMessage.srcID > SocialSrc.srcID

@@ -2,6 +2,8 @@
 using BM.Auth.ApplicationService.UserModule.Abtracts;
 using BM.Auth.Domain;
 using BM.Auth.Dtos;
+using BM.Auth.Dtos.Position;
+using BM.Auth.Dtos.User;
 using BM.Auth.Infrastructure;
 using BM.Constant;
 using Microsoft.EntityFrameworkCore;
@@ -24,37 +26,71 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
             _authSpecService = authSpecService;
             _authPositionService = authPositionService;
         }
-        public async Task<double> CaculateSalary (int positionID, int specialtyID)
+        public async Task<double> CaculateSalary(int positionID, int specialtyID)
         {
             var pos = await _authPositionService.AuthGetPosition(positionID);
-            if (pos == null)
+            if (pos == null || pos.Data == null)
             {
+                _logger.LogWarning($"Position with ID {positionID} not found.");
                 return 0;
             }
+
             var posResult = pos.Data as AuthReadPositionDto;
+            if (posResult == null)
+            {
+                _logger.LogWarning($"Position data for ID {positionID} is not of type AuthReadPositionDto.");
+                return 0;
+            }
             var salaryDefault = posResult.DefaultSalary;
 
             var spec = await _authSpecService.AuthGetSpec(specialtyID);
-            if (spec == null)
+            if (spec == null || spec.Data == null)
             {
+                _logger.LogWarning($"Specialty with ID {specialtyID} not found.");
                 return 0;
             }
             var specResult = spec.Data as AuthReadSpecDto;
+            if (specResult == null)
+            {
+                _logger.LogWarning($"Specialty data for ID {specialtyID} is not of type AuthReadSpecDto.");
+                return 0;
+            }
             var percent = specResult.percent;
 
             var salary = salaryDefault + (salaryDefault * percent / 100);
             return salary;
         }
 
-
         public async Task<ResponeDto> AuthCreateEmp(AuthCreateEmpDto authCreateEmpDto)
         {
             _logger.LogInformation("AuthCreateEmp");
             try
             {
-              
+                // Kiểm tra xem userID đã tồn tại trong bảng AuthEmp chưa (nếu có ràng buộc UNIQUE)
+                var existingEmp = await _dbContext.Emps.FirstOrDefaultAsync(e => e.userID == authCreateEmpDto.userID);
+                if (existingEmp != null)
+                {
+                    return ErrorConst.Error(400, $"User with ID {authCreateEmpDto.userID} is already associated with an employee (empID: {existingEmp.empID}).");
+                }
 
-                var salary = await CaculateSalary(authCreateEmpDto.positionID , authCreateEmpDto.specialtyID);
+                // Kiểm tra positionID và specialtyID
+                var posCheck = await _authPositionService.AuthGetPosition(authCreateEmpDto.positionID);
+                if (posCheck == null || posCheck.Data == null)
+                {
+                    return ErrorConst.Error(400, $"Position with ID {authCreateEmpDto.positionID} does not exist.");
+                }
+
+                var specCheck = await _authSpecService.AuthGetSpec(authCreateEmpDto.specialtyID);
+                if (specCheck == null || specCheck.Data == null)
+                {
+                    return ErrorConst.Error(400, $"Specialty with ID {authCreateEmpDto.specialtyID} does not exist.");
+                }
+
+                var salary = await CaculateSalary(authCreateEmpDto.positionID, authCreateEmpDto.specialtyID);
+                if (salary == 0)
+                {
+                    return ErrorConst.Error(500, "Unable to calculate salary due to invalid position or specialty data.");
+                }
 
                 var empCode = Guid.NewGuid().ToString();
 
@@ -66,12 +102,33 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                     salary = salary,
                     startDate = DateTime.Now,
                     userID = authCreateEmpDto.userID,
-
-
+                    status = "OK",
+                    bonusSalary = 0
                 };
                 _dbContext.Emps.Add(emp);
                 await _dbContext.SaveChangesAsync();
-                return ErrorConst.Success("Tạo nhân viên thành công", emp);
+
+                // Ánh xạ sang DTO
+                var pos = await _authPositionService.AuthGetPosition(emp.positionID);
+                var empDto = new AuthEmpDto
+                {
+                    empID = emp.empID,
+                    empCode = emp.empCode,
+                    positionID = emp.positionID,
+                    positionName = pos?.Data is AuthReadPositionDto posDto ? posDto.positionName : null,
+                    specialtyID = emp.specialtyID,
+                    salary = emp.salary,
+                    startDate = emp.startDate,
+                    userID = emp.userID,
+                    status = emp.status,
+                    bonusSalary = emp.bonusSalary
+                };
+
+                return ErrorConst.Success("Tạo nhân viên thành công", empDto);
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is Microsoft.Data.SqlClient.SqlException sqlEx && sqlEx.Number == 2601)
+            {
+                return ErrorConst.Error(400, $"User with ID {authCreateEmpDto.userID} is already associated with an employee.");
             }
             catch (Exception ex)
             {

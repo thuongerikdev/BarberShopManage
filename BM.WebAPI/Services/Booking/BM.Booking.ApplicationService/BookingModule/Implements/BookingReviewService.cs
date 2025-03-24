@@ -1,7 +1,7 @@
 ﻿using BM.Booking.ApplicationService.BookingModule.Abtracts;
 using BM.Booking.ApplicationService.Common;
 using BM.Booking.Domain;
-using BM.Booking.Dtos;
+using BM.Booking.Dtos.CRUDdtos;
 using BM.Booking.Infrastructure;
 using BM.Constant;
 using Microsoft.EntityFrameworkCore;
@@ -33,6 +33,14 @@ namespace BM.Booking.ApplicationService.BookingModule.Implements
                     rating = bookingCreateReviewDto.rating
                 };
                 _dbContext.BookingReviews.Add(review);
+
+                //var appointment = await _dbContext.BookingAppointments.FindAsync(bookingCreateReviewDto.appID);
+                //if (appointment == null)
+                //{
+                //    return ErrorConst.Error(500, "Không tìm thấy cuộc hẹn");
+                //}
+               
+
                 await _dbContext.SaveChangesAsync();
                 return ErrorConst.Success("Tạo review thành công", review);
             }

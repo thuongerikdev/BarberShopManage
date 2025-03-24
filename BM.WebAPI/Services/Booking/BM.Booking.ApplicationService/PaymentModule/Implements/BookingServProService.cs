@@ -1,7 +1,7 @@
 ﻿using BM.Booking.ApplicationService.Common;
 using BM.Booking.ApplicationService.PaymentModule.Abtracts;
 using BM.Booking.Domain;
-using BM.Booking.Dtos;
+using BM.Booking.Dtos.CRUDdtos;
 using BM.Booking.Infrastructure;
 using BM.Constant;
 using Microsoft.EntityFrameworkCore;

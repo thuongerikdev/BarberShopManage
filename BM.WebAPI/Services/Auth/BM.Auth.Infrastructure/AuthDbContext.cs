@@ -17,6 +17,9 @@ namespace BM.Auth.Infrastructure
         public DbSet<AuthCustomer> Customers { get; set; }
         public DbSet<AuthSchedule> Schedules { get; set; }
         public DbSet<AuthScheEmp> ScheEmps { get; set; }
+        public DbSet<AuthRole> Roles { get; set; }
+        public DbSet<AuthPermission> Permissions { get; set; }
+        public DbSet<AuthRolePermission> RolePermissions { get; set; }
         public AuthDbContext(DbContextOptions<AuthDbContext> options) : base(options)
         {
         }
@@ -30,7 +33,7 @@ namespace BM.Auth.Infrastructure
             modelBuilder.Entity<AuthUser>()
               .HasOne(u => u.AuthCustomer)
               .WithOne(e => e.AuthUser)
-              .HasForeignKey<AuthEmp>(e => e.userID); //(1-1)
+              .HasForeignKey<AuthCustomer>(e => e.userID); //(1-1)
 
 
             modelBuilder.Entity<AuthEmp>()
@@ -53,6 +56,20 @@ namespace BM.Auth.Infrastructure
                 .WithMany(s => s.AuthScheEmps)
                 .HasForeignKey(se => se.scheduleID); //(1-n)
 
+            modelBuilder.Entity<AuthUser>()
+                .HasOne(u => u.AuthRoles)
+                .WithMany(r => r.AuthUsers)
+                .HasForeignKey(r => r.roleID); //(1-n)
+
+            modelBuilder.Entity<AuthRole>()
+                .HasMany(r => r.AuthRolePermissions)
+                .WithOne(u => u.AuthRole)
+                .HasForeignKey(u => u.roleID); //(1-n)
+
+            modelBuilder.Entity<AuthPermission>()
+                .HasMany(p => p.AuthRolePermissions)
+                .WithOne(r => r.AuthPermission)
+                .HasForeignKey(r => r.permissionID); //(1-n)
 
             base.OnModelCreating(modelBuilder);
         }

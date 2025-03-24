@@ -1,4 +1,5 @@
 ﻿using BM.Auth.Dtos;
+using BM.Auth.Dtos.Position;
 using BM.Constant;
 using System;
 using System.Collections.Generic;
@@ -15,5 +16,34 @@ namespace BM.Auth.ApplicationService.UserModule.Abtracts
         public Task<ResponeDto> AuthDeletePosition(int positionID);
         public Task<ResponeDto> AuthGetPosition(int positionID);
         public Task<ResponeDto> AuthGetAllPosition();
+    }
+    public interface IAuthScheduleService
+    {
+        public Task<ResponeDto> AuthCreateSchedule(AuthCreateScheduleDto authCreateScheduleDto);
+        public Task<ResponeDto> AuthUpdateSchedule(AuthUpdateScheduleDto authUpdateScheduleDto);
+        public Task<ResponeDto> AuthDeleteSchedule(int scheduleID);
+        public Task<ResponeDto> AuthGetSchedule(int scheduleID);
+        public Task<ResponeDto> AuthGetAllSchedule();
+
+    }
+    public interface IAuthSpecService
+    {
+        public Task<ResponeDto> AuthCreateSpec(AuthCreateSpecDto authCreateSpecDto);
+        public Task<ResponeDto> AuthUpdateSpec(AuthUpdateSpecDto authUpdateSpecDto);
+        public Task<ResponeDto> AuthDeleteSpec(int specialtyID);
+        public Task<ResponeDto> AuthGetSpec(int specialtyID);
+        public Task<ResponeDto> AuthGetAllSpec();
+    }
+    public interface IAuthScheEmpService
+    {
+        public Task<ResponeDto> AuthCreateScheEmp(AuthCreateScheEmpDto authCreateScheEmpDto);
+        public Task<ResponeDto> AuthUpdateScheEmp(AuthUpdateScheEmpDto authUpdateScheEmpDto);
+        public Task<ResponeDto> AuthDeleteScheEmp(int scheEmpID);
+        public Task<ResponeDto> AuthGetScheEmp(int scheEmpID);
+        public Task<ResponeDto> AuthGetAllScheEmp();
+        public Task<ResponeDto> AuthGetScheEmpByEmpID(int empID);
+        public Task<ResponeDto> AuthGetScheEmpByScheID(int scheID);
+        public Task<ResponeDto> AuthGetScheEmpByMonth(int month, int empID);
+        public Task<ResponeDto> AuthGetAllScheduleWeekNow(int weekOffset = 0);
     }
 }

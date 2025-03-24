@@ -2,6 +2,7 @@
 using BM.Auth.ApplicationService.UserModule.Abtracts;
 using BM.Auth.Domain;
 using BM.Auth.Dtos;
+using BM.Auth.Dtos.Position;
 using BM.Auth.Infrastructure;
 using BM.Constant;
 using Microsoft.EntityFrameworkCore;

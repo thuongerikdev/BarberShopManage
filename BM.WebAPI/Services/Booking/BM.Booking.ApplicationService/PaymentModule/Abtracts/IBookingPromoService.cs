@@ -1,4 +1,4 @@
-﻿using BM.Booking.Dtos;
+﻿using BM.Booking.Dtos.CRUDdtos;
 using BM.Constant;
 using System;
 using System.Collections.Generic;

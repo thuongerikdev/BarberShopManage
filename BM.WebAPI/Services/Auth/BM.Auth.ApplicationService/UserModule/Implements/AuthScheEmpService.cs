@@ -182,15 +182,15 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
             try
             {
                 var listSchedule = await _dbContext.ScheEmps
-                .Where(sche => sche.empID == empID)
-                .Include(sche => sche.AuthSchedule) // Eager loading
-                .Where(joined => joined.AuthSchedule.startDate.Month == month)
-                .Select(joined => joined.AuthSchedule)
-                .ToListAsync();
+                    .Where(sche => sche.empID == empID)
+                    .Include(sche => sche.AuthSchedule)
+                    .Where(joined => joined.AuthSchedule.startDate.HasValue && joined.AuthSchedule.startDate.Value.Month == month)
+                    .Select(joined => joined.AuthSchedule)
+                    .ToListAsync();
 
-                if (listSchedule == null || !listSchedule.Any())
+                if (!listSchedule.Any())
                 {
-                    return ErrorConst.Error(500, "Không tìm thấy lịch hẹn nhân viên");
+                    return ErrorConst.Error(404, "Không tìm thấy lịch hẹn nhân viên");
                 }
 
                 return ErrorConst.Success("Lấy danh sách lịch hẹn nhân viên thành công", listSchedule);
@@ -201,21 +201,20 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                 return ErrorConst.Error(500, ex.Message);
             }
         }
-        public async Task<ResponeDto> AuthGetAllScheduleWeekNow(int weekOffset )
+        public async Task<ResponeDto> AuthGetAllScheduleWeekNow(int weekOffset)
         {
             _logger.LogInformation("AuthGetAllScheduleWeekNow");
             try
             {
-                List<DateTime> weekDays = GetWeekDays(DateTime.Now, weekOffset);
+                var weekDays = new HashSet<DateTime>(GetWeekDays(DateTime.Now, weekOffset));
 
-                // Lấy danh sách lịch cho các ngày trong tuần cùng với nhân viên liên quan
                 var scheduleData = await _dbContext.Schedules
-                    .Where(sche => weekDays.Contains(sche.startDate.Date))
+                    .Where(sche => sche.startDate.HasValue && weekDays.Contains(sche.startDate.Value.Date))
                     .Include(sche => sche.AuthScheEmps)
                     .ThenInclude(se => se.AuthEmp)
                     .ToListAsync();
 
-                if (scheduleData == null || !scheduleData.Any())
+                if (!scheduleData.Any())
                 {
                     return ErrorConst.Error(404, "Không tìm thấy lịch hẹn trong tuần này");
                 }
@@ -224,7 +223,7 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
 
                 foreach (var day in weekDays)
                 {
-                    var dailySchedules = scheduleData.Where(sche => sche.startDate.Date == day).ToList();
+                    var dailySchedules = scheduleData.Where(sche => sche.startDate.Value.Date == day).ToList();
                     if (dailySchedules.Any())
                     {
                         foreach (var schedule in dailySchedules)

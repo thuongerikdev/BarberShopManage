@@ -16,13 +16,15 @@ namespace BM.Booking.Domain
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int orderID { get; set; }
         public int custID { get; set; }
-        public int appID { get; set; }
         public double orderTotal { get; set; }
         [MaxLength(50)]
         public string orderStatus { get; set; }
         public DateTime createAt { get; set; }
         public DateTime orderDate { get; set; }
+
+        public virtual BookingInvoice BookingInvoice { get; set; }
         public virtual ICollection< BookingAppointment> BookingAppointments { get; set; }
+   
 
     }
 }

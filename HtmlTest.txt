@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat App với SignalR</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        #messagesList { list-style-type: none; padding: 0; max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; }
+        #messagesList li { padding: 5px 0; }
+    </style>
+</head>
+<body>
+    <h2>Chat App</h2>
+    <div>
+        <input type="number" id="senderId" placeholder="ID của bạn" />
+        <input type="number" id="receiverId" placeholder="ID người nhận (để trống nếu gửi nhóm)" />
+        <input type="number" id="groupId" placeholder="ID nhóm (để trống nếu gửi riêng)" />
+        <input type="text" id="messageInput" placeholder="Tin nhắn" />
+        <button onclick="sendMessage()">Gửi</button>
+    </div>
+    <ul id="messagesList"></ul>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <script src="/js/chat.js"></script>
+</body>
+</html>
+
+
+
+const connection = new signalR.HubConnectionBuilder()
+    .withUrl("/chatHub")
+    .build();
+
+// Nhận tin nhắn riêng
+connection.on("ReceiveMessage", (senderId, message, messageId) => {
+    const li = document.createElement("li");
+    li.textContent = `From ${senderId} (ID: ${messageId}): ${message}`;
+    document.getElementById("messagesList").appendChild(li);
+});
+
+// Nhận tin nhắn nhóm
+connection.on("ReceiveGroupMessage", (senderId, groupId, message, messageId) => {
+    const li = document.createElement("li");
+    li.textContent = `From ${senderId} in Group ${groupId} (ID: ${messageId}): ${message}`;
+    document.getElementById("messagesList").appendChild(li);
+});
+
+// Thông báo user kết nối/ngắt kết nối
+connection.on("UserConnected", (connectionId) => {
+    console.log(`User connected: ${connectionId}`);
+});
+connection.on("UserDisconnected", (connectionId) => {
+    console.log(`User disconnected: ${connectionId}`);
+});
+
+// Gửi tin nhắn
+function sendMessage() {
+    const senderId = document.getElementById("senderId").value;
+    const receiverId = document.getElementById("receiverId").value;
+    const groupId = document.getElementById("groupId").value;
+    const message = document.getElementById("messageInput").value;
+
+    if (!senderId || !message) {
+        alert("Vui lòng nhập ID của bạn và tin nhắn!");
+        return;
+    }
+
+    if (receiverId) {
+        connection.invoke("SendPrivateMessage", parseInt(senderId), parseInt(receiverId), message)
+            .catch(err => console.error(err));
+    } else if (groupId) {
+        connection.invoke("SendGroupMessage", parseInt(senderId), parseInt(groupId), message)
+            .catch(err => console.error(err));
+    } else {
+        alert("Vui lòng nhập ID người nhận hoặc ID nhóm!");
+        return;
+    }
+
+    document.getElementById("messageInput").value = "";
+}
+
+// Kết nối tới Hub
+connection.start()
+    .then(() => console.log("Kết nối thành công!"))
+    .catch(err => console.error(err));

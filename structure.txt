@@ -1,0 +1,25 @@
+lib/
+├── data/
+│   ├── datasources/
+│   │   └── auth_remote_data_source.dart  # No double slashes
+│   ├── models/
+│   │   └── user_model.dart               # Must exist here
+│   └── repositories/
+│       └── auth_repository_impl.dart
+├── domain/
+│   ├── entities/
+│   │   └── user.dart
+│   ├── repositories/
+│   │   └── auth_repository.dart
+│   └── usecases/
+│       └── login_use_case.dart           # No double slashes
+├── presentation/
+│   ├── providers/
+│   │   └── auth_provider.dart
+│   ├── screens/
+│   │   └── login_screen.dart
+|   |   |__ main_screen.dart
+│   └── widgets/
+│       ├── animated_face.dart
+│       └── login_form.dart
+├── main.dart

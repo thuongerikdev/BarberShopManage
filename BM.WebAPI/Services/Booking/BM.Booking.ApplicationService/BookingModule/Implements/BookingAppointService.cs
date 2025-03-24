@@ -1,7 +1,7 @@
 ﻿using BM.Booking.ApplicationService.BookingModule.Abtracts;
 using BM.Booking.ApplicationService.Common;
 using BM.Booking.Domain;
-using BM.Booking.Dtos;
+using BM.Booking.Dtos.CRUDdtos;
 using BM.Booking.Infrastructure;
 using BM.Constant;
 using Microsoft.EntityFrameworkCore;
@@ -19,20 +19,20 @@ namespace BM.Booking.ApplicationService.BookingModule.Implements
         public BookingAppointService(ILogger<BookingAppointService> logger, BookingDbContext bookingDbContext) : base(logger, bookingDbContext)
         {
         }
-        public async Task<ResponeDto> BookingCreateAppoint(BookingCreateAppointDto bookingCreateAppointDto)
+        public async Task<ResponeDto> BookingCreateAppoint(List<BookingCreateAppointDto> bookingCreateAppointDto)
         {
             _logger.LogInformation("BookingCreateAppointService called");
             try
             {
-                var appoint = new BookingAppointment
+                var appoint = bookingCreateAppointDto.Select(a => new BookingAppointment
                 {
-                    appStatus = bookingCreateAppointDto.appStatus,
-                    empID = bookingCreateAppointDto.empID,
-                    servID = bookingCreateAppointDto.servID,
-                    orderID = bookingCreateAppointDto.orderID,
+                    appStatus = a.appStatus,
+                    empID = a.empID,
+                    servID = a.servID,
+                    orderID = a.orderID,
 
-                };
-                _dbContext.BookingAppointments.Add(appoint);
+                }).ToList();
+                _dbContext.BookingAppointments.AddRange(appoint);
                 await _dbContext.SaveChangesAsync();
                 return ErrorConst.Success("Tạo dịch vụ thành công", appoint);
             }
@@ -109,6 +109,20 @@ namespace BM.Booking.ApplicationService.BookingModule.Implements
             try
             {
                 var appoints = await _dbContext.BookingAppointments.ToListAsync();
+                return ErrorConst.Success("Lấy danh sách dịch vụ thành công", appoints);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+        public async Task<ResponeDto> BookingGetAppointByOrderID(int orderID)
+        {
+            _logger.LogInformation("BookingGetAppointByOrderID called");
+            try
+            {
+                var appoints = await _dbContext.BookingAppointments.Where(a => a.orderID == orderID).ToListAsync();
                 return ErrorConst.Success("Lấy danh sách dịch vụ thành công", appoints);
             }
             catch (Exception ex)

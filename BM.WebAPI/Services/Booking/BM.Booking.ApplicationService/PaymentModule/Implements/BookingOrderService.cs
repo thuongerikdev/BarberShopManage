@@ -1,7 +1,7 @@
 ﻿using BM.Booking.ApplicationService.Common;
 using BM.Booking.ApplicationService.PaymentModule.Abtracts;
 using BM.Booking.Domain;
-using BM.Booking.Dtos;
+using BM.Booking.Dtos.CRUDdtos;
 using BM.Booking.Infrastructure;
 using BM.Constant;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +24,7 @@ namespace BM.Booking.ApplicationService.PaymentModule.Implements
             _logger.LogInformation("BookingCreateOrder");
             try
             {
+
                 var order = new BookingOrder
                 {
                     orderDate = bookingCreateOrderDto.orderDate,
@@ -31,9 +32,9 @@ namespace BM.Booking.ApplicationService.PaymentModule.Implements
                     orderTotal = bookingCreateOrderDto.orderTotal,
                     createAt = bookingCreateOrderDto.createAt,
                     custID = bookingCreateOrderDto.custID,
-                    appID = bookingCreateOrderDto.appID
+ 
                 };
-                _dbContext.BookingOrder.Add(order);
+                _dbContext.BookingOrders.Add(order);
                 await _dbContext.SaveChangesAsync();
                 return ErrorConst.Success("Tạo order thành công", order);
             }
@@ -48,7 +49,7 @@ namespace BM.Booking.ApplicationService.PaymentModule.Implements
             _logger.LogInformation("BookingUpdateOrder");
             try
             {
-                var order = await _dbContext.BookingOrder.FindAsync(bookingUpdateOrderDto.orderID);
+                var order = await _dbContext.BookingOrders.FindAsync(bookingUpdateOrderDto.orderID);
                 if (order == null)
                 {
                     return ErrorConst.Error(500, "Không tìm thấy order");
@@ -58,7 +59,6 @@ namespace BM.Booking.ApplicationService.PaymentModule.Implements
                 order.orderTotal = bookingUpdateOrderDto.orderTotal;
                 order.createAt = bookingUpdateOrderDto.createAt;
                 order.custID = bookingUpdateOrderDto.custID;
-                order.appID = bookingUpdateOrderDto.appID;
                 await _dbContext.SaveChangesAsync();
                 return ErrorConst.Success("Cập nhật order thành công", order);
             }
@@ -73,12 +73,12 @@ namespace BM.Booking.ApplicationService.PaymentModule.Implements
             _logger.LogInformation("BookingDeleteOrder");
             try
             {
-                var order = await _dbContext.BookingOrder.FindAsync(orderID);
+                var order = await _dbContext.BookingOrders.FindAsync(orderID);
                 if (order == null)
                 {
                     return ErrorConst.Error(500, "Không tìm thấy order");
                 }
-                _dbContext.BookingOrder.Remove(order);
+                _dbContext.BookingOrders.Remove(order);
                 await _dbContext.SaveChangesAsync();
                 return ErrorConst.Success("Xóa order thành công", order);
             }
@@ -93,7 +93,7 @@ namespace BM.Booking.ApplicationService.PaymentModule.Implements
             _logger.LogInformation("BookingGetOrder");
             try
             {
-                var order = await _dbContext.BookingOrder.FindAsync(orderID);
+                var order = await _dbContext.BookingOrders.FindAsync(orderID);
                 if (order == null)
                 {
                     return ErrorConst.Error(500, "Không tìm thấy order");
@@ -112,7 +112,27 @@ namespace BM.Booking.ApplicationService.PaymentModule.Implements
             _logger.LogInformation("BookingGetAllOrder");
             try
             {
-                var orders = await _dbContext.BookingOrder.ToListAsync();
+                var orders = await _dbContext.BookingOrders.ToListAsync();
+                return ErrorConst.Success("Lấy danh sách order thành công", orders);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+        public async Task<ResponeDto> BookingConfirmOrder(int orderID)
+        {
+            _logger.LogInformation("BookingGetAllOrder");
+            try
+            {
+                var orders = await _dbContext.BookingOrders.FindAsync(orderID);
+                if (orders == null)
+                {
+                    return ErrorConst.Error(500, "Không tìm thấy order");
+                }
+                orders.orderStatus = "Confirm";
+                await _dbContext.SaveChangesAsync();
                 return ErrorConst.Success("Lấy danh sách order thành công", orders);
             }
             catch (Exception ex)

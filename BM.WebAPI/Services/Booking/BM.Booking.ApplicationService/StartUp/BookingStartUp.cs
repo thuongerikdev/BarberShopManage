@@ -9,6 +9,13 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using BM.Booking.Infrastructure;
 using BM.Constant.Database;
+using BM.Booking.ApplicationService.BussinessModule.Abtracts;
+using BM.Booking.ApplicationService.BussinessModule.Implements;
+using BM.Booking.ApplicationService.BookingModule.Abtracts;
+using BM.Booking.ApplicationService.BookingModule.Implements;
+using BM.Booking.ApplicationService.PaymentModule.Abtracts;
+using BM.Booking.ApplicationService.PaymentModule.Implements;
+using BM.Shared.ApplicationService;
 namespace BM.Booking.ApplicationService.StartUp
 {
     public static class BookingStartUp
@@ -33,12 +40,23 @@ namespace BM.Booking.ApplicationService.StartUp
                 },
                 ServiceLifetime.Scoped
             );
+            builder.Services.AddSignalR();
 
-            //builder.Services.AddScoped<IAuthPositionService, AuthPositionService>();
-            //builder.Services.AddScoped<IAuthEmpService, AuthEmpService>();
-            //builder.Services.AddScoped<IAuthSpecService, AuthSpecService>();
-            //builder.Services.AddScoped<IAuthUserService, AuthUserService>();
+            builder.Services.AddHostedService<BookingCancellationService>();
 
+            builder.Services.AddScoped<IBookingBussinessService, BookingBussinessService>();
+
+            builder.Services.AddScoped<IBookingAppointService, BookingAppointService>();
+            builder.Services.AddScoped<IBookingOrderService, BookingOrderService>();
+            builder.Services.AddScoped<IBookingPromoService, BookingPromoService>();
+            builder.Services.AddScoped<IBookingServService, BookingServService>();
+            builder.Services.AddScoped<IBookingReviewService, BookingReviewService>();
+            builder.Services.AddScoped<IBookingServProService, BookingServProService>();
+
+            builder.Services.AddScoped<IBookingBussinessService, BookingBussinessService>();
+            builder.Services.AddScoped<IBookingInvoiceService , BookingInvoiceService>();
+
+            builder.Services.AddScoped<ISendOrderData, BookingBussinessService>();
 
 
 

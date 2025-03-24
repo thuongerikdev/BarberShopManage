@@ -1,4 +1,4 @@
-﻿using BM.Booking.Dtos;
+﻿using BM.Booking.Dtos.CRUDdtos;
 using BM.Constant;
 using System;
 using System.Collections.Generic;
@@ -10,10 +10,11 @@ namespace BM.Booking.ApplicationService.BookingModule.Abtracts
 {
     public interface IBookingAppointService
     {
-        public Task<ResponeDto> BookingCreateAppoint(BookingCreateAppointDto bookingCreateAppointDto);
+        public Task<ResponeDto> BookingCreateAppoint(List<BookingCreateAppointDto> bookingCreateAppointDto);
         public Task<ResponeDto> BookingUpdateAppoint(BookingUpdateAppointDto bookingUpdateAppointDto);
         public Task<ResponeDto> BookingDeleteAppoint(int appointID);
         public Task<ResponeDto> BookingGetAppoint(int appointID);
         public Task<ResponeDto> BookingGetAllAppoint();
+        public Task<ResponeDto> BookingGetAppointByOrderID(int orderID);
     }
 }

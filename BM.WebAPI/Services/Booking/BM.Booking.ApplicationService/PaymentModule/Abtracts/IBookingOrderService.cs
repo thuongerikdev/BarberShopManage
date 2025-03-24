@@ -1,4 +1,4 @@
-﻿using BM.Booking.Dtos;
+﻿using BM.Booking.Dtos.CRUDdtos;
 using BM.Constant;
 using System;
 using System.Collections.Generic;
@@ -15,5 +15,6 @@ namespace BM.Booking.ApplicationService.PaymentModule.Abtracts
         public Task<ResponeDto> BookingDeleteOrder(int orderID);
         public Task<ResponeDto> BookingGetOrder(int orderID);
         public Task<ResponeDto> BookingGetAllOrder();
+        public Task<ResponeDto> BookingConfirmOrder (int orderID);
     }
 }

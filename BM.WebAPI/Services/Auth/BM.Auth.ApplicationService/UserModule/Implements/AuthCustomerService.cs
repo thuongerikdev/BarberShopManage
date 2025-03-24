@@ -2,8 +2,10 @@
 using BM.Auth.ApplicationService.UserModule.Abtracts;
 using BM.Auth.Domain;
 using BM.Auth.Dtos;
+using BM.Auth.Dtos.User;
 using BM.Auth.Infrastructure;
 using BM.Constant;
+using BM.Shared.ApplicationService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
@@ -14,9 +16,9 @@ using System.Threading.Tasks;
 
 namespace BM.Auth.ApplicationService.UserModule.Implements
 {
-    public class AuthCustomerService : AuthServiceBase, IAuthCustomerService
+    public class AuthCustomerService : AuthServiceBase, IAuthCustomerService, IGetCustomerByOrUserID
     {
-        public AuthCustomerService(ILogger logger, AuthDbContext dbContext) : base(logger, dbContext)
+        public AuthCustomerService(ILogger<AuthCustomerService> logger, AuthDbContext dbContext) : base(logger, dbContext)
         {
         }
         public async Task<ResponeDto> AuthCreateCustomer(AuthCreateCustomerDto authCreateCustomerDto)
@@ -109,6 +111,24 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
             {
                 var customers = await _dbContext.Customers.ToListAsync();
                 return ErrorConst.Success("Lấy danh sách khách hàng thành công", customers);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+        public async Task<ResponeDto> GetCustomerByOrUserID(int userID)
+        {
+            _logger.LogInformation("GetCustomerByOrUserID");
+            try
+            {
+                var customer = await _dbContext.Customers.Where(x => x.userID == userID).FirstOrDefaultAsync();
+                if (customer == null)
+                {
+                    return ErrorConst.Error(500, "Không tìm thấy khách hàng");
+                }
+                return ErrorConst.Success("Lấy thông tin khách hàng thành công", customer);
             }
             catch (Exception ex)
             {
