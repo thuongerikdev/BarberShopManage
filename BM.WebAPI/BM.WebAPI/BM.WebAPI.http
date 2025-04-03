@@ -1,4 +1,4 @@
-@BM.WebAPI_HostAddress = http://localhost:5072
+@BM.WebAPI_HostAddress = http://http://192.168.84.53:5072
 
 GET {{BM.WebAPI_HostAddress}}/weatherforecast/
 Accept: application/json

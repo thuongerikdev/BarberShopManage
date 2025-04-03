@@ -15,7 +15,7 @@ namespace BM.WebAPI.Controllers.CRUD.Booking
             _bookingServService = bookingServService;
         }
         [HttpPost("create")]
-        public async Task<IActionResult> Create([FromBody] BookingCreateServiceDto bookingCreateServiceDto)
+        public async Task<IActionResult> Create([FromForm] BookingCreateServiceDto bookingCreateServiceDto)
         {
             if (!ModelState.IsValid)
             {

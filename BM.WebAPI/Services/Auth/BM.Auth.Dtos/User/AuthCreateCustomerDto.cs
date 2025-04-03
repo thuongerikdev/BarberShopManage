@@ -11,6 +11,7 @@ namespace BM.Auth.Dtos
         public int userID { get; set; }
         public string? customerType { get; set; }
         public string? customerStatus { get; set; }
+        public int vipID { get; set; }
 
     }
     public class AuthReadCustomerDto

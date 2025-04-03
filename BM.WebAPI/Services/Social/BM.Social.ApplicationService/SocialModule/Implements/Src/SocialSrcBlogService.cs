@@ -1,4 +1,5 @@
 ﻿using BM.Constant;
+using BM.Shared.ApplicationService;
 using BM.Social.ApplicationService.Common;
 using BM.Social.ApplicationService.SocialModule.Abtracts;
 using BM.Social.Domain;

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -13,7 +14,7 @@ namespace BM.Booking.Dtos.CRUDdtos
         public string servDescription { get; set; }
         public double servPrice { get; set; }
         public string servStatus { get; set; }
-        public string servImage { get; set; }
+        public IFormFile servImage { get; set; }
     }
     public class BookingUpdateServiceDto
     {

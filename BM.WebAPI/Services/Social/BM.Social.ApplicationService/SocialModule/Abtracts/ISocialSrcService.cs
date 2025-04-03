@@ -11,11 +11,12 @@ namespace BM.Social.ApplicationService.SocialModule.Abtracts
 {
     public interface ISocialSrcService
     {
-        public Task<ResponeDto> SocialCreateSrc(SocialCreateSrcDto socialCreateSrcDto );
+        public Task<ResponeDto> SocialCreateSrc(SocialCreateSrcDto socialCreateSrcDto);
         public Task<ResponeDto> SocialUpdateSrc(SocialUpdateSrcDto socialUpdateSrcDto);
         public Task<ResponeDto> SocialDeleteSrc(int srcID);
         public Task<ResponeDto> SocialGetSrc(int srcID);
         public Task<ResponeDto> SocialGetAllSrc();
+        public Task<ResponeDto> GetSocialSrcbyType(string srcType);
     }
     public interface ISocialSrcBlogService
     {

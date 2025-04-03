@@ -31,6 +31,7 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                     customerStatus = authCreateCustomerDto.customerStatus,
                     customerType = authCreateCustomerDto.customerType,
                     userID = authCreateCustomerDto.userID,
+                    vipID = authCreateCustomerDto.vipID,
                     loyaltyPoints = 0,
 
                 };

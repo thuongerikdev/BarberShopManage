@@ -35,7 +35,7 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                 return 0;
             }
 
-            var posResult = pos.Data as AuthReadPositionDto;
+            var posResult = pos.Data as AuthPosition;
             if (posResult == null)
             {
                 _logger.LogWarning($"Position data for ID {positionID} is not of type AuthReadPositionDto.");
@@ -49,7 +49,7 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                 _logger.LogWarning($"Specialty with ID {specialtyID} not found.");
                 return 0;
             }
-            var specResult = spec.Data as AuthReadSpecDto;
+            var specResult = spec.Data as AuthSpecialty;
             if (specResult == null)
             {
                 _logger.LogWarning($"Specialty data for ID {specialtyID} is not of type AuthReadSpecDto.");
@@ -103,7 +103,8 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                     startDate = DateTime.Now,
                     userID = authCreateEmpDto.userID,
                     status = "OK",
-                    bonusSalary = 0
+                    bonusSalary = 0,
+                    branchID = authCreateEmpDto.branchID
                 };
                 _dbContext.Emps.Add(emp);
                 await _dbContext.SaveChangesAsync();
@@ -121,6 +122,7 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                     startDate = emp.startDate,
                     userID = emp.userID,
                     status = emp.status,
+                    branchID = emp.branchID,
                     bonusSalary = emp.bonusSalary
                 };
 
@@ -211,5 +213,21 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                 return ErrorConst.Error(500, ex.Message);
             }
         }
+        public async Task<ResponeDto> AuthGetAllUserEmp()
+        {
+            _logger.LogInformation("AuthGetAllEmp");
+            try
+            {
+                var emps =await _dbContext.Users.Where(x => x.isEmp == true).ToListAsync();
+
+                return ErrorConst.Success("Lấy danh sách nhân viên thành công", emps);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+
     } 
 }

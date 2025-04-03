@@ -59,7 +59,7 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
         }
 
         [HttpDelete("delete/{empID}")]
-        public async Task<IActionResult> Delete([FromBody] int empID)
+        public async Task<IActionResult> Delete( int empID)
         {
             if (!ModelState.IsValid)
             {
@@ -119,6 +119,23 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
                 return BadRequest(ErrorConst.Error(500, ex.Message));
             }
 
+        }
+        [HttpGet("getAllUserEmp")]
+        public async Task <IActionResult> GetAllUserEmp()
+        {
+            try
+            {
+                var result = await _authEmpService.AuthGetAllUserEmp();
+                if (result == null)
+                {
+                    return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));
+                }
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ErrorConst.Error(500, ex.Message));
+            }
         }
     }
 }

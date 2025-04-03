@@ -12,6 +12,7 @@ namespace BM.Auth.Dtos.User
         public int positionID { get; set; }
         public int specialtyID { get; set; }
       
+        public int branchID { get; set; }
         public DateTime? startDate { get; set; }
 
     }
@@ -31,6 +32,7 @@ namespace BM.Auth.Dtos.User
         public int empID { get; set; }
         public int positionID { get; set; }
         public int specialtyID { get; set; }
+        public int branchID { get; set; }
         //public double bonusSalary { get; set; }
 
     }
@@ -47,6 +49,7 @@ namespace BM.Auth.Dtos.User
         public int userID { get; set; }
         public double bonusSalary { get; set; }
         public string status { get; set; }
+        public int branchID { get; set; }
     }
 
 }

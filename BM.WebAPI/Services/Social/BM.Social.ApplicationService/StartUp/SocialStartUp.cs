@@ -16,6 +16,7 @@ using StackExchange.Redis;
 using BM.Social.ApplicationService.SocialModule.Implements.Social;
 using BM.Social.ApplicationService.SocialModule.Implements.Business;
 using Microsoft.Extensions.Logging;
+using BM.Shared.ApplicationService;
 
 namespace BM.Social.ApplicationService.StartUp
 {

@@ -2,5 +2,6 @@
     "java.compile.nullAnalysis.mode": "automatic",
     "cSpell.words": [
         "usecases"
-    ]
+    ],
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

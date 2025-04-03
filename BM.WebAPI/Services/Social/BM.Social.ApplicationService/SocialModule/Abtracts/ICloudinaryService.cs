@@ -7,8 +7,5 @@ using System.Threading.Tasks;
 
 namespace BM.Social.ApplicationService.SocialModule.Abtracts
 {
-    public interface ICloudinaryService
-    {
-        Task<string> UploadImageAsync(IFormFile file);
-    }
+    
 }

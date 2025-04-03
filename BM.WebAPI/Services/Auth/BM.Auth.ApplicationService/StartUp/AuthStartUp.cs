@@ -1,5 +1,7 @@
 ﻿using BM.Auth.ApplicationService.UserModule.Abtracts;
 using BM.Auth.ApplicationService.UserModule.Implements;
+using BM.Auth.ApplicationService.VipModule.Abtracts;
+using BM.Auth.ApplicationService.VipModule.Implements;
 using BM.Auth.Domain;
 using BM.Auth.Infrastructure;
 using BM.Constant;
@@ -72,6 +74,9 @@ namespace BM.Auth.ApplicationService.StartUp
             builder.Services.AddScoped<IEmailCancelBooking , EmailService>();
             builder.Services.AddScoped<AuthDataSend , AuthUserService>();
             builder.Services.AddScoped<IGetCustomerByOrUserID , AuthCustomerService>();
+
+            builder.Services.AddScoped<IAuthBranchService, AuthBranchService>();
+            builder.Services.AddScoped<IAuthVipService, AuthVipService>();
 
 
 

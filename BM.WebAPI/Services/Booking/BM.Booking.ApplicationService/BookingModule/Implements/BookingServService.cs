@@ -4,6 +4,7 @@ using BM.Booking.Domain;
 using BM.Booking.Dtos.CRUDdtos;
 using BM.Booking.Infrastructure;
 using BM.Constant;
+using BM.Shared.ApplicationService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
@@ -16,21 +17,29 @@ namespace BM.Booking.ApplicationService.BookingModule.Implements
 {
     public class BookingServService : BookingServiceBase, IBookingServService
     {
-        public BookingServService(ILogger<BookingServService> logger, BookingDbContext bookingDbContext) : base(logger, bookingDbContext)
+        private readonly ICloudinaryService _cloudinaryService;
+        public BookingServService(
+            ILogger<BookingServService> logger, 
+            BookingDbContext bookingDbContext,
+            ICloudinaryService cloudinaryService
+
+            ) : base(logger, bookingDbContext)
         {
+            _cloudinaryService = cloudinaryService;
         }
         public async Task<ResponeDto> BookingCreateService(BookingCreateServiceDto bookingCreateServiceDto)
         {
             _logger.LogInformation("BookingCreateService called");
             try
             {
+                var img = await _cloudinaryService.UploadImageAsync(bookingCreateServiceDto.servImage);
                 var service = new BookingService
                 {
                     servName = bookingCreateServiceDto.servName,
                     servPrice = bookingCreateServiceDto.servPrice,
                     servDescription = bookingCreateServiceDto.servDescription,
                     servStatus = bookingCreateServiceDto.servStatus,
-                    servImage = bookingCreateServiceDto.servImage,                  
+                    servImage = img,                  
                 };
                 _dbContext.BookingServices.Add(service);
                 await _dbContext.SaveChangesAsync();

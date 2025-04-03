@@ -1,4 +1,6 @@
 ﻿using BM.Constant;
+using BM.Constant.Dto;
+using BM.Shared.ApplicationService;
 using BM.Social.ApplicationService.Common;
 using BM.Social.ApplicationService.SocialModule.Abtracts;
 using BM.Social.Domain;
@@ -7,10 +9,12 @@ using BM.Social.Infrastructure;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace BM.Social.ApplicationService.SocialModule.Implements.Src
@@ -18,9 +22,20 @@ namespace BM.Social.ApplicationService.SocialModule.Implements.Src
     public class SocialSrcService : SocialServiceBase, ISocialSrcService
     {
         private readonly ICloudinaryService _cloudinaryService;
-        public SocialSrcService(ILogger<SocialSrcService> logger, SocialDbContext dbContext, ICloudinaryService cloudinaryService) : base(logger, dbContext)
+        private readonly IDatabase _redisDb;
+        private readonly AuthDataSend _authDataSend;
+        public SocialSrcService(
+            ILogger<SocialSrcService> logger,
+            SocialDbContext dbContext,
+            ICloudinaryService cloudinaryService,
+            IConnectionMultiplexer redis,
+            AuthDataSend authDataSend 
+
+            ) : base(logger, dbContext)
         {
             _cloudinaryService = cloudinaryService;
+            _redisDb = redis.GetDatabase();
+            _authDataSend = authDataSend;
         }
         public async Task<ResponeDto> SocialCreateSrc(SocialCreateSrcDto socialCreateSrcDto)
         {
@@ -59,6 +74,7 @@ namespace BM.Social.ApplicationService.SocialModule.Implements.Src
                 {
                     srcDate = DateTime.Now,
                     srcName = socialCreateSrcDto.srcName,
+                    srcTitle = socialCreateSrcDto.srcTitle,
                     imageSrc = imageSrc
                 };
 
@@ -88,6 +104,7 @@ namespace BM.Social.ApplicationService.SocialModule.Implements.Src
                 src.srcDate = DateTime.Now;
                 src.srcName = socialUpdateSrcDto.srcName;
                 src.imageSrc = socialUpdateSrcDto.imageSrc;
+                src.srcTitle = socialUpdateSrcDto.srcTitle;
                 await _dbContext.SaveChangesAsync();
                 return ErrorConst.Success("Cập nhật src thành công", src);
             }
@@ -150,6 +167,61 @@ namespace BM.Social.ApplicationService.SocialModule.Implements.Src
             }
 
         }
+        public async Task<ResponeDto> GetSocialSrcbyType(string srcType)
+        {
+            _logger.LogInformation("SocialGetSliderImage called with srcType: {SrcType}", srcType);
+            try
+            {
+                string redisKey = $"social_src:{srcType}";
+                var cachedData = await _redisDb.StringGetAsync(redisKey);
+
+                if (cachedData.HasValue)
+                {
+                    _logger.LogInformation("Data retrieved from Redis with key: {RedisKey}", redisKey);
+                    var srcListFromCache = JsonSerializer.Deserialize<List<SocialSrc>>(cachedData);
+                    return ErrorConst.Success("Lấy danh sách từ cache thành công", srcListFromCache);
+                }
+
+                // Nếu không có trong Redis, lấy từ database
+                var srcList = await _dbContext.socialSrcs
+                    .Where(x => x.srcTitle == srcType)
+                    .ToListAsync();
+
+                if (srcList == null || !srcList.Any())
+                {
+                    _logger.LogWarning("No items found for srcType: {SrcType}", srcType);
+                    return ErrorConst.Error(500, "Lấy danh sách thất bại");
+                }
+
+                // Chuyển thành JSON và lưu vào Redis
+                string jsonData = JsonSerializer.Serialize(srcList);
+                await _redisDb.StringSetAsync(redisKey, jsonData, TimeSpan.FromHours(1));
+                _logger.LogInformation("Data saved to Redis with key: {RedisKey}", redisKey);
+
+                return ErrorConst.Success("Lấy danh sách thành công", srcList);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in GetSocialSrcbyType");
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+        //public async Task<ResponeDto> SocialUpdateAvatar (int userID , IFormFile file )
+        //{
+        //    _logger.LogInformation("Update user avataer");
+        //    try
+        //    {
+        //        var userData = await _authDataSend.GetUserToOtherDomain(userID);
+        //        var user = userData.Data as AuthUser; 
+        //        user.
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex , ex.Message);
+        //        return ErrorConst.Error(500 ,ex.Message);
+        //    }
+        //}
     }
 
 }

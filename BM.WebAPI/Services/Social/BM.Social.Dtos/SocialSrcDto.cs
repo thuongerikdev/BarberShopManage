@@ -11,6 +11,7 @@ namespace BM.Social.Dtos
     {
         public string srcName { get; set; }
         public IFormFile imageSrc { get; set; }
+        public string srcTitle { get; set; }
 
 
     }
@@ -18,9 +19,9 @@ namespace BM.Social.Dtos
     {
         public int srcID { get; set; }
         public string srcName { get; set; }
+        public string srcTitle { get; set; }
 
         public string imageSrc { get; set; }
-        public string videoSrc { get; set; }
     }
     public class SocialCreateSrcBlogDto
     {
@@ -63,5 +64,10 @@ namespace BM.Social.Dtos
         public int ErrorCode { get; set; }
         public string ErrorMessager { get; set; }
         public SocialBlogCacheDto Data { get; set; }
+    }
+    public class SocialCreateSrcUserDto
+    {
+        public int srcID { get; set; }
+        public int userID { get; set; }
     }
 }

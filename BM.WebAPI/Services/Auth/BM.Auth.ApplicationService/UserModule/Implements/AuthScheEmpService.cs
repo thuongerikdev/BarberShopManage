@@ -34,8 +34,8 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                     empID = authCreateScheEmpDto.empID,
                     status = authCreateScheEmpDto.status,
                     note = authCreateScheEmpDto.note,
-                    startDate = null,
-                    endDate = null ,
+                    startDate = authCreateScheEmpDto.startDate,
+                    endDate = authCreateScheEmpDto.endDate ,
 
                 };
                 _dbContext.ScheEmps.Add(scheEmp);

@@ -1,25 +1,94 @@
-lib/
-├── data/
-│   ├── datasources/
-│   │   └── auth_remote_data_source.dart  # No double slashes
-│   ├── models/
-│   │   └── user_model.dart               # Must exist here
-│   └── repositories/
-│       └── auth_repository_impl.dart
-├── domain/
-│   ├── entities/
-│   │   └── user.dart
-│   ├── repositories/
-│   │   └── auth_repository.dart
-│   └── usecases/
-│       └── login_use_case.dart           # No double slashes
-├── presentation/
-│   ├── providers/
-│   │   └── auth_provider.dart
-│   ├── screens/
-│   │   └── login_screen.dart
-|   |   |__ main_screen.dart
-│   └── widgets/
-│       ├── animated_face.dart
-│       └── login_form.dart
-├── main.dart
+D:\PersonalProject\BarberManagement\barbermanagemobile\
+├── lib/
+│   ├── data/
+│   │   ├── datasources/
+│   │   │   ├── auth_remote_data_source.dart
+│   │   │   ├── slider_remote_data_source.dart
+│   │   │   └── employee_remote_data_source.dart
+|   |   |   |__ booking_service_remote_data_source.dart
+│   │   ├── models/
+│   │   │   └── user_model.dart
+|   |   |   |__ booking_create_order_request_model.dart
+│   │   └── repositories/
+│   │       ├── auth_repository_impl.dart
+│   │       ├── slider_repository_impl.dart
+│   │       └── employee_repository_impl.dart
+|   |       |__ booking_service_repository_impl.dart
+│   ├── domain/
+│   │   ├── entities/
+│   │   │   └── user.dart
+|   |   |   |__ booking_create_order.dart
+│   │   ├── repositories/
+│   │   │   ├── auth_repository.dart
+│   │   │   ├── slider_repository.dart
+│   │   │   └── employee_repository.dart
+|   |   |   |__ booking_service_repository.dart
+│   │   └── usecases/
+│   │       ├── login_use_case.dart
+│   │       ├── get_slider_images_use_case.dart
+│   │       └── get_employees_use_case.dart
+|   |       |__ get_booking_services_use_case.dart
+│   ├── presentation/
+│   │   ├── providers/
+│   │   │   └── auth_provider.dart
+│   │   ├── screens/
+│   │   │   ├── login_screen.dart
+│   │   │   ├── MainScreen.dart
+│   │   │   ├── HomeScreen.dart
+│   │   │   ├── BlogScreen.dart
+│   │   │   ├── ProfileScreen.dart
+│   │   │   └── BookingScreen.dart
+│   │   └── widgets/
+│   │       ├── animated_face.dart
+│   │       └── login_form.dart
+│   ├── main.dart
+|   |__ injection.dart
+├── assets/
+│   └── .env
+├── pubspec.yaml
+
+
+{
+  "roleID": 1,
+  "userName": "emp2",
+  "password": "emp2",
+  "email": "thuongerikdev@gmail.com",
+  "phoneNumber": "012345",
+  "fullName": "emp2",
+  "dateOfBirth": "2025-03-27T13:07:13.397Z",
+  "gender": "nu",
+  "positionID": 2,
+  "specialtyID": 2,
+  "startDate": "2025-03-27T13:22:49.587Z"
+}
+
+ final List<Map<String, String>> sliderItems = [
+    {
+      'image': '../../../image/Slider/slider1.jpg',
+      'title': 'Ưu đãi 50% Cắt tóc'
+    },
+    {
+      'image': '../../../image/Slider/slider2.jpg',
+      'title': 'Nhuộm tóc chuyên nghiệp'
+    },
+    {'image': '../../../image/Slider/slider3.jpg', 'title': 'Massage thư giãn'},
+  ];
+
+  final List<Map<String, String>> services = [
+    {'name': 'Cắt tóc', 'image': '../../../image/Service/CuttingHair.jpg'},
+    {'name': 'Nhuộm tóc', 'image': '../../../image/Service/Massage.jpg'},
+    {'name': 'Massage', 'image': '../../../image/Service/HairDying.jpg'},
+  ];
+
+  final List<Map<String, String>> employees = [
+    {'name': 'Nguyễn Văn A', 'image': '../../../image/Employee/emp1.jpg'},
+    {'name': 'Trần Thị B', 'image': '../../../image/Employee/emp2.jpg'},
+    {'name': 'Lê Văn C', 'image': '../../../image/Employee/emp3.jpg'},
+    {'name': 'Lê Văn C', 'image': '../../../image/Employee/emp3.jpg'},
+  ];
+
+  final List<Map<String, dynamic>> blocks = [
+    {'title': 'Lịch sử đặt lịch', 'icon': Icons.history, 'color': Colors.blue},
+    {'title': 'Ưu đãi', 'icon': Icons.local_offer, 'color': Colors.orange},
+    {'title': 'Hỗ trợ', 'icon': Icons.support_agent, 'color': Colors.green},
+  ];

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using BM.Shared.ApplicationService;
 
 namespace BM.Social.ApplicationService.SocialModule.Implements.Src
 {

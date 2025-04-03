@@ -1,4 +1,5 @@
 ﻿using BM.Constant;
+using BM.Shared.ApplicationService;
 using BM.Social.ApplicationService.SocialModule.Abtracts;
 using BM.Social.Domain;
 using BM.Social.Dtos;
@@ -83,6 +84,7 @@ namespace BM.Social.ApplicationService.SocialModule.Implements.Business
                         var socialSrcDto = new SocialCreateSrcDto
                         {
                             srcName = $"Blog {blogID} - Section {i + 1}",
+                            srcTitle = "Blog",
                             imageSrc = section.image,
                         };
 

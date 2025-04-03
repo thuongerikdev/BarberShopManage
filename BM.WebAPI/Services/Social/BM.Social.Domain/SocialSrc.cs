@@ -16,6 +16,7 @@ namespace BM.Social.Domain
         public int srcID { get; set; }
         [MaxLength(50)]
         public string srcName { get; set; }
+        public string srcTitle { get; set; }
 
         public string imageSrc { get; set; }
         public DateTime srcDate { get; set; } = DateTime.Now;
@@ -46,4 +47,13 @@ namespace BM.Social.Domain
         public virtual SocialMessage SocialMessage { get; set; }
         public virtual SocialSrc SocialSrc { get; set; }
     }
+    
+    //public class SocialSrcUser
+    //{
+    //    [Key]
+    //    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    //    public int scrUserID { get; set; }
+    //    public int srcID { get; set; }
+    //    public int userID { get; set; }
+    //}
 }

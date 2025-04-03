@@ -231,7 +231,8 @@ namespace BM.Booking.ApplicationService.BussinessModule.Implements
             var timeNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneById);
             var tick = DateTime.Now.Ticks.ToString();
             var pay = new VnPayLibrary();
-            var urlCallBack = _configuration["PaymentBackReturnUrl"];
+            var baseUrl = _configuration["ApplicationSettings:BaseUrl"];
+            var urlCallBack = $"{baseUrl}/api/BookingBussiness/vnpay/PaymentExecute";
 
             pay.AddRequestData("vnp_Version", _configuration["Vnpay:Version"]);
             pay.AddRequestData("vnp_Command", _configuration["Vnpay:Command"]);

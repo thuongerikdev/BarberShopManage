@@ -7,6 +7,7 @@ using BM.Auth.Infrastructure;
 using BM.Constant;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -115,6 +116,38 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
             try
             {
                 var schedules = await _dbContext.Schedules.ToListAsync();
+                return ErrorConst.Success("Lấy danh sách lịch hẹn thành công", schedules);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+        public async Task<ResponeDto> AuthGetEmpByDate(DateTime date)
+        {
+            _logger.LogInformation("Auth get emp by date");
+            try
+            {
+                var schedules = await _dbContext.ScheEmps
+                    .Where(se => se.startDate <= date
+                        && se.endDate >= date
+                        && se.status == "OK" // Giả sử "Active" là trạng thái đang hoạt động
+                       )
+                    .Select(se => new
+                    {
+                        EmployeeId = se.AuthEmp.empID,
+                        EmployeeCode = se.AuthEmp.empCode,
+                        EmployeeName = se.AuthEmp.AuthUser != null ? se.AuthEmp.AuthUser.fullName : null, // Giả sử AuthUser có field FullName
+                        Position = se.AuthEmp.AuthPosition != null ? se.AuthEmp.AuthPosition.positionName : null,
+                        Specialty = se.AuthEmp.AuthSpecialty != null ? se.AuthEmp.AuthSpecialty.specialtyName : null,
+                        Branch = se.AuthEmp.AuthBranches != null ? se.AuthEmp.AuthBranches.branchName : null,
+                        ScheduleName = se.AuthSchedule.scheduleName,
+                        StartTime = se.startDate,
+                        EndTime = se.endDate
+                    })
+                    .ToListAsync();
+
                 return ErrorConst.Success("Lấy danh sách lịch hẹn thành công", schedules);
             }
             catch (Exception ex)

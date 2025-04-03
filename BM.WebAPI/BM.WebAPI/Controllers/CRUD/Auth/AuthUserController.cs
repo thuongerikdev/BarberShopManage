@@ -87,6 +87,31 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
                 return BadRequest(ErrorConst.Error(500, ex.Message));
             }
         }
+        [HttpPost("registerEmp")]
+        public async Task<IActionResult> RegisterEmp([FromBody] AuthRegisteEmprDto authRegisterDto)
+        {
+            if (authRegisterDto == null)
+            {
+                return BadRequest(ErrorConst.Error(500, "Đầu vào không hợp lệ"));
+            }
+            try
+            {
+
+                var result = await _authUserService.AuthRegisterEmp(authRegisterDto);
+                if (result.ErrorCode == 0)
+                {
+                    return Ok(result);
+                }
+                else
+                {
+                    return BadRequest(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ErrorConst.Error(500, ex.Message));
+            }
+        }
         [HttpPut("update")]
         public async Task<IActionResult> Update([FromBody] AuthUpdateUserDto authUpdateUserDto)
         {
@@ -166,6 +191,26 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             try
             {
                 var result = await _authUserService.AuthGetAllUser();
+                if (result.ErrorCode == 0)
+                {
+                    return Ok(result);
+                }
+                else
+                {
+                    return BadRequest(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ErrorConst.Error(500, ex.Message));
+            }
+        }
+        [HttpPut("updateAvatar")]
+        public async Task <IActionResult> updateAvatar ( [FromForm ]AuthUpdateAvatarDto authUpdateAvatarDto)
+        {
+            try
+            {
+                var result = await _authUserService.AuthUpdateUserAvatar(authUpdateAvatarDto.userID, authUpdateAvatarDto.file);
                 if (result.ErrorCode == 0)
                 {
                     return Ok(result);

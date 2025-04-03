@@ -216,6 +216,10 @@ namespace BM.WebAPI.Migrations.SocialDb
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("srcTitle")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("srcID");
 
                     b.ToTable("SocialSrc", "social");

@@ -12,6 +12,8 @@ namespace BM.Auth.Dtos
         public int scheduleID { get; set; }
         public string? status { get; set; }
         public string? note { get; set; }
+        public DateTime startDate { get; set; }
+        public DateTime endDate { get; set; }
     }
     public class AuthReadScheEmpDto
     {

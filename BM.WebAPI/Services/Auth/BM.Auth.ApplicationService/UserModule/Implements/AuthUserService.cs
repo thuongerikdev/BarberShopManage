@@ -6,6 +6,7 @@ using BM.Auth.Dtos.User;
 using BM.Auth.Infrastructure;
 using BM.Constant;
 using BM.Shared.ApplicationService;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -27,6 +28,8 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
         private readonly IDatabase _redisDb;
         private readonly IConfiguration _config;
         private readonly IEmailService _emailService;
+        private readonly ICloudinaryService _cloudinaryService;
+        private readonly IAuthEmpService _authEmpService;
 
         public AuthUserService(
             ILogger<AuthUserService> logger,
@@ -34,12 +37,16 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
             IConfiguration configuration,
             IEmailService emailService,
             IConnectionMultiplexer redis,
+            ICloudinaryService cloudinaryService,
+            IAuthEmpService authEmpService,
             IConfiguration config) : base(logger, dbContext)
         {
             _configuration = configuration;
             _redisDb = redis.GetDatabase();
             _config = config;
             _emailService = emailService;
+            _cloudinaryService = cloudinaryService;
+            _authEmpService = authEmpService;
         }
 
         private string SecretKey => _configuration["Jwt:SecretKey"];
@@ -103,6 +110,7 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                     roleID = authRegisterDto.roleID,
                     token = "",
                     isEmailVerified = false,
+                    isEmp = false ,
                     emailVerificationToken = verificationToken
                 };
 
@@ -124,8 +132,126 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                 return ErrorConst.Error(500, ex.Message);
             }
         }
+        public async Task<ResponeDto> AuthRegisterEmp(AuthRegisteEmprDto authRegisterDto)
+        {
+            _logger.LogInformation("AuthRegister");
+            try
+            {
+                var existingUser = await _dbContext.Users.FirstOrDefaultAsync(x => x.userName == authRegisterDto.userName);
+                if (existingUser != null)
+                {
+                    return ErrorConst.Error(500, "Người dùng đã tồn tại.");
+                }
+
+                // Băm mật khẩu
+                var (passwordHash, passwordSalt) = PasswordHasher.HashPassword(authRegisterDto.password);
+
+                var verificationToken = GenerateVerificationToken();
+
+                var user = new AuthUser
+                {
+                    userName = authRegisterDto.userName,
+                    passwordHash = passwordHash,
+                    passwordSalt = passwordSalt,
+                    email = authRegisterDto.email,
+                    phoneNumber = authRegisterDto.phoneNumber,
+                    fullName = authRegisterDto.fullName,
+                    avatar = "",
+                    dateOfBirth = authRegisterDto.dateOfBirth,
+                    gender = authRegisterDto.gender,
+                    roleID = authRegisterDto.roleID,
+                    token = "",
+                    isEmailVerified = false,
+                    isEmp = true,
+                    emailVerificationToken = verificationToken
+                };
+               
+
+                _dbContext.Users.Add(user);
+                await _dbContext.SaveChangesAsync();
+
+                var userRes = await _dbContext.Users.FirstOrDefaultAsync(x => x.userName == authRegisterDto.userName);
+
+                var emp = new AuthCreateEmpDto
+                {
+                    userID = userRes.userID,
+                    positionID = authRegisterDto.positionID,
+                    specialtyID = authRegisterDto.specialtyID,
+                    startDate = authRegisterDto.startDate,
+                    branchID = authRegisterDto.branchID,
+                };
+                await _authEmpService.AuthCreateEmp(emp);
+                await _dbContext.SaveChangesAsync();
+                if (userRes == null)
+                {
+                    return ErrorConst.Error(500, "Không thể tìm thấy người dùng vừa tạo.");
+                }
+
+                await _emailService.SendVerificationEmail(userRes.userID, userRes.email, verificationToken);
+                return ErrorConst.Success("Đăng ký thành công. Vui lòng kiểm tra email để xác nhận.", null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
 
         public async Task<ResponeDto> AuthLogin(AuthLoginDto authLoginDto)
+        {
+            _logger.LogInformation("AuthLogin");
+            try
+            {
+                var user = await _dbContext.Users.FirstOrDefaultAsync(x => x.userName == authLoginDto.userName);
+                if (user == null)
+                {
+                    return ErrorConst.Error(404, "Người dùng không tồn tại.");
+                }
+                if (user.isEmp == true)
+                {
+                    return ErrorConst.Error(500, "ban khong co quyen truy cap ");
+                }
+
+                bool isPasswordValid = PasswordHasher.VerifyPassword(authLoginDto.password, user.passwordHash, user.passwordSalt);
+                if (!isPasswordValid)
+                {
+                    return ErrorConst.Error(401, "Mật khẩu không đúng.");
+                }
+
+                if (!user.isEmailVerified)
+                {
+                    return ErrorConst.Error(403, "Vui lòng xác minh email trước khi đăng nhập.");
+                }
+
+                string cacheKey = $"user_{authLoginDto.userName}";
+                var cachedToken = await _redisDb.StringGetAsync(cacheKey);
+                if (cachedToken.HasValue)
+                {
+                    return ErrorConst.Success("Đăng nhập thành công", cachedToken.ToString());
+                }
+
+                var authPermissions = await _dbContext.RolePermissions
+                    .Where(x => x.roleID == user.roleID)
+                    .Include(x => x.AuthPermission)
+                    .Select(x => x.AuthPermission)
+                    .ToListAsync();
+
+                string token = GenerateToken(user.fullName, user.userID, authPermissions);
+                user.token = token;
+
+                await _redisDb.StringSetAsync(cacheKey, token, TimeSpan.FromHours(1));
+                await _dbContext.SaveChangesAsync();
+
+                return ErrorConst.Success("Đăng nhập thành công", token);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+
+        public async Task<ResponeDto> AuthLoginEmp(AuthLoginDto authLoginDto)
         {
             _logger.LogInformation("AuthLogin");
             try
@@ -313,6 +439,34 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                     return ErrorConst.Error(500, "Không tìm thấy người dùng");
                 }
                 return ErrorConst.Success("Lấy thông tin người dùng thành công", user);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+
+        public async Task<ResponeDto> AuthUpdateUserAvatar ( int userID , IFormFile file)
+        {
+            _logger.LogInformation("Update user avatar");
+            try
+            {
+                var user = await _dbContext.Users.FindAsync(userID);
+                if(user == null )
+                {
+                    return ErrorConst.Error(500, "khong tim thay user");
+                }
+                var result = await _cloudinaryService.UploadImageAsync(file);
+                if(result == null)
+                {
+                    return ErrorConst.Error(500, "khong the upload file");
+                }
+                user.avatar = result;
+                await _dbContext.SaveChangesAsync();
+                return ErrorConst.Success("cap nhat avatar thanh cong", null);
+
+
             }
             catch (Exception ex)
             {

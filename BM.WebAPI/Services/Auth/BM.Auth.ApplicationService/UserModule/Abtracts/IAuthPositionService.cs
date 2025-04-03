@@ -24,6 +24,7 @@ namespace BM.Auth.ApplicationService.UserModule.Abtracts
         public Task<ResponeDto> AuthDeleteSchedule(int scheduleID);
         public Task<ResponeDto> AuthGetSchedule(int scheduleID);
         public Task<ResponeDto> AuthGetAllSchedule();
+        public Task<ResponeDto> AuthGetEmpByDate(DateTime date);
 
     }
     public interface IAuthSpecService

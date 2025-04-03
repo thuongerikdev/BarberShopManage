@@ -5,6 +5,7 @@ using BM.Constant;
 using BM.Shared.ApplicationService;
 using MailKit.Search;
 using MailKit.Security;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using StackExchange.Redis;
@@ -20,17 +21,15 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
     public class EmailService : IEmailService , IEmailCancelBooking
     {
         private readonly EmailSettings _emailSettings;
-        //private readonly IAuthUserService _authUserService;
+        private readonly string _baseUrl;
 
         public EmailService(
-            IOptions<EmailSettings> emailSettings
-            //IAuthUserService authUserService
-
-            )
-
+            IOptions<EmailSettings> emailSettings,
+            IConfiguration configuration)
         {
             _emailSettings = emailSettings.Value;
-            //_authUserService = authUserService;
+            // Lấy URL từ Kestrel hoặc ApplicationSettings trong appsettings.json
+            _baseUrl = configuration["Kestrel:Endpoints:Http:Url"] ?? configuration["ApplicationSettings:BaseUrl"];
         }
 
         public async Task SendEmailAsync(string to, string subject, string body)
@@ -111,7 +110,7 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
         public async Task SendVerificationEmail(int userId, string email, string verificationToken)
         {
             var subject = "Verify Your Email Address";
-            var verificationLink = $"https://localhost:7147/api/AuthUser/verify-email?token={verificationToken}&userId={userId}";
+            var verificationLink = $"{_baseUrl}/api/AuthUser/verify-email?token={verificationToken}&userId={userId}";
 
             var bodyBuilder = new BodyBuilder
             {
