@@ -26,7 +26,7 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             try
             {
                 var result = await _authUserService.VerifyEmail(userId, token);
-                if (result.ErrorCode == 0)
+                if (result.ErrorCode == 200)
                 {
                     // Trả về phản hồi thành công, có thể kèm theo redirect hoặc thông báo
                     return Ok(result); // Hoặc redirect tới trang xác nhận thành công
@@ -73,7 +73,7 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             {
 
                 var result = await _authUserService.AuthRegister(authRegisterDto);
-                if (result.ErrorCode == 0)
+                if (result.ErrorCode == 200)
                 {
                     return Ok(result);
                 }
@@ -98,7 +98,7 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             {
 
                 var result = await _authUserService.AuthRegisterEmp(authRegisterDto);
-                if (result.ErrorCode == 0)
+                if (result.ErrorCode == 200)
                 {
                     return Ok(result);
                 }
@@ -123,7 +123,7 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             {
 
                 var result = await _authUserService.AuthUpdateUser(authUpdateUserDto);
-                if (result.ErrorCode == 0)
+                if (result.ErrorCode == 200)
                 {
                     return Ok(result);
                 }
@@ -147,7 +147,7 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             try
             {
                 var result = await _authUserService.AuthDeleteUser(userID);
-                if (result.ErrorCode == 0)
+                if (result.ErrorCode == 200)
                 {
                     return Ok(result);
                 }
@@ -171,7 +171,7 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             try
             {
                 var result = await _authUserService.AuthGetUser(userID);
-                if (result.ErrorCode == 0)
+                if (result.ErrorCode == 200)
                 {
                     return Ok(result);
                 }
@@ -191,7 +191,7 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             try
             {
                 var result = await _authUserService.AuthGetAllUser();
-                if (result.ErrorCode == 0)
+                if (result.ErrorCode == 200)
                 {
                     return Ok(result);
                 }

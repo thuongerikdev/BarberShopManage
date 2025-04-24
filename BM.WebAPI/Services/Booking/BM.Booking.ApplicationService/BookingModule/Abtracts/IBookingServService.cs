@@ -16,4 +16,13 @@ namespace BM.Booking.ApplicationService.BookingModule.Abtracts
         public Task<ResponeDto> BookingGetService(int serviceID);
         public Task<ResponeDto> BookingGetAllService();
     }
+    public interface IBookingServiceDetailService
+    {
+        public Task<ResponeDto> BookingCreateServiceDetail(BookingCreateServiceDetailDto bookingCreateServiceDetailDto);
+        public Task<ResponeDto> BookingUpdateServiceDetail(BookingUpdateServiceDetailDto bookingUpdateServiceDetailDto);
+        public Task<ResponeDto> BookingDeleteServiceDetail(int serviceDetailID);
+        public Task<ResponeDto> BookingGetServiceDetailByID(int serviceDetailID);
+        public Task<ResponeDto> BookingGetAllServiceDetail();
+        public Task<ResponeDto> BookingGetServiceDetailByServiceID(int serviceID);
+    }
 }

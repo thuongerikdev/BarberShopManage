@@ -15,7 +15,7 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             _authVipService = authVipService;
         }
         [HttpPost("createvip")]
-        public async Task<IActionResult> CreateVip([FromBody] AuthCreateVip authCreateVip)
+        public async Task<IActionResult> CreateVip([FromForm] AuthCreateVip authCreateVip)
         {
             if (!ModelState.IsValid)
             {
@@ -36,7 +36,7 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             }
         }
         [HttpPut("updatevip")]
-        public async Task<IActionResult> UpdateVip([FromBody] AuthUpdateVip authUpdateVip)
+        public async Task<IActionResult> UpdateVip([FromForm] AuthUpdateVip authUpdateVip)
         {
             if (!ModelState.IsValid)
             {

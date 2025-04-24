@@ -15,7 +15,7 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             _authScheEmpService = authScheEmpService;
         }
         [HttpPost("create")]
-        public async Task<IActionResult> AuthCreateScheEmp( AuthCreateScheEmpDto authCreateScheEmpDto)
+        public async Task<IActionResult> AuthCreateScheEmp( List<AuthCreateScheEmpDto> authCreateScheEmpDto)
         {
             if (!ModelState.IsValid)
             {

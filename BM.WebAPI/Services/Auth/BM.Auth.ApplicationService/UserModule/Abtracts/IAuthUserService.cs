@@ -30,6 +30,7 @@ namespace BM.Auth.ApplicationService.UserModule.Abtracts
         public Task<ResponeDto> AuthDeleteCustomer(int customerID);
         public Task<ResponeDto> AuthGetCustomer(int customerID);
         public Task<ResponeDto> AuthGetAllCustomer();
+        public Task<ResponeDto> AuthGetCustomerByUserID(int userID);    
     }
     public interface IAuthEmpService
     {

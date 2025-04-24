@@ -5,23 +5,26 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace BM.Auth.Dtos.User
 {
     public class AuthCreateVip
     {
-        public int vipType { get; set; }
-        public int vipStatus { get; set; }
+        public string vipType { get; set; }
+        public string vipStatus { get; set; }
         public double vipCost { get; set; }
         public double vipDiscount { get; set; }
+        public IFormFile Image { get; set; }
     }
     public class AuthUpdateVip
     {
         public int vipID { get; set; }
-        public int vipType { get; set; }
-        public int vipStatus { get; set; }
+        public string vipType { get; set; }
+        public string vipStatus { get; set; }
         public double vipCost { get; set; }
         public double vipDiscount { get; set; }
+        public IFormFile Image { get; set; }
     }
 
     public class AuthCreateBranch
@@ -34,6 +37,7 @@ namespace BM.Auth.Dtos.User
         public string startWork { get; set; }
         public string endWork { get; set; }
         public string location { get; set; }
+        public IFormFile? branchImage { get; set; }
     }
     public class AuthUpdateBranch
     {
@@ -46,6 +50,7 @@ namespace BM.Auth.Dtos.User
         public string startWork { get; set; }
         public string endWork { get; set; }
         public string location { get; set; }
+        public IFormFile? branchImage { get; set; }
     }
     public class AuthCreateCusPromo {
         public int customerID { get; set; }

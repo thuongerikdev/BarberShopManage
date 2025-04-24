@@ -14,14 +14,14 @@ namespace BM.Booking.Domain
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int appID { get; set; }
-        public int servID { get; set; }
+        public int serviceDetailID { get; set; }
         public int empID { get; set; }
         public int orderID { get; set; }
         [MaxLength(50)]
         public string appStatus { get; set; }
 
-        public virtual BookingService BookingService { get; set; } //ok
-        public virtual BookingReview BookingReviews { get; set; } //ok
+        public virtual BookingServiceDetail BookingServiceDetails { get; set; } //ok
+        //public virtual BookingReview BookingReviews { get; set; } //ok
         public virtual BookingOrder BookingOrder { get; set; } //ok
 
         //public virtual BookingEmployee BookingEmployee { get; set; }

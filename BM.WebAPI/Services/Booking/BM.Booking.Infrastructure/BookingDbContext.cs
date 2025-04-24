@@ -1,59 +1,92 @@
 ﻿using BM.Booking.Domain;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BM.Booking.Infrastructure
 {
     public class BookingDbContext : DbContext
     {
-        public DbSet<BookingOrder> BookingOrders { get; set; }
-        public DbSet<BookingService> BookingServices { get; set; }
-        public DbSet<BookingServPro> BookingServPros { get; set; }
-        public DbSet<BookingReview> BookingReviews { get; set; }
-        public DbSet<BookingPromotion> BookingPromotions { get; set; }
+        public BookingDbContext(DbContextOptions<BookingDbContext> options) : base(options) { }
+
         public DbSet<BookingAppointment> BookingAppointments { get; set; }
+        public DbSet<BookingOrder> BookingOrders { get; set; }
+        public DbSet<BookingReview> BookingReviews { get; set; }
+        public DbSet<BookingService> BookingServices { get; set; }
         public DbSet<BookingInvoice> BookingInvoices { get; set; }
-        public BookingDbContext(DbContextOptions<BookingDbContext> options) : base(options)
-        {
-        }
+        public DbSet<BookingServiceDetail> BookingServiceDetails { get; set; }
+        public DbSet<BookingProduct> BookingProducts { get; set; }
+        public DbSet<BookingProductDescription> BookingProductDescriptions { get; set; }
+        public DbSet<BookingProductDetail> BookingProductDetails { get; set; }
+        public DbSet<BookingOrderProduct> BookingOrderProducts { get; set; }
+        public DbSet<BookingCategory> BookingCategories { get; set; }
+        public DbSet<BookingSupplier> BookingSuppliers { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<BookingService>()
-                .HasMany(bs => bs.BookingAppointments)
-                .WithOne(ba => ba.BookingService)
-                .HasForeignKey(ba => ba.servID); //(1-n)
-
-            modelBuilder.Entity<BookingService>()
-                .HasMany(bs => bs.BookingServPros)
-                .WithOne(bsp => bsp.BookingService)
-                .HasForeignKey(bs => bs.servID); //(1-n)
-
-            modelBuilder.Entity<BookingAppointment>()
-                .HasOne(ba => ba.BookingReviews)
-                .WithOne(bs => bs.BookingAppointment)
-                .HasForeignKey<BookingReview>(ba => ba.appID); //(1-1)
-
-            modelBuilder.Entity<BookingAppointment>()
-                .HasOne(ba => ba.BookingOrder)
-                .WithMany(bo => bo.BookingAppointments)
-                .HasForeignKey(ba => ba.orderID); //(1-n)
-
-            modelBuilder.Entity<BookingPromotion>()
-                .HasMany(bp => bp.BookingServPros)
-                .WithOne(bsp => bsp.BookingPromotion)
-                .HasForeignKey(bsp => bsp.promoID); //(1-n)
-
-            // Sửa mối quan hệ 1-1 giữa BookingInvoice và BookingOrder
+            // BookingInvoice - BookingOrder (1-1)
             modelBuilder.Entity<BookingInvoice>()
-                .HasOne(bi => bi.BookingOrder)
-                .WithOne(bo => bo.BookingInvoice)
-                .HasForeignKey<BookingInvoice>(bi => bi.orderID); // Khóa ngoại nằm ở BookingInvoice
+                .HasOne(i => i.BookingOrder)
+                .WithOne(o => o.BookingInvoice)
+                .HasForeignKey<BookingInvoice>(i => i.orderID);
 
-            base.OnModelCreating(modelBuilder);
+            // BookingAppointment - BookingServiceDetails (n-1)
+            modelBuilder.Entity<BookingAppointment>()
+                .HasOne(a => a.BookingServiceDetails)
+                .WithMany(sd => sd.BookingAppointments)
+                .HasForeignKey(a => a.serviceDetailID);
+
+            // BookingOrder - BookingReview (1-1)
+            modelBuilder.Entity<BookingReview>()
+                .HasOne(r => r.BookingOrder)
+                .WithOne(a => a.BookingReview)
+                .HasForeignKey<BookingReview>(r => r.orderID);
+
+            // BookingAppointment - BookingOrder (n-1)
+            modelBuilder.Entity<BookingAppointment>()
+                .HasOne(a => a.BookingOrder)
+                .WithMany(o => o.BookingAppointments)
+                .HasForeignKey(a => a.orderID);
+
+            // BookingServiceDetail - BookingService (n-1)
+            modelBuilder.Entity<BookingServiceDetail>()
+                .HasOne(sd => sd.BookingService)
+                .WithMany(s => s.BookingServiceDetails)
+                .HasForeignKey(sd => sd.servID);
+
+            // BookingProduct - BookingCategory (n-1)
+            modelBuilder.Entity<BookingProduct>()
+                .HasOne(p => p.BookingCategory)
+                .WithMany(c => c.BookingProducts)
+                .HasForeignKey(p => p.categoryID);
+
+            // BookingProductDetail - BookingProduct (n-1)
+            modelBuilder.Entity<BookingProductDetail>()
+                .HasOne(pd => pd.BookingProduct)
+                .WithMany(p => p.BookingProductDetails)
+                .HasForeignKey(pd => pd.productID);
+
+            // BookingProductDetail - BookingProductDescription (n-1)
+            modelBuilder.Entity<BookingProductDetail>()
+                .HasOne(pd => pd.BookingProductDescription)
+                .WithMany(d => d.BookingProductDetails)
+                .HasForeignKey(pd => pd.productDescriptionID);
+
+            // BookingProductDetail - BookingSupplier (n-1)
+            modelBuilder.Entity<BookingProductDetail>()
+                .HasOne(pd => pd.BookingSupplier)
+                .WithMany(s => s.BookingProductDetails)
+                .HasForeignKey(pd => pd.supplierID);
+
+            // BookingOrderProduct - BookingOrder (n-1)
+            modelBuilder.Entity<BookingOrderProduct>()
+                .HasOne(op => op.BookingOrder)
+                .WithMany(o => o.BookingOrderProducts)
+                .HasForeignKey(op => op.orderID);
+
+            // BookingOrderProduct - BookingProductDetail (n-1)
+            modelBuilder.Entity<BookingOrderProduct>()
+                .HasOne(op => op.BookingProductDetail)
+                .WithMany(pd => pd.BookingOrderProducts)
+                .HasForeignKey(op => op.productDetailID);
         }
     }
 }

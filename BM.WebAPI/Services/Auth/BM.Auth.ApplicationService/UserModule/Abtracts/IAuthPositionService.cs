@@ -19,12 +19,12 @@ namespace BM.Auth.ApplicationService.UserModule.Abtracts
     }
     public interface IAuthScheduleService
     {
-        public Task<ResponeDto> AuthCreateSchedule(AuthCreateScheduleDto authCreateScheduleDto);
+        public Task<ResponeDto> AuthCreateSchedule(List<AuthCreateScheduleDto> authCreateScheduleDto);
         public Task<ResponeDto> AuthUpdateSchedule(AuthUpdateScheduleDto authUpdateScheduleDto);
         public Task<ResponeDto> AuthDeleteSchedule(int scheduleID);
         public Task<ResponeDto> AuthGetSchedule(int scheduleID);
         public Task<ResponeDto> AuthGetAllSchedule();
-        public Task<ResponeDto> AuthGetEmpByDate(DateTime date);
+        public Task<ResponeDto> GetEmployeesByDateAndBranch(DateTime date , int branhesID);
 
     }
     public interface IAuthSpecService
@@ -37,7 +37,7 @@ namespace BM.Auth.ApplicationService.UserModule.Abtracts
     }
     public interface IAuthScheEmpService
     {
-        public Task<ResponeDto> AuthCreateScheEmp(AuthCreateScheEmpDto authCreateScheEmpDto);
+        public Task<ResponeDto> AuthCreateScheEmp(List<AuthCreateScheEmpDto> authCreateScheEmpDto);
         public Task<ResponeDto> AuthUpdateScheEmp(AuthUpdateScheEmpDto authUpdateScheEmpDto);
         public Task<ResponeDto> AuthDeleteScheEmp(int scheEmpID);
         public Task<ResponeDto> AuthGetScheEmp(int scheEmpID);

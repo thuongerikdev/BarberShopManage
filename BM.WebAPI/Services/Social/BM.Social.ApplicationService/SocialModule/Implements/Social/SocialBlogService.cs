@@ -1,4 +1,5 @@
 ﻿using BM.Constant;
+using BM.Shared.ApplicationService;
 using BM.Social.ApplicationService.Common;
 using BM.Social.ApplicationService.SocialModule.Abtracts;
 using BM.Social.Domain;
@@ -16,21 +17,31 @@ namespace BM.Social.ApplicationService.SocialModule.Implements.Social
 {
     public class SocialBlogService : SocialServiceBase, ISocialBlogService
     {
-        public SocialBlogService(ILogger<SocialBlogService> logger, SocialDbContext dbContext) : base(logger, dbContext)
+        private readonly ICloudinaryService _cloudinaryService;
+
+        public SocialBlogService(ILogger<SocialBlogService> logger, SocialDbContext dbContext , ICloudinaryService cloudinaryService) : base(logger, dbContext)
         {
+            _cloudinaryService = cloudinaryService;
         }
         public async Task<ResponeDto> SocialCreateBlog(SocialCreateBlogDto socialCreateBlogDto)
         {
             _logger.LogInformation("SocialCreateBlog called");
             try
             {
+                if (socialCreateBlogDto == null)
+                {
+                    _logger.LogError("socialCreateBlogDto is null");
+                    return ErrorConst.Error(400, "Dữ liệu đầu vào không hợp lệ");
+                }
+                var img = await _cloudinaryService.UploadImageAsync(socialCreateBlogDto.blogImage);
                 var blog = new SocialBlog
                 {
                     blogContent = socialCreateBlogDto.blogContent,
                     blogTitle = socialCreateBlogDto.blogTitle,
                     blogStatus = socialCreateBlogDto.blogStatus,
                     blogLike = socialCreateBlogDto.blogLike,
-                    blogDate = DateTime.Now
+                    blogDate = DateTime.Now,
+                    blogImage = img,
                 };
                 _dbContext.socialBlogs.Add(blog);
                 await _dbContext.SaveChangesAsync();
@@ -47,6 +58,12 @@ namespace BM.Social.ApplicationService.SocialModule.Implements.Social
             _logger.LogInformation("SocialUpdateBlog called");
             try
             {
+                if (socialUpdateBlogDto == null)
+                {
+                    _logger.LogError("socialUpdateBlogDto is null");
+                    return ErrorConst.Error(400, "Dữ liệu đầu vào không hợp lệ");
+                }
+                var img = await _cloudinaryService.UploadImageAsync(socialUpdateBlogDto.blogImage);
                 var blog = await _dbContext.socialBlogs.FindAsync(socialUpdateBlogDto.blogID);
                 if (blog == null)
                 {
@@ -56,6 +73,7 @@ namespace BM.Social.ApplicationService.SocialModule.Implements.Social
                 blog.blogTitle = socialUpdateBlogDto.blogTitle;
                 blog.blogStatus = socialUpdateBlogDto.blogStatus;
                 blog.blogLike = socialUpdateBlogDto.blogLike;
+                blog.blogImage = img;
                 await _dbContext.SaveChangesAsync();
                 return ErrorConst.Success("Cập nhật blog thành công", blog);
             }

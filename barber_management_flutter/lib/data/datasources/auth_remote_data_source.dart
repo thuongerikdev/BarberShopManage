@@ -1,4 +1,3 @@
-// lib/data/datasources/auth_remote_data_source.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -6,6 +5,7 @@ import '../models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
   Future<UserModel> login(String email, String password);
+  Future<UserModel> getUserByID(int userID);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -28,10 +28,32 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
     if (response.statusCode == 200) {
       final jsonData = jsonDecode(response.body);
-      if (jsonData['errorCode'] == 0) {
+      if (jsonData['errorCode'] == 200) {
         return UserModel.fromJson(jsonData);
       } else {
         throw Exception(jsonData['errorMessager'] ?? 'Đăng nhập thất bại');
+      }
+    } else {
+      throw Exception('Lỗi server: ${response.statusCode}');
+    }
+  }
+
+  @override
+  Future<UserModel> getUserByID(int userID) async {
+    final url = Uri.parse('$baseUrl/AuthUser/get/$userID');
+    final headers = {'Content-Type': 'application/json'};
+
+    final response = await http.get(
+      url,
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final jsonData = jsonDecode(response.body);
+      if (jsonData['errorCode'] == 200) {
+        return UserModel.fromJson(jsonData);
+      } else {
+        throw Exception(jsonData['errorMessager'] ?? 'Lấy thông tin người dùng thất bại');
       }
     } else {
       throw Exception('Lỗi server: ${response.statusCode}');

@@ -29,7 +29,7 @@ namespace BM.Booking.ApplicationService.BookingModule.Implements
                     reviewContent = bookingCreateReviewDto.reviewContent,
                     reviewDate = bookingCreateReviewDto.reviewDate,
                     reviewStatus = bookingCreateReviewDto.reviewStatus,
-                    appID = bookingCreateReviewDto.appID,
+                    orderID = bookingCreateReviewDto.orderID,
                     rating = bookingCreateReviewDto.rating
                 };
                 _dbContext.BookingReviews.Add(review);
@@ -63,7 +63,7 @@ namespace BM.Booking.ApplicationService.BookingModule.Implements
                 review.reviewContent = bookingUpdateReviewDto.reviewContent;
                 review.reviewDate = bookingUpdateReviewDto.reviewDate;
                 review.reviewStatus = bookingUpdateReviewDto.reviewStatus;
-                review.appID = bookingUpdateReviewDto.appID;
+                review.orderID = bookingUpdateReviewDto.orderID;
                 review.rating = bookingUpdateReviewDto.rating;
                 await _dbContext.SaveChangesAsync();
                 return ErrorConst.Success("Cập nhật review thành công", review);

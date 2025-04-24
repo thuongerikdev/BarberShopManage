@@ -86,6 +86,7 @@ namespace BM.Auth.Domain
         public virtual AuthUser AuthUser { get; set; }
         public virtual ICollection<AuthCusPromo> AuthCusPromos { get; set; }
 
+
     }
     //[Table(nameof(LoyaltyPoint), Schema = BM.Constant.Database.DbSchema.Auth)]
     //public class LoyaltyPoint
@@ -115,10 +116,11 @@ namespace BM.Auth.Domain
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int vipID { get; set; }
-        public int vipType { get; set; }
-        public int vipStatus { get; set; }
+        public string vipType { get; set; }
+        public string vipStatus { get; set; }
         public double vipCost { get; set; }
         public double vipDiscount { get; set; }
+        public string vipImage { get; set; }
         public virtual ICollection<AuthCustomer> AuthCustomers { get; set; }
 
     }
@@ -136,7 +138,9 @@ namespace BM.Auth.Domain
         public string startWork { get; set; }
         public string endWork { get; set; }
         public string location { get; set; }
+        public string branchImage { get; set; }
         public virtual ICollection <AuthEmp> AuthEmps { get; set; }
+
 
     }
     public class AuthCusPromo
@@ -148,5 +152,26 @@ namespace BM.Auth.Domain
         public int promoID { get; set; }
         public string cusPromoStatus { get; set; }
         public virtual AuthCustomer AuthCustomer { get; set; }
+        public virtual AuthPromotion AuthPromotion { get; set; }
     }
+
+    public class AuthPromotion
+    {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int promoID { get; set; }
+        [MaxLength(50)]
+        public string promoName { get; set; }
+        [MaxLength(50)]
+        public string promoDescription { get; set; }
+        public double promoDiscount { get; set; }
+        public DateTime promoStart { get; set; }
+        public DateTime promoEnd { get; set; }
+        public string promoStatus { get; set; }
+        public string promoType { get; set; }
+        public string promoImage { get; set; }
+        public virtual ICollection<AuthCusPromo> AuthCusPromos { get; set; }
+
+    }
+
 }

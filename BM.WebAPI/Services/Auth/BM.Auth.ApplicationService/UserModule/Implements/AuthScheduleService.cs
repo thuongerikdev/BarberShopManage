@@ -21,24 +21,27 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
         public AuthScheduleService(ILogger<AuthScheduleService> logger, AuthDbContext dbContext) : base(logger, dbContext)
         {
         }
-        public async Task<ResponeDto> AuthCreateSchedule(AuthCreateScheduleDto authCreateScheduleDto)
+        public async Task<ResponeDto> AuthCreateSchedule(List<AuthCreateScheduleDto> scheduleDtos)
         {
-            _logger.LogInformation("AuthCreateSchedule");
+            _logger.LogInformation("AuthCreateSchedule - batch");
+
             try
             {
-                var schedule = new AuthSchedule
+                var schedules = scheduleDtos.Select(dto => new AuthSchedule
                 {
-                    scheduleName = authCreateScheduleDto.scheduleName,
-                    description = authCreateScheduleDto.description,
-                    note = authCreateScheduleDto.note,
-                    startDate = authCreateScheduleDto.startDate,
-                    endDate = authCreateScheduleDto.endDate,
-                    status = authCreateScheduleDto.status,
-                    percent = authCreateScheduleDto.percent,
-                };
-                _dbContext.Schedules.Add(schedule);
+                    scheduleName = dto.scheduleName,
+                    description = dto.description,
+                    note = dto.note,
+                    startDate = dto.startDate,
+                    endDate = dto.endDate,
+                    status = dto.status,
+                    percent = dto.percent,
+                }).ToList();
+
+                await _dbContext.Schedules.AddRangeAsync(schedules);
                 await _dbContext.SaveChangesAsync();
-                return ErrorConst.Success("Tạo lịch hẹn thành công", schedule);
+
+                return ErrorConst.Success("Tạo nhiều lịch hẹn thành công", schedules);
             }
             catch (Exception ex)
             {
@@ -46,6 +49,7 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                 return ErrorConst.Error(500, ex.Message);
             }
         }
+
         public async Task<ResponeDto> AuthUpdateSchedule(AuthUpdateScheduleDto authUpdateScheduleDto)
         {
             _logger.LogInformation("AuthUpdateSchedule");
@@ -124,36 +128,58 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                 return ErrorConst.Error(500, ex.Message);
             }
         }
-        public async Task<ResponeDto> AuthGetEmpByDate(DateTime date)
+        public async Task<ResponeDto> GetEmployeesByDateAndBranch (DateTime date, int branchesID)
         {
-            _logger.LogInformation("Auth get emp by date");
+            _logger.LogInformation($"Fetching employees by date {date:yyyy-MM-dd} and branch ID {branchesID}");
+
             try
             {
-                var schedules = await _dbContext.ScheEmps
+                // Truy vấn danh sách nhân viên theo ngày và chi nhánh
+                var employeeSchedules = await _dbContext.ScheEmps
                     .Where(se => se.startDate <= date
-                        && se.endDate >= date
-                        && se.status == "OK" // Giả sử "Active" là trạng thái đang hoạt động
-                       )
+                                && se.endDate >= date
+                                && se.status == "OK"
+                                && se.AuthEmp.branchID == branchesID) // Lọc theo branchID
+                    .Include(se => se.AuthEmp) // Tải các quan hệ liên quan
+                        .ThenInclude(emp => emp.AuthUser)
+                    .Include(se => se.AuthEmp)
+                        .ThenInclude(emp => emp.AuthPosition)
+                    .Include(se => se.AuthEmp)
+                        .ThenInclude(emp => emp.AuthSpecialty)
+                    .Include(se => se.AuthEmp)
+                        .ThenInclude(emp => emp.AuthBranches)
+                    .Include(se => se.AuthSchedule)
                     .Select(se => new
                     {
                         EmployeeId = se.AuthEmp.empID,
                         EmployeeCode = se.AuthEmp.empCode,
-                        EmployeeName = se.AuthEmp.AuthUser != null ? se.AuthEmp.AuthUser.fullName : null, // Giả sử AuthUser có field FullName
-                        Position = se.AuthEmp.AuthPosition != null ? se.AuthEmp.AuthPosition.positionName : null,
-                        Specialty = se.AuthEmp.AuthSpecialty != null ? se.AuthEmp.AuthSpecialty.specialtyName : null,
-                        Branch = se.AuthEmp.AuthBranches != null ? se.AuthEmp.AuthBranches.branchName : null,
-                        ScheduleName = se.AuthSchedule.scheduleName,
+                        EmployeeName = se.AuthEmp.AuthUser != null ? se.AuthEmp.AuthUser.fullName : "N/A",
+                        Position = se.AuthEmp.AuthPosition != null ? se.AuthEmp.AuthPosition.positionName : "N/A",
+                        Specialty = se.AuthEmp.AuthSpecialty != null ? se.AuthEmp.AuthSpecialty.specialtyName : "N/A",
+                        Branch = se.AuthEmp.AuthBranches != null ? se.AuthEmp.AuthBranches.branchName : "N/A",
+                        ScheduleName = se.AuthSchedule != null ? se.AuthSchedule.scheduleName : "N/A",
                         StartTime = se.startDate,
                         EndTime = se.endDate
                     })
                     .ToListAsync();
 
-                return ErrorConst.Success("Lấy danh sách lịch hẹn thành công", schedules);
+                // Kiểm tra nếu không có dữ liệu
+                if (!employeeSchedules.Any())
+                {
+                    return ErrorConst.Success("Không tìm thấy nhân viên phù hợp", new List<object>());
+                }
+
+                return ErrorConst.Success("Lấy danh sách lịch nhân viên thành công", employeeSchedules);
+            }
+            catch (DbUpdateException dbEx)
+            {
+                _logger.LogError(dbEx, "Database error while fetching employee schedules");
+                return ErrorConst.Error(500, "Lỗi cơ sở dữ liệu khi lấy danh sách nhân viên");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
-                return ErrorConst.Error(500, ex.Message);
+                _logger.LogError(ex, "Unexpected error while fetching employee schedules");
+                return ErrorConst.Error(500, $"Lỗi không xác định: {ex.Message}");
             }
         }
     }

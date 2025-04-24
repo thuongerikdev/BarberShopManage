@@ -16,6 +16,7 @@ using BM.Booking.ApplicationService.BookingModule.Implements;
 using BM.Booking.ApplicationService.PaymentModule.Abtracts;
 using BM.Booking.ApplicationService.PaymentModule.Implements;
 using BM.Shared.ApplicationService;
+using BM.Booking.ApplicationService.BookingModule.Implements.BookingSale;
 namespace BM.Booking.ApplicationService.StartUp
 {
     public static class BookingStartUp
@@ -48,15 +49,24 @@ namespace BM.Booking.ApplicationService.StartUp
 
             builder.Services.AddScoped<IBookingAppointService, BookingAppointService>();
             builder.Services.AddScoped<IBookingOrderService, BookingOrderService>();
-            builder.Services.AddScoped<IBookingPromoService, BookingPromoService>();
+            //builder.Services.AddScoped<IBookingPromoService, BookingPromoService>();    
             builder.Services.AddScoped<IBookingServService, BookingServService>();
+            builder.Services.AddScoped<IBookingServiceDetailService, BookingServiceDetailService>();
             builder.Services.AddScoped<IBookingReviewService, BookingReviewService>();
-            builder.Services.AddScoped<IBookingServProService, BookingServProService>();
+            //builder.Services.AddScoped<IBookingServProService, BookingServProService>();
 
             builder.Services.AddScoped<IBookingBussinessService, BookingBussinessService>();
             builder.Services.AddScoped<IBookingInvoiceService , BookingInvoiceService>();
 
             builder.Services.AddScoped<ISendOrderData, BookingBussinessService>();
+
+            builder.Services.AddScoped<IBookingProductService, BookingProductService>();
+            builder.Services.AddScoped<IBookingProductDescriptionService, BookingProductDescriptionService>();
+            builder.Services.AddScoped<IBookingCategoryService, BookingCategoryService>();
+            builder.Services.AddScoped<IBookingProductDetailService, BookingProductDetailService>();
+            builder.Services.AddScoped<IBookingOrderProductService, BookingOrderProductService>();
+            builder.Services.AddScoped<IBookingSupplierService, BookingSupplierService>();
+
 
 
 

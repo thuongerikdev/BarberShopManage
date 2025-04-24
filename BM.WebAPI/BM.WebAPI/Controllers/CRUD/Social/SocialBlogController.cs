@@ -17,7 +17,7 @@ namespace BM.WebAPI.Controllers.CRUD.Social
 
 
         [HttpPost("create")]
-        public async Task<IActionResult> Create([FromBody] SocialCreateBlogDto socialCreateBlogDto )
+        public async Task<IActionResult> Create([FromForm] SocialCreateBlogDto socialCreateBlogDto )
         {
             if (!ModelState.IsValid)
             {
@@ -38,7 +38,7 @@ namespace BM.WebAPI.Controllers.CRUD.Social
             }
         }
         [HttpPut("update")]
-        public async Task<IActionResult> Update([FromBody] SocialUpdateBlogDto socialUpdateBlogDto)
+        public async Task<IActionResult> Update([FromForm] SocialUpdateBlogDto socialUpdateBlogDto)
         {
             if (!ModelState.IsValid)
             {

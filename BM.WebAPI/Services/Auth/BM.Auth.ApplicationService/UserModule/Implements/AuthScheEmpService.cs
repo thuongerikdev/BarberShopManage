@@ -23,22 +23,22 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
             _authEmpService = authEmpService;
             _authScheduleService = authScheduleService;
         }
-        public async Task<ResponeDto> AuthCreateScheEmp(AuthCreateScheEmpDto authCreateScheEmpDto)
+        public async Task<ResponeDto> AuthCreateScheEmp(List<AuthCreateScheEmpDto> authCreateScheEmpDto)
         {
             _logger.LogInformation("AuthCreateScheEmp");
             try
             {
-                var scheEmp = new AuthScheEmp
+                var scheEmp = authCreateScheEmpDto.Select( dto =>  new AuthScheEmp
                 {
-                    scheduleID = authCreateScheEmpDto.scheduleID,
-                    empID = authCreateScheEmpDto.empID,
-                    status = authCreateScheEmpDto.status,
-                    note = authCreateScheEmpDto.note,
-                    startDate = authCreateScheEmpDto.startDate,
-                    endDate = authCreateScheEmpDto.endDate ,
+                    scheduleID = dto.scheduleID,
+                    empID = dto.empID,
+                    status = dto.status,
+                    note = dto.note,
+                    startDate = dto.startDate,
+                    endDate = dto.endDate ,
 
-                };
-                _dbContext.ScheEmps.Add(scheEmp);
+                }).ToList();
+                _dbContext.ScheEmps.AddRangeAsync(scheEmp);
                 await _dbContext.SaveChangesAsync();
                 return ErrorConst.Success("Tạo lịch hẹn nhân viên thành công", scheEmp);
             }

@@ -77,6 +77,9 @@ namespace BM.Auth.ApplicationService.StartUp
 
             builder.Services.AddScoped<IAuthBranchService, AuthBranchService>();
             builder.Services.AddScoped<IAuthVipService, AuthVipService>();
+            builder.Services.AddScoped<IAuthPromoService, AuthPromoService>();
+            builder.Services.AddScoped<IAuthCusPromoService,  AuthCusPromoService>();
+            builder.Services.AddScoped<IGetPromotionShared, AuthCusPromoService>();
 
 
 

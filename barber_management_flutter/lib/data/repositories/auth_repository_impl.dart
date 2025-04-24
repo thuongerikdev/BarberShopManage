@@ -17,4 +17,14 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(e.toString());
     }
   }
+
+  @override
+  Future<Either<String, UserModel>> getUserByID(int userID) async {
+    try {
+      final userModel = await remoteDataSource.getUserByID(userID);
+      return Right(userModel);
+    } catch (e) {
+      return Left(e.toString());
+    }
+  }
 }

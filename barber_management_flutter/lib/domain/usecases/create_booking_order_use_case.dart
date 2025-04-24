@@ -1,12 +1,18 @@
 import 'package:barbermanagemobile/domain/entities/booking_create_order.dart';
-import 'package:barbermanagemobile/domain/repositories/booking_service_repository.dart';
+import 'package:barbermanagemobile/domain/repositories/booking_order_repository.dart';
+import 'package:dartz/dartz.dart';
 
 class CreateBookingOrderUseCase {
-  final BookingServiceRepository repository;
+  final BookingOrderRepository repository;
 
   CreateBookingOrderUseCase(this.repository);
 
-  Future<void> call(BookingCreateOrder order) async {
-    await repository.createBookingOrder(order);
+  Future<Either<String, void>> call(BookingCreateOrder order) async {
+    try {
+      await repository.createBookingOrder(order);
+      return const Right(null);
+    } catch (e) {
+      return Left('Failed to create booking order: $e');
+    }
   }
 }

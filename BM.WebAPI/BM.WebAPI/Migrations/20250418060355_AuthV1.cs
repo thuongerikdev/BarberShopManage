@@ -119,11 +119,32 @@ namespace BM.WebAPI.Migrations
                     branchHotline = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     startWork = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     endWork = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    location = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    location = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    branchImage = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Branches", x => x.branchID);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Promos",
+                columns: table => new
+                {
+                    promoID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    promoName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    promoDescription = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    promoDiscount = table.Column<double>(type: "float", nullable: false),
+                    promoStart = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    promoEnd = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    promoStatus = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    promoType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    promoImage = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Promos", x => x.promoID);
                 });
 
             migrationBuilder.CreateTable(
@@ -132,10 +153,11 @@ namespace BM.WebAPI.Migrations
                 {
                     vipID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    vipType = table.Column<int>(type: "int", nullable: false),
-                    vipStatus = table.Column<int>(type: "int", nullable: false),
+                    vipType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    vipStatus = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     vipCost = table.Column<double>(type: "float", nullable: false),
-                    vipDiscount = table.Column<double>(type: "float", nullable: false)
+                    vipDiscount = table.Column<double>(type: "float", nullable: false),
+                    vipImage = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -305,11 +327,17 @@ namespace BM.WebAPI.Migrations
                 {
                     table.PrimaryKey("PK_CusPromos", x => x.cusPromoID);
                     table.ForeignKey(
-                        name: "FK_CusPromos_AuthCustomer_promoID",
-                        column: x => x.promoID,
+                        name: "FK_CusPromos_AuthCustomer_customerID",
+                        column: x => x.customerID,
                         principalSchema: "auth",
                         principalTable: "AuthCustomer",
                         principalColumn: "customerID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CusPromos_Promos_promoID",
+                        column: x => x.promoID,
+                        principalTable: "Promos",
+                        principalColumn: "promoID",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -415,6 +443,11 @@ namespace BM.WebAPI.Migrations
                 column: "roleID");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CusPromos_customerID",
+                table: "CusPromos",
+                column: "customerID");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_CusPromos_promoID",
                 table: "CusPromos",
                 column: "promoID");
@@ -449,6 +482,9 @@ namespace BM.WebAPI.Migrations
             migrationBuilder.DropTable(
                 name: "AuthCustomer",
                 schema: "auth");
+
+            migrationBuilder.DropTable(
+                name: "Promos");
 
             migrationBuilder.DropTable(
                 name: "AuthPosition",

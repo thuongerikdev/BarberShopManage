@@ -41,16 +41,48 @@ namespace BM.WebAPI.Migrations.BookingDb
                     b.Property<int>("orderID")
                         .HasColumnType("int");
 
-                    b.Property<int>("servID")
+                    b.Property<int>("serviceDetailID")
                         .HasColumnType("int");
 
                     b.HasKey("appID");
 
                     b.HasIndex("orderID");
 
-                    b.HasIndex("servID");
+                    b.HasIndex("serviceDetailID");
 
                     b.ToTable("BookingAppointment", "booking");
+                });
+
+            modelBuilder.Entity("BM.Booking.Domain.BookingCategory", b =>
+                {
+                    b.Property<int>("categoryID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("categoryID"));
+
+                    b.Property<string>("categoryDescription")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("categoryImage")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("categoryName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("categoryPrice")
+                        .HasColumnType("float");
+
+                    b.Property<string>("categoryStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("categoryID");
+
+                    b.ToTable("BookingCategories");
                 });
 
             modelBuilder.Entity("BM.Booking.Domain.BookingInvoice", b =>
@@ -120,40 +152,145 @@ namespace BM.WebAPI.Migrations.BookingDb
                     b.ToTable("BookingOrder", "booking");
                 });
 
-            modelBuilder.Entity("BM.Booking.Domain.BookingPromotion", b =>
+            modelBuilder.Entity("BM.Booking.Domain.BookingOrderProduct", b =>
                 {
-                    b.Property<int>("promoID")
+                    b.Property<int>("orderProductID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("promoID"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("orderProductID"));
 
-                    b.Property<string>("promoDescription")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                    b.Property<int>("orderID")
+                        .HasColumnType("int");
 
-                    b.Property<double>("promoDiscount")
+                    b.Property<int>("productDetailID")
+                        .HasColumnType("int");
+
+                    b.Property<double>("productPrice")
                         .HasColumnType("float");
 
-                    b.Property<DateTime>("promoEnd")
-                        .HasColumnType("datetime2");
+                    b.Property<int>("quantity")
+                        .HasColumnType("int");
 
-                    b.Property<string>("promoName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                    b.HasKey("orderProductID");
 
-                    b.Property<DateTime>("promoStart")
-                        .HasColumnType("datetime2");
+                    b.HasIndex("orderID");
 
-                    b.Property<string>("promoStatus")
+                    b.HasIndex("productDetailID");
+
+                    b.ToTable("BookingOrderProducts");
+                });
+
+            modelBuilder.Entity("BM.Booking.Domain.BookingProduct", b =>
+                {
+                    b.Property<int>("productID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("productID"));
+
+                    b.Property<int>("categoryID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("productDescription")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("promoID");
+                    b.Property<string>("productImage")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.ToTable("BookingPromotion", "booking");
+                    b.Property<string>("productName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("productPrice")
+                        .HasColumnType("float");
+
+                    b.Property<string>("productStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("productID");
+
+                    b.HasIndex("categoryID");
+
+                    b.ToTable("BookingProduct", "booking");
+                });
+
+            modelBuilder.Entity("BM.Booking.Domain.BookingProductDescription", b =>
+                {
+                    b.Property<int>("productDescriptionID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("productDescriptionID"));
+
+                    b.Property<string>("productColor")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("productDescription")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("productImage")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("productName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("productSize")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("productStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("productType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("productDescriptionID");
+
+                    b.ToTable("BookingProductDescriptions");
+                });
+
+            modelBuilder.Entity("BM.Booking.Domain.BookingProductDetail", b =>
+                {
+                    b.Property<int>("productDetailID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("productDetailID"));
+
+                    b.Property<int>("productDescriptionID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("productID")
+                        .HasColumnType("int");
+
+                    b.Property<double>("productPrice")
+                        .HasColumnType("float");
+
+                    b.Property<int>("productQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("supplierID")
+                        .HasColumnType("int");
+
+                    b.HasKey("productDetailID");
+
+                    b.HasIndex("productDescriptionID");
+
+                    b.HasIndex("productID");
+
+                    b.HasIndex("supplierID");
+
+                    b.ToTable("BookingProductDetails");
                 });
 
             modelBuilder.Entity("BM.Booking.Domain.BookingReview", b =>
@@ -164,7 +301,7 @@ namespace BM.WebAPI.Migrations.BookingDb
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("reviewID"));
 
-                    b.Property<int>("appID")
+                    b.Property<int>("orderID")
                         .HasColumnType("int");
 
                     b.Property<int>("rating")
@@ -185,33 +322,10 @@ namespace BM.WebAPI.Migrations.BookingDb
 
                     b.HasKey("reviewID");
 
-                    b.HasIndex("appID")
+                    b.HasIndex("orderID")
                         .IsUnique();
 
                     b.ToTable("BookingReview", "booking");
-                });
-
-            modelBuilder.Entity("BM.Booking.Domain.BookingServPro", b =>
-                {
-                    b.Property<int>("servProID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("servProID"));
-
-                    b.Property<int>("promoID")
-                        .HasColumnType("int");
-
-                    b.Property<int>("servID")
-                        .HasColumnType("int");
-
-                    b.HasKey("servProID");
-
-                    b.HasIndex("promoID");
-
-                    b.HasIndex("servID");
-
-                    b.ToTable("BookingServPro", "booking");
                 });
 
             modelBuilder.Entity("BM.Booking.Domain.BookingService", b =>
@@ -249,6 +363,84 @@ namespace BM.WebAPI.Migrations.BookingDb
                     b.ToTable("BookingService", "booking");
                 });
 
+            modelBuilder.Entity("BM.Booking.Domain.BookingServiceDetail", b =>
+                {
+                    b.Property<int>("serviceDetailID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("serviceDetailID"));
+
+                    b.Property<string>("servDescription")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("servID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("servImage")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("servName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("servPrice")
+                        .HasColumnType("float");
+
+                    b.Property<string>("servStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("serviceDetailID");
+
+                    b.HasIndex("servID");
+
+                    b.ToTable("BookingServiceDetails");
+                });
+
+            modelBuilder.Entity("BM.Booking.Domain.BookingSupplier", b =>
+                {
+                    b.Property<int>("supplierID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("supplierID"));
+
+                    b.Property<string>("supplierAddress")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("supplierEmail")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("supplierImage")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("supplierName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("supplierNote")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("supplierPhone")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("supplierStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("supplierID");
+
+                    b.ToTable("BookingSuppliers");
+                });
+
             modelBuilder.Entity("BM.Booking.Domain.BookingAppointment", b =>
                 {
                     b.HasOne("BM.Booking.Domain.BookingOrder", "BookingOrder")
@@ -257,15 +449,15 @@ namespace BM.WebAPI.Migrations.BookingDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BM.Booking.Domain.BookingService", "BookingService")
+                    b.HasOne("BM.Booking.Domain.BookingServiceDetail", "BookingServiceDetails")
                         .WithMany("BookingAppointments")
-                        .HasForeignKey("servID")
+                        .HasForeignKey("serviceDetailID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("BookingOrder");
 
-                    b.Navigation("BookingService");
+                    b.Navigation("BookingServiceDetails");
                 });
 
             modelBuilder.Entity("BM.Booking.Domain.BookingInvoice", b =>
@@ -279,40 +471,88 @@ namespace BM.WebAPI.Migrations.BookingDb
                     b.Navigation("BookingOrder");
                 });
 
-            modelBuilder.Entity("BM.Booking.Domain.BookingReview", b =>
+            modelBuilder.Entity("BM.Booking.Domain.BookingOrderProduct", b =>
                 {
-                    b.HasOne("BM.Booking.Domain.BookingAppointment", "BookingAppointment")
-                        .WithOne("BookingReviews")
-                        .HasForeignKey("BM.Booking.Domain.BookingReview", "appID")
+                    b.HasOne("BM.Booking.Domain.BookingOrder", "BookingOrder")
+                        .WithMany("BookingOrderProducts")
+                        .HasForeignKey("orderID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("BookingAppointment");
+                    b.HasOne("BM.Booking.Domain.BookingProductDetail", "BookingProductDetail")
+                        .WithMany("BookingOrderProducts")
+                        .HasForeignKey("productDetailID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BookingOrder");
+
+                    b.Navigation("BookingProductDetail");
                 });
 
-            modelBuilder.Entity("BM.Booking.Domain.BookingServPro", b =>
+            modelBuilder.Entity("BM.Booking.Domain.BookingProduct", b =>
                 {
-                    b.HasOne("BM.Booking.Domain.BookingPromotion", "BookingPromotion")
-                        .WithMany("BookingServPros")
-                        .HasForeignKey("promoID")
+                    b.HasOne("BM.Booking.Domain.BookingCategory", "BookingCategory")
+                        .WithMany("BookingProducts")
+                        .HasForeignKey("categoryID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("BookingCategory");
+                });
+
+            modelBuilder.Entity("BM.Booking.Domain.BookingProductDetail", b =>
+                {
+                    b.HasOne("BM.Booking.Domain.BookingProductDescription", "BookingProductDescription")
+                        .WithMany("BookingProductDetails")
+                        .HasForeignKey("productDescriptionID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BM.Booking.Domain.BookingProduct", "BookingProduct")
+                        .WithMany("BookingProductDetails")
+                        .HasForeignKey("productID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BM.Booking.Domain.BookingSupplier", "BookingSupplier")
+                        .WithMany("BookingProductDetails")
+                        .HasForeignKey("supplierID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BookingProduct");
+
+                    b.Navigation("BookingProductDescription");
+
+                    b.Navigation("BookingSupplier");
+                });
+
+            modelBuilder.Entity("BM.Booking.Domain.BookingReview", b =>
+                {
+                    b.HasOne("BM.Booking.Domain.BookingOrder", "BookingOrder")
+                        .WithOne("BookingReview")
+                        .HasForeignKey("BM.Booking.Domain.BookingReview", "orderID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BookingOrder");
+                });
+
+            modelBuilder.Entity("BM.Booking.Domain.BookingServiceDetail", b =>
+                {
                     b.HasOne("BM.Booking.Domain.BookingService", "BookingService")
-                        .WithMany("BookingServPros")
+                        .WithMany("BookingServiceDetails")
                         .HasForeignKey("servID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("BookingPromotion");
-
                     b.Navigation("BookingService");
                 });
 
-            modelBuilder.Entity("BM.Booking.Domain.BookingAppointment", b =>
+            modelBuilder.Entity("BM.Booking.Domain.BookingCategory", b =>
                 {
-                    b.Navigation("BookingReviews")
-                        .IsRequired();
+                    b.Navigation("BookingProducts");
                 });
 
             modelBuilder.Entity("BM.Booking.Domain.BookingOrder", b =>
@@ -321,18 +561,41 @@ namespace BM.WebAPI.Migrations.BookingDb
 
                     b.Navigation("BookingInvoice")
                         .IsRequired();
+
+                    b.Navigation("BookingOrderProducts");
+
+                    b.Navigation("BookingReview")
+                        .IsRequired();
                 });
 
-            modelBuilder.Entity("BM.Booking.Domain.BookingPromotion", b =>
+            modelBuilder.Entity("BM.Booking.Domain.BookingProduct", b =>
                 {
-                    b.Navigation("BookingServPros");
+                    b.Navigation("BookingProductDetails");
+                });
+
+            modelBuilder.Entity("BM.Booking.Domain.BookingProductDescription", b =>
+                {
+                    b.Navigation("BookingProductDetails");
+                });
+
+            modelBuilder.Entity("BM.Booking.Domain.BookingProductDetail", b =>
+                {
+                    b.Navigation("BookingOrderProducts");
                 });
 
             modelBuilder.Entity("BM.Booking.Domain.BookingService", b =>
                 {
-                    b.Navigation("BookingAppointments");
+                    b.Navigation("BookingServiceDetails");
+                });
 
-                    b.Navigation("BookingServPros");
+            modelBuilder.Entity("BM.Booking.Domain.BookingServiceDetail", b =>
+                {
+                    b.Navigation("BookingAppointments");
+                });
+
+            modelBuilder.Entity("BM.Booking.Domain.BookingSupplier", b =>
+                {
+                    b.Navigation("BookingProductDetails");
                 });
 #pragma warning restore 612, 618
         }

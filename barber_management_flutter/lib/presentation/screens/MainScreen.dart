@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
-import 'login_screen.dart';
-import 'HomeScreen.dart';
-import 'BlogScreen.dart';
-import 'ProfileScreen.dart';
-import 'BookingScreen.dart';
+import 'package:barbermanagemobile/presentation/providers/auth_provider.dart';
+import 'package:barbermanagemobile/presentation/screens/LoginScreen.dart';
+import 'package:barbermanagemobile/presentation/screens/HomeScreen.dart';
+import 'package:barbermanagemobile/presentation/screens/BlogScreen.dart';
+import 'package:barbermanagemobile/presentation/screens/ProfileScreen.dart';
+import 'package:barbermanagemobile/presentation/screens/BookingScreen.dart';
 
 class MainScreen extends StatefulWidget {
+  const MainScreen({super.key});
+
   @override
   _MainScreenState createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen>
-    with SingleTickerProviderStateMixin {
+class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   int _selectedIndex = 0;
@@ -25,8 +26,7 @@ class _MainScreenState extends State<MainScreen>
       duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
-    _fadeAnimation =
-        CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+    _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
     _controller.forward();
   }
 
@@ -40,21 +40,26 @@ class _MainScreenState extends State<MainScreen>
   static const backgroundColor = Color(0xFF212121);
   static const accentColor = Color(0xFF8D6E63);
 
-  List<Widget> _pages = [
-    HomeScreen(),
-    BlogScreen(),
-    BookingScreen(), // Added BookingScreen
-    ProfileScreen(),
-  ];
-
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+    _controller.forward(from: 0); // Restart the fade animation for smooth transition
   }
+
+  final List<Widget> _pages = [];
 
   @override
   Widget build(BuildContext context) {
+    // Initialize _pages here to ensure _onItemTapped is available
+    _pages.clear(); // Clear to avoid duplicates
+    _pages.addAll([
+      const HomeScreen(),
+      const BlogScreen(),
+      BookingScreen(onBack: () => _onItemTapped(0)), // Pass the callback to return to HomeScreen
+      const ProfileScreen(),
+    ]);
+
     final authProvider = Provider.of<AuthProvider>(context);
 
     return Scaffold(
@@ -110,7 +115,6 @@ class _MainScreenState extends State<MainScreen>
       floatingActionButton: _selectedIndex == 0
           ? FloatingActionButton(
               onPressed: () {
-                // You can add support functionality here
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Đang liên hệ hỗ trợ...')),
                 );
@@ -139,10 +143,8 @@ class _MainScreenState extends State<MainScreen>
           elevation: 0,
           selectedItemColor: accentColor,
           unselectedItemColor: Colors.grey[400],
-          selectedLabelStyle:
-              TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-          unselectedLabelStyle:
-              TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+          selectedLabelStyle: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+          unselectedLabelStyle: TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
           showUnselectedLabels: true,
           type: BottomNavigationBarType.fixed,
           items: [

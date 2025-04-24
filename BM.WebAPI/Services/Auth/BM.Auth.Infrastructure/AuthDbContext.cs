@@ -23,6 +23,7 @@ namespace BM.Auth.Infrastructure
         public DbSet<AuthVip> Vips { get; set; }
         public DbSet<AuthBranches> Branches { get; set; }
         public DbSet <AuthCusPromo> CusPromos { get; set; }
+        public DbSet<AuthPromotion> Promos { get; set; }
         public AuthDbContext(DbContextOptions<AuthDbContext> options) : base(options)
         {
         }
@@ -87,6 +88,26 @@ namespace BM.Auth.Infrastructure
                 .HasMany(p => p.AuthRolePermissions)
                 .WithOne(r => r.AuthPermission)
                 .HasForeignKey(r => r.permissionID); //(1-n)
+
+            modelBuilder.Entity<AuthBranches>()
+                .HasMany(b => b.AuthEmps)
+                .WithOne(e => e.AuthBranches)
+                .HasForeignKey(e => e.branchID); //(1-n)
+
+            modelBuilder.Entity<AuthVip>()
+                .HasMany(v => v.AuthCustomers)
+                .WithOne(c => c.AuthVip)
+                .HasForeignKey(c => c.vipID); //(1-n)
+
+            modelBuilder.Entity<AuthCusPromo>()
+                .HasOne(cp => cp.AuthCustomer)
+                .WithMany(c => c.AuthCusPromos)
+                .HasForeignKey(cp => cp.customerID); //(1-n)
+
+            modelBuilder.Entity<AuthCusPromo>()
+                .HasOne(cp => cp.AuthPromotion)
+                .WithMany(p => p.AuthCusPromos)
+                .HasForeignKey(cp => cp.promoID); //(1-n)
 
             base.OnModelCreating(modelBuilder);
         }

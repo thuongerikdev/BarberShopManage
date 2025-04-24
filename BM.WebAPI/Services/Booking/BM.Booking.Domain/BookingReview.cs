@@ -14,7 +14,7 @@ namespace BM.Booking.Domain
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int reviewID { get; set; }
-        public int appID { get; set; }
+        public int orderID { get; set; }
         public int rating { get; set; }
         [MaxLength(50)]
         public string reviewContent { get; set; }
@@ -22,7 +22,7 @@ namespace BM.Booking.Domain
         [MaxLength(50)]
         public string reviewStatus { get; set; }
 
-        public virtual BookingAppointment BookingAppointment { get; set; }
+        public virtual BookingOrder BookingOrder { get; set; }
 
 
 

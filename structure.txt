@@ -47,6 +47,10 @@ D:\PersonalProject\BarberManagement\barbermanagemobile\
 │   └── .env
 ├── pubspec.yaml
 
+root : https://grok.com/chat/50e3ef25-beaf-40de-96c3-87bdb1e36af9
+
+tree E:\PersonalProject\BarberManagement\barber_management_flutter\lib /f > E:\PersonalProject\BarberManagement\barber_management_flutter\lib\folder-tree.txt
+
 
 {
   "roleID": 1,
@@ -61,6 +65,38 @@ D:\PersonalProject\BarberManagement\barbermanagemobile\
   "specialtyID": 2,
   "startDate": "2025-03-27T13:22:49.587Z"
 }
+
+  final List<Map<String, dynamic>> blocks = [
+    {
+      'title': 'Lịch sử đặt lịch',
+      'icon': Icons.history,
+      'color': Color(0xFFD7CCC8)
+    },
+    {'title': 'Ưu đãi', 'icon': Icons.local_offer, 'color': Color(0xFFBCAAA4)},
+    {
+      'title': 'Điểm danh',
+      'icon': Icons.check_circle,
+      'color': Color(0xFFA1887F)
+    },
+  ];
+
+  final List<Map<String, dynamic>> featuredProducts = [
+    {
+      'name': 'Dầu gội cao cấp',
+      'image': '../../../image/Product/DauGoi.jpg',
+      'price': '250.000 VNĐ'
+    },
+    {
+      'name': 'Sáp vuốt tóc',
+      'image': '../../../image/Product/Sap.jpg',
+      'price': '300.000 VNĐ'
+    },
+    {
+      'name': 'Tinh dầu dưỡng tóc',
+      'image': '../../../image/Product/TinhDau.jpg',
+      'price': '200.000 VNĐ'
+    },
+  ];
 
  final List<Map<String, String>> sliderItems = [
     {

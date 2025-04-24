@@ -1,5 +1,3 @@
-
-
 class BookingCreateOrderRequestModel {
   final List<BookingCreateBusinessAppointModel>? appoint;
   final BookingCreateOrderBusinessModel? order;
@@ -11,44 +9,39 @@ class BookingCreateOrderRequestModel {
     required this.promoID,
   });
 
-  // Chuyển từ object sang JSON
   Map<String, dynamic> toJson() => {
-        'Appoint': appoint?.map((e) => e.toJson()).toList(),
-        'Order': order?.toJson(),
-        'PromoID': promoID,
+        'appoint': appoint?.map((e) => e.toJson()).toList(),
+        'order': order?.toJson(),
+        'promoID': promoID,
       };
 
-  // Parse từ JSON sang object (nếu API trả về)
   factory BookingCreateOrderRequestModel.fromJson(Map<String, dynamic> json) {
     return BookingCreateOrderRequestModel(
-      appoint: json['Appoint'] != null
-          ? (json['Appoint'] as List)
+      appoint: json['appoint'] != null
+          ? (json['appoint'] as List)
               .map((e) => BookingCreateBusinessAppointModel.fromJson(e))
               .toList()
           : null,
-      order: json['Order'] != null
-          ? BookingCreateOrderBusinessModel.fromJson(json['Order'])
+      order: json['order'] != null
+          ? BookingCreateOrderBusinessModel.fromJson(json['order'])
           : null,
-      promoID: json['PromoID'],
+      promoID: json['promoID'],
     );
   }
 }
 
 class BookingCreateBusinessAppointModel {
-  // final int appID; // Đã comment trong C#, nên tôi cũng bỏ qua
   final int servID;
   final int empID;
   final String appStatus;
 
   BookingCreateBusinessAppointModel({
-    // this.appID,
     required this.servID,
     required this.empID,
     required this.appStatus,
   });
 
   Map<String, dynamic> toJson() => {
-        // 'appID': appID,
         'servID': servID,
         'empID': empID,
         'appStatus': appStatus,
@@ -56,7 +49,6 @@ class BookingCreateBusinessAppointModel {
 
   factory BookingCreateBusinessAppointModel.fromJson(Map<String, dynamic> json) {
     return BookingCreateBusinessAppointModel(
-      // appID: json['appID'],
       servID: json['servID'],
       empID: json['empID'],
       appStatus: json['appStatus'],

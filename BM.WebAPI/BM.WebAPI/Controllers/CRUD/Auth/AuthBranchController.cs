@@ -15,7 +15,7 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             _authBranchService = authBranchService;
         }
         [HttpPost("createbranch")]
-        public async Task<IActionResult> CreateBranch([FromBody] AuthCreateBranch authCreateBranch)
+        public async Task<IActionResult> CreateBranch([FromForm] AuthCreateBranch authCreateBranch)
         {
             if (!ModelState.IsValid)
             {
@@ -36,7 +36,7 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             }
         }
         [HttpPut("updatebranch")]
-        public async Task<IActionResult> UpdateBranch([FromBody] AuthUpdateBranch authUpdateBranch)
+        public async Task<IActionResult> UpdateBranch([FromForm] AuthUpdateBranch authUpdateBranch)
         {
             if (!ModelState.IsValid)
             {

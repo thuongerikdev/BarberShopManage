@@ -17,6 +17,8 @@ namespace BM.Social.Domain
         public string blogTitle { get; set; }
         public string blogContent { get; set; }
         public string blogStatus { get; set; }
+        public string blogDescription { get; set; }
+        public string blogImage { get; set; }
         public int blogLike { get; set; }
         public DateTime blogDate { get; set; } = DateTime.Now;
         public DateTime updateAt { get; set; } = DateTime.Now;
@@ -38,6 +40,7 @@ namespace BM.Social.Domain
         public string commentContent { get; set; }
         public string commentStatus { get; set; }
         public int commentLike { get; set; }
+        //public string commentImage { get; set; }
         public DateTime commentDate { get; set; } = DateTime.Now;
         public DateTime updateAt { get; set; } = DateTime.Now;
         public virtual SocialBlog SocialBlog { get; set; }

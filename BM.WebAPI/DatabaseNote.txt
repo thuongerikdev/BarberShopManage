@@ -1,8 +1,6 @@
 // Use DBML to define your database structure
 // Docs: https://dbml.dbdiagram.io/docs
 
-https://dbdiagram.io/d/Barber-Manage-67d0526875d75cc844ae4d88
-
 Table AuthPosition {
   positionID integer [primary key, increment]
   positionName varchar(50)
@@ -53,8 +51,8 @@ Table AuthRole {
 
 Table AuthRolePermission {
   rolePermissionID integer [primary key, increment]
-  roleID integer
   permissionID integer
+  roleID integer
   status varchar
   startDate timestamp
   updateAt timestamp
@@ -73,12 +71,15 @@ Table AuthUser {
   userID integer [primary key, increment]
   roleID integer
   userName varchar(50)
-  password varchar(50)
+  passwordHash varchar(50)
+  passwordSalt varchar(50)
   email varchar(50)
   phoneNumber varchar(20)
   fullName varchar(50)
   avatar varchar
   dateOfBirth timestamp
+  isEmailVerified bool
+  emailVerificationToken varchar
   gender varchar(10)
 }
 
@@ -89,18 +90,59 @@ Table AuthEmp {
   specialtyID integer
   empCode varchar
   salary double
+  bonusSalary double
   rate double
   status varchar
-  startDate timestamp
+  branchID integer
+  startDate datetime
 }
+
 
 Table AuthCustomer {
   customerID integer [primary key, increment]
   userID integer
-  loyaltyPoints integer
+  vipID integer
+  loyaltyPoints double
   customerType varchar
   customerStatus varchar
+  totalSpent double
+  percentDiscount double
 }
+
+Table AuthPromotion {
+  promoID integer [primary key, increment]
+  promoName varchar(50)
+  promoDescription varchar(50)
+  promoDiscount double
+  promoStart timestamp
+  promoEnd timestamp
+  promoStatus varchar
+}
+Table AuthCusPromo {
+  cuspromoID interger [primary key , increment]
+  customerID interger
+  promoID interger
+  cusPromoStatus varchar
+}
+Table AuthVip {
+  vipID integer [primary key, increment]
+  vipType integer
+  vipStatus integer
+  vipCost double
+  vipDiscount double
+}
+Table AuthBranches {
+  branchID integer [primary key, increment]
+  branchName varchar
+  branchType varchar
+  branchStatus varchar
+  branchArea double
+  branchHotline varchar
+  startWork varchar
+  endWork varchar
+  location varchar
+}
+
 
 // Define relationships
 Ref: AuthScheEmp.empID > AuthEmp.empID // many-to-one
@@ -112,7 +154,10 @@ Ref: AuthRolePermission.permissionID > AuthPermission.permissionID // many-to-on
 Ref: AuthUser.roleID > AuthRole.roleID // many-to-one
 Ref: AuthCustomer.userID > AuthUser.userID // many-to-one
 Ref: AuthEmp.userID > AuthUser.userID // many-to-one
-
+Ref: AuthPromotion.promoID < AuthCusPromo.promoID
+Ref: AuthCustomer.customerID < AuthCusPromo.customerID
+Ref: AuthCustomer.vipID > AuthVip.vipID
+Ref: AuthBranches.branchID < AuthEmp.branchID
 
 
 // Use DBML to define your database structure
@@ -120,7 +165,7 @@ Ref: AuthEmp.userID > AuthUser.userID // many-to-one
 
 Table BookingAppointment {
   appID integer [primary key, increment]
-  servID integer
+  serviceDetailID integer
   empID integer
   orderID integer
   appStatus varchar(50)
@@ -135,15 +180,7 @@ Table BookingOrder {
   orderDate timestamp
 }
 
-Table BookingPromotion {
-  promoID integer [primary key, increment]
-  promoName varchar(50)
-  promoDescription varchar(50)
-  promoDiscount double
-  promoStart timestamp
-  promoEnd timestamp
-  promoStatus varchar
-}
+
 
 Table BookingReview {
   reviewID integer [primary key, increment]
@@ -163,11 +200,11 @@ Table BookingService {
   servImage varchar
 }
 
-Table BookingServPro {
-  servProID integer [primary key, increment]
-  servID integer
-  promoID integer
-}
+// Table BookingServPro {
+//   servProID integer [primary key, increment]
+//   servID integer
+//   promoID integer
+// }
 Table BookingInvoice {
   invoiceID integer [primary key , increment]
   orderID integer
@@ -177,17 +214,95 @@ Table BookingInvoice {
   status varchar(50)
   paymentMethod varchar(50)
 }
+Table BookingServiceDetails{
+  serviceDetailID interger [primary key , increment]
+  servID interger 
+  servPrice double
+  servName varchar(50)
+  servImage varchar(100)
+  servDescription varchar(50)
+  servStatus varchar (50)
+}
+
+Table BookingProduct {
+  productID integer [primary key, increment]
+  productName varchar
+  productDescription varchar
+  productPrice double
+  productStatus varchar
+  productImage varchar
+  categoryID integer
+}
+
+Table BookingCategory {
+  categoryID integer [primary key, increment]
+  categoryName varchar
+  categoryDescription varchar
+  categoryPrice double
+  categoryStatus varchar
+  categoryImage varchar
+}
+
+Table BookingProductDescription {
+  productDescriptionID integer [primary key, increment]
+  productImage varchar
+  productName varchar
+  productDescription varchar
+  productStatus varchar
+  productColor varchar
+  productSize varchar
+  productType varchar
+}
+
+Table BookingProductDetail {
+  productDetailID integer [primary key, increment]
+  productID interger
+  productDescriptionID integer
+  supplierID interger
+  productPrice double
+  productQuantity integer
+}
+
+Table BookingOrderProduct {
+  orderProductID integer [primary key, increment]
+  orderID integer
+  productDetailID integer
+  productPrice double
+  quantity integer
+}
+
+Table BookingSupplier {
+  supplierID integer [primary key, increment]
+  supplierName varchar
+  supplierEmail varchar
+  supplierPhone varchar
+  supplierAddress varchar
+  supplierStatus varchar
+  supplierNote varchar
+}
+
 
 // Define relationships
 Ref: BookingInvoice.orderID - BookingOrder.orderID
-Ref: BookingAppointment.servID > BookingService.servID // many-to-one
+Ref: BookingAppointment.serviceDetailID > BookingServiceDetails.serviceDetailID // many-to-one
 Ref: BookingAppointment.appID > BookingReview.appID // many-to-one
 Ref: BookingOrder.orderID > BookingAppointment.orderID // many-to-one
 // Ref: BookingOrder.custID > BookingCustomer.custID // many-to-one (assuming BookingCustomer exists)
-Ref: BookingServPro.servID > BookingService.servID // many-to-one
-Ref: BookingServPro.promoID > BookingPromotion.promoID // many-to-one
+// Ref: BookingServPro.servID > BookingService.servID // many-to-one
+// Ref: BookingServPro.promoID > BookingPromotion.promoID // many-to-one
 // Ref: BookingAppointment.empID > AuthEmp.empID
 // Ref: BookingOrder.custID > AuthCustomer.customerID
+Ref: BookingServiceDetails.servID > BookingService.servID
+Ref: BookingCategory.categoryID < BookingProduct.categoryID
+Ref: BookingProductDetail.productID > BookingProduct.productID
+Ref: BookingProductDetail.productDescriptionID > BookingProductDescription.productDescriptionID
+Ref: BookingProductDetail.supplierID > BookingSupplier.supplierID
+Ref: BookingProductDetail.productDetailID < BookingOrderProduct.productDetailID
+Ref: BookingOrderProduct.orderID > BookingOrder.orderID
+
+
+
+
 Table SocialBlog {
   blogID integer [primary key , increment]
   blogTitle varchar(50)
@@ -201,12 +316,15 @@ Table SocialMessage {
   messageID integer [primary key , increment]
   senderID interger 
   receiverID interger 
-  content varchar(500)
+  groupID interger
+  messageContent varchar(500)
   groupName varchar(50)
   messageDate datetime
+  updateAt datetime
 }
 Table SocialSrc {
   srcID integer [primary key , increment]
+  srcName varchar
   imageSrc varchar 
   videoSrc varchar
   srcDate datetime
@@ -221,7 +339,7 @@ Table SocialSrcMessage{
   srcID interger 
   messID integer
 }
-Table SocialComment {
+Table SocialBlogComment {
   commentID interger [primary key, increment]
   blogID interger 
   userID interger
@@ -232,8 +350,27 @@ Table SocialComment {
   updateAt datetime
  
 }
+Table SocialGroup {
+  groupID interger [primary key , increment]
+  groupName varchar(50)
+  groupStatus varchar(50)
+  groupDescription varchar (50)
+  avatar srcID 
+}
+Table SocialGroupUser{
+  socialGroupUserID interger [primary key , increment]
+  userID interger 
+  groupID interger
+}
 Ref: SocialBlog.blogID < SocialSrcBlog.blogID
 Ref: SocialSrc.srcID < SocialSrcBlog.srcID
-Ref: SocialComment.blogID > SocialBlog.blogID
+Ref: SocialBlogComment.blogID > SocialBlog.blogID
 Ref: SocialMessage.messageID < SocialSrcMessage.messID
 Ref: SocialSrcMessage.srcID > SocialSrc.srcID
+Ref: SocialMessage.groupID  > SocialGroup.groupID
+Ref: SocialGroupUser.groupID > SocialGroup.groupID
+
+
+// Ref: "AuthRolePermission"."roleID" < "AuthUser"."isEmailVerified"
+
+Ref: "AuthScheEmp"."status" < "AuthBranches"."branchType"

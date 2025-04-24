@@ -1,6 +1,7 @@
 ﻿using BM.Auth.ApplicationService.VipModule.Abtracts;
 using BM.Auth.Dtos.User;
 using BM.Constant;
+using BM.Shared.ApplicationService;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BM.WebAPI.Controllers.CRUD.Auth
@@ -10,9 +11,11 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
     public class AuthCusPromoController : Controller
     {
         private IAuthCusPromoService _authCusPromoService;
-        public AuthCusPromoController(IAuthCusPromoService authCusPromoService)
+        private IGetPromotionShared _getPromotionShared;
+        public AuthCusPromoController(IAuthCusPromoService authCusPromoService, IGetPromotionShared getPromotionShared)
         {
             _authCusPromoService = authCusPromoService;
+            _getPromotionShared = getPromotionShared;
         }
         [HttpPost("createcuspromo")]
         public async Task<IActionResult> CreateCusPromo([FromBody] AuthCreateCusPromo authCreateCusPromo)
@@ -104,6 +107,28 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             try
             {
                 var result = await _authCusPromoService.AuthGetAllCusPromo();
+                if (result == null)
+                {
+                    return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));
+                }
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ErrorConst.Error(500, ex.Message));
+            }
+
+        }
+        [HttpGet("getcuspromobyCusAndProMo")]
+        public async Task<IActionResult> GetCusPromoByCusAndProMo([FromQuery] int cusID, [FromQuery] int proMoID)
+        {
+            if (cusID <= 0 || proMoID <= 0)
+            {
+                return BadRequest(ErrorConst.Error(400, "cusID hoặc proMoID không hợp lệ"));
+            }
+            try
+            {
+                var result = await _getPromotionShared.GetCustomerAndPromotionAsync(cusID, proMoID);
                 if (result == null)
                 {
                     return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));

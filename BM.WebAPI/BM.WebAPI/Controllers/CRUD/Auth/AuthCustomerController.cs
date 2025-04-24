@@ -115,5 +115,26 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
                 return BadRequest(ErrorConst.Error(500, ex.Message));
             }
         }
+        [HttpGet("getByUserID/{userID}")]
+        public async Task<IActionResult> GetByUserID( int userID)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ErrorConst.Error(500, "Đầu vào không hợp lệ"));
+            }
+            try
+            {
+                var result = await _authCustomerService.AuthGetCustomerByUserID(userID);
+                if (result == null)
+                {
+                    return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));
+                }
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ErrorConst.Error(500, ex.Message));
+            }
+        }
     }
 }

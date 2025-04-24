@@ -19,23 +19,26 @@ class BookingServiceRepositoryImpl implements BookingServiceRepository {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getEmployeesByDate(DateTime date) async {
-    return await dataSource.getEmployeesByDate(date);
+  Future<List<Map<String, dynamic>>> getEmployeesByDate(DateTime date, int branchID) async {
+    return await dataSource.getEmployeesByDate(date, branchID);
   }
 
   @override
   Future<List<Map<String, dynamic>>> getAllServices() async {
-    return await dataSource.getAllServices();
+    return await dataSource.getBookingServices();
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getBookingServiceDetail(int serviceID) async {
+    return await dataSource.getBookingServiceDetail(serviceID);
   }
 
   @override
   Future<void> createBookingOrder(BookingCreateOrder order) async {
-    // Chuyển đổi từ BookingCreateOrder sang BookingCreateOrderRequestModel
     final requestModel = _mapToRequestModel(order);
     return await dataSource.createBookingOrder(requestModel);
   }
 
-  // Hàm mapper để chuyển đổi từ entity sang model
   BookingCreateOrderRequestModel _mapToRequestModel(BookingCreateOrder order) {
     return BookingCreateOrderRequestModel(
       appoint: order.appoint?.map((appoint) => BookingCreateBusinessAppointModel(

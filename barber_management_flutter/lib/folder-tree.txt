@@ -1,0 +1,97 @@
+LIB
++-- a.txt
++-- folder-tree.txt
++-- injection.dart
++-- main.dart
++-- data
+¦   +-- datasources
+¦   ¦   +-- auth_remote_data_source.dart
+¦   ¦   +-- booking_category_remote_data_source.dart
+¦   ¦   +-- booking_service_remote_data_source.dart
+¦   ¦   +-- branch_remote_data_source.dart
+¦   ¦   +-- employee_remote_data_source.dart
+¦   ¦   +-- promotion_remote_data_source.dart
+¦   ¦   +-- slider_remote_data_source.dart
+¦   ¦   +-- vip_remote_data_source.dart
+¦   +-- models
+¦   ¦   +-- booking_category_model.dart
+¦   ¦   +-- booking_create_order_request_model.dart
+¦   ¦   +-- branch_model.dart
+¦   ¦   +-- promotion_model.dart
+¦   ¦   +-- user_model.dart
+¦   ¦   +-- vip_model.dart
+¦   +-- repositories
+¦       +-- auth_repository_impl.dart
+¦       +-- booking_category_repository_impl.dart
+¦       +-- booking_service_repository_impl.dart
+¦       +-- branch_repository_impl.dart
+¦       +-- employee_repository_impl.dart
+¦       +-- promotion_repository_impl.dart
+¦       +-- slider_repository_impl.dart
+¦       +-- vip_repository_impl.dart
++-- domain
+¦   +-- entities
+¦   ¦   +-- booking_category.dart
+¦   ¦   +-- booking_create_order.dart
+¦   ¦   +-- branch.dart
+¦   ¦   +-- promotion.dart
+¦   ¦   +-- user.dart
+¦   ¦   +-- vip.dart
+¦   +-- repositories
+¦   ¦   +-- auth_repository.dart
+¦   ¦   +-- booking_category_repository.dart
+¦   ¦   +-- booking_service_repository.dart
+¦   ¦   +-- branch_repository.dart
+¦   ¦   +-- employee_repository.dart
+¦   ¦   +-- promotion_repository.dart
+¦   ¦   +-- slider_repository.dart
+¦   ¦   +-- vip_repository.dart
+¦   +-- usecases
+¦       +-- create_booking_order_use_case.dart
+¦       +-- get_all_branches_use_case.dart
+¦       +-- get_booking_categories_use_case.dart
+¦       +-- get_booking_services_use_case.dart
+¦       +-- get_booking_service_detail_use_case.dart
+¦       +-- get_branches_use_case.dart
+¦       +-- get_employees_by_branch_use_case.dart
+¦       +-- get_employees_by_date_use_case.dart
+¦       +-- get_employees_use_case.dart
+¦       +-- get_promotions_use_case.dart
+¦       +-- get_slider_images_use_case.dart
+¦       +-- get_vips_use_case.dart
+¦       +-- login_use_case.dart
++-- presentation
+    +-- providers
+    ¦   +-- auth_provider.dart
+    +-- screens
+    ¦   +-- BlogScreen.dart
+    ¦   +-- BookingDetailScreen.dart
+    ¦   +-- BookingScreen.dart
+    ¦   +-- BranchScreen.dart
+    ¦   +-- CommitmentScreen.dart
+    ¦   +-- HomeScreen.dart
+    ¦   +-- LoginScreen.dart
+    ¦   +-- MainScreen.dart
+    ¦   +-- ProfileScreen.dart
+    ¦   +-- PromotionScreen.dart
+    ¦   +-- VipScreen.dart
+    +-- widgets
+        +-- animated_face.dart
+        +-- login_form.dart
+
+
+{
+  "appoint": [
+    {
+      "servID": 1,
+      "empID": 2,
+      "appStatus": "OK"
+    }
+  ],
+  "order": {
+    "custID": 3,
+    "createAt": "2025-04-23T11:53:48.267Z",
+    "orderDate": "2025-04-24T08:00:00"
+  },
+  "promoID": 1 
+}

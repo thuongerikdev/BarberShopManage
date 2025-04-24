@@ -141,6 +141,25 @@ namespace BM.Booking.ApplicationService.PaymentModule.Implements
                 return ErrorConst.Error(500, ex.Message);
             }
         }
+        public async Task<ResponeDto> BookingGetOrderByCustomerID(int customerID)
+        {
+            _logger.LogInformation("BookingGetOrderByCustomerID");
+            try
+            {
+                var orders = await _dbContext.BookingOrders.Where(x => x.custID == customerID).ToListAsync();
+                if (orders == null)
+                {
+                    return ErrorConst.Error(500, "Không tìm thấy order");
+                }
+                return ErrorConst.Success("Lấy danh sách order thành công", orders);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+
+        }
     }
    
 }

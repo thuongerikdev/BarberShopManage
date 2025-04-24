@@ -11,4 +11,8 @@ namespace BM.Shared.ApplicationService
     {
         public Task<ResponeDto> GetOrderToOtherDomain(int orderID);
     }
+    public interface IGetPromotionShared
+    {
+        public  Task<ResponeDto> GetCustomerAndPromotionAsync(int customerID, int promoID);
+    }
 }

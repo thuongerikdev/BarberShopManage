@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BM.WebAPI.Migrations.SocialDb
 {
     [DbContext(typeof(SocialDbContext))]
-    [Migration("20250328182759_SocialV1")]
+    [Migration("20250418060546_SocialV1")]
     partial class SocialV1
     {
         /// <inheritdoc />

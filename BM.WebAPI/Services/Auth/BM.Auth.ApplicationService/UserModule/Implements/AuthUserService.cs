@@ -30,6 +30,7 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
         private readonly IEmailService _emailService;
         private readonly ICloudinaryService _cloudinaryService;
         private readonly IAuthEmpService _authEmpService;
+        private readonly IAuthCustomerService _authCustomerService;
 
         public AuthUserService(
             ILogger<AuthUserService> logger,
@@ -38,6 +39,7 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
             IEmailService emailService,
             IConnectionMultiplexer redis,
             ICloudinaryService cloudinaryService,
+            IAuthCustomerService authCustomerService,
             IAuthEmpService authEmpService,
             IConfiguration config) : base(logger, dbContext)
         {
@@ -47,6 +49,7 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
             _emailService = emailService;
             _cloudinaryService = cloudinaryService;
             _authEmpService = authEmpService;
+            _authCustomerService = authCustomerService;
         }
 
         private string SecretKey => _configuration["Jwt:SecretKey"];
@@ -117,11 +120,27 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                 _dbContext.Users.Add(user);
                 await _dbContext.SaveChangesAsync();
 
+                
+
+             
+
                 var userRes = await _dbContext.Users.FirstOrDefaultAsync(x => x.userName == authRegisterDto.userName);
                 if (userRes == null)
                 {
                     return ErrorConst.Error(500, "Không thể tìm thấy người dùng vừa tạo.");
                 }
+
+                var customer = new AuthCreateCustomerDto
+                {
+                    userID = userRes.userID,
+                    customerStatus = "OK",
+                    customerType = "Normal",
+                    vipID = 1
+
+
+                };
+                await _authCustomerService.AuthCreateCustomer(customer);
+                await _dbContext.SaveChangesAsync();
 
                 await _emailService.SendVerificationEmail(userRes.userID, userRes.email, verificationToken);
                 return ErrorConst.Success("Đăng ký thành công. Vui lòng kiểm tra email để xác nhận.", null);

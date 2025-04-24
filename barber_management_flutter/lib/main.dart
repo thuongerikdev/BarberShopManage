@@ -3,7 +3,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:barbermanagemobile/injection.dart';
 import 'package:barbermanagemobile/presentation/providers/auth_provider.dart';
-import 'package:barbermanagemobile/presentation/screens/login_screen.dart';
+import 'package:barbermanagemobile/presentation/screens/LoginScreen.dart';
+
+
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,6 +29,8 @@ Future<void> main() async {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

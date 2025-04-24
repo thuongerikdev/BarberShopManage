@@ -32,6 +32,8 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                     customerType = authCreateCustomerDto.customerType,
                     userID = authCreateCustomerDto.userID,
                     vipID = authCreateCustomerDto.vipID,
+                    percentDiscount = 0,
+                    totalSpent = 0,
                     loyaltyPoints = 0,
 
                 };
@@ -122,6 +124,24 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
         public async Task<ResponeDto> GetCustomerByOrUserID(int userID)
         {
             _logger.LogInformation("GetCustomerByOrUserID");
+            try
+            {
+                var customer = await _dbContext.Customers.Where(x => x.userID == userID).FirstOrDefaultAsync();
+                if (customer == null)
+                {
+                    return ErrorConst.Error(500, "Không tìm thấy khách hàng");
+                }
+                return ErrorConst.Success("Lấy thông tin khách hàng thành công", customer);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+        public async Task <ResponeDto> AuthGetCustomerByUserID(int userID)
+        {
+            _logger.LogInformation("AuthGetCustomerbyUserID");
             try
             {
                 var customer = await _dbContext.Customers.Where(x => x.userID == userID).FirstOrDefaultAsync();

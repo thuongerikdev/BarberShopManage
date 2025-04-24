@@ -1,5 +1,5 @@
-﻿using BM.Booking.ApplicationService.PaymentModule.Abtracts;
-using BM.Booking.Dtos.CRUDdtos;
+﻿using BM.Booking.ApplicationService.BookingModule.Abtracts;
+using BM.Booking.Dtos.CRUDDtos.BM.Booking.Application.DTOs;
 using BM.Constant;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,15 +7,15 @@ namespace BM.WebAPI.Controllers.CRUD.Booking
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class BookingServPromoController : Controller
+    public class BookingSupplierController : Controller
     {
-        protected readonly IBookingServProService _bookingServProService;
-        public BookingServPromoController(IBookingServProService bookingServProService)
+        protected readonly IBookingSupplierService _bookingSupplierService;
+        public BookingSupplierController(IBookingSupplierService bookingSupplierService)
         {
-            _bookingServProService = bookingServProService;
+            _bookingSupplierService = bookingSupplierService;
         }
         [HttpPost("create")]
-        public async Task<IActionResult> Create([FromBody] BookingCreateServPromoDto bookingCreateServProDto)
+        public async Task<IActionResult> Create([FromForm] BookingCreateSupplierDto bookingCreateSupplierDto)
         {
             if (!ModelState.IsValid)
             {
@@ -23,7 +23,7 @@ namespace BM.WebAPI.Controllers.CRUD.Booking
             }
             try
             {
-                var result = await _bookingServProService.BookingCreateServPro(bookingCreateServProDto);
+                var result = await _bookingSupplierService.BookingCreateSupplier(bookingCreateSupplierDto);
                 if (result == null)
                 {
                     return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));
@@ -35,8 +35,8 @@ namespace BM.WebAPI.Controllers.CRUD.Booking
                 return BadRequest(ErrorConst.Error(500, ex.Message));
             }
         }
-        [HttpPost("update")]
-        public async Task<IActionResult> Update([FromBody] BookingUpdateServPromoDto bookingUpdateServProDto)
+        [HttpPut("update")]
+        public async Task<IActionResult> Update([FromForm] BookingUpdateSupplierDto bookingUpdateSupplierDto)
         {
             if (!ModelState.IsValid)
             {
@@ -44,7 +44,7 @@ namespace BM.WebAPI.Controllers.CRUD.Booking
             }
             try
             {
-                var result = await _bookingServProService.BookingUpdateServPro(bookingUpdateServProDto);
+                var result = await _bookingSupplierService.BookingUpdateSupplier(bookingUpdateSupplierDto);
                 if (result == null)
                 {
                     return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));
@@ -56,8 +56,8 @@ namespace BM.WebAPI.Controllers.CRUD.Booking
                 return BadRequest(ErrorConst.Error(500, ex.Message));
             }
         }
-        [HttpDelete("delete/{servProID}")]
-        public async Task<IActionResult> Delete(int servProID)
+        [HttpDelete("delete/{supplierID}")]
+        public async Task<IActionResult> Delete(int supplierID)
         {
             if (!ModelState.IsValid)
             {
@@ -65,7 +65,7 @@ namespace BM.WebAPI.Controllers.CRUD.Booking
             }
             try
             {
-                var result = await _bookingServProService.BookingDeleteServPro(servProID);
+                var result = await _bookingSupplierService.BookingDeleteSupplier(supplierID);
                 if (result == null)
                 {
                     return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));
@@ -77,17 +77,16 @@ namespace BM.WebAPI.Controllers.CRUD.Booking
                 return BadRequest(ErrorConst.Error(500, ex.Message));
             }
         }
-        [HttpGet("get/{servProID}")]
-        public async Task<IActionResult> Get(int servProID)
+        [HttpGet("get/{supplierID}")]
+        public async Task<IActionResult> Get(int supplierID)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ErrorConst.Error(500, "Đầu vào không hợp lệ"));
-
             }
             try
             {
-                var result = await _bookingServProService.BookingGetServPro(servProID);
+                var result = await _bookingSupplierService.BookingGetSupplier(supplierID);
                 if (result == null)
                 {
                     return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));
@@ -97,7 +96,6 @@ namespace BM.WebAPI.Controllers.CRUD.Booking
             catch (Exception ex)
             {
                 return BadRequest(ErrorConst.Error(500, ex.Message));
-
             }
         }
         [HttpGet("getall")]
@@ -109,7 +107,7 @@ namespace BM.WebAPI.Controllers.CRUD.Booking
             }
             try
             {
-                var result = await _bookingServProService.BookingGetAllServPro();
+                var result = await _bookingSupplierService.BookingGetAllSupplier();
                 if (result == null)
                 {
                     return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));

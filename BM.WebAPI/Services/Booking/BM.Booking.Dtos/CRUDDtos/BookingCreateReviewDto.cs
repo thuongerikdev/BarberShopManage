@@ -9,7 +9,7 @@ namespace BM.Booking.Dtos.CRUDdtos
 {
     public class BookingCreateReviewDto
     {
-        public int appID { get; set; }
+        public int orderID { get; set; }
         public int rating { get; set; }
         public string reviewContent { get; set; }
         public DateTime reviewDate { get; set; }
@@ -18,7 +18,7 @@ namespace BM.Booking.Dtos.CRUDdtos
     public class BookingUpdateReviewDto
     {
         public int reviewID { get; set; }
-        public int appID { get; set; }
+        public int orderID { get; set; }
         public int rating { get; set; }
         public string reviewContent { get; set; }
         public DateTime reviewDate { get; set; }
@@ -27,7 +27,7 @@ namespace BM.Booking.Dtos.CRUDdtos
     public class BookingReadReviewDto
     {
         public int reviewID { get; set; }
-        public int appID { get; set; }
+        public int orderID { get; set; }
         public int rating { get; set; }
         public string reviewContent { get; set; }
         public DateTime reviewDate { get; set; }

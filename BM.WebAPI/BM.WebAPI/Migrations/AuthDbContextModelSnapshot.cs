@@ -37,6 +37,10 @@ namespace BM.WebAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("branchImage")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("branchName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -85,6 +89,8 @@ namespace BM.WebAPI.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("cusPromoID");
+
+                    b.HasIndex("customerID");
 
                     b.HasIndex("promoID");
 
@@ -252,6 +258,50 @@ namespace BM.WebAPI.Migrations
                     b.HasKey("positionID");
 
                     b.ToTable("AuthPosition", "auth");
+                });
+
+            modelBuilder.Entity("BM.Auth.Domain.AuthPromotion", b =>
+                {
+                    b.Property<int>("promoID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("promoID"));
+
+                    b.Property<string>("promoDescription")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<double>("promoDiscount")
+                        .HasColumnType("float");
+
+                    b.Property<DateTime>("promoEnd")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("promoImage")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("promoName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("promoStart")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("promoStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("promoType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("promoID");
+
+                    b.ToTable("Promos");
                 });
 
             modelBuilder.Entity("BM.Auth.Domain.AuthRole", b =>
@@ -511,11 +561,17 @@ namespace BM.WebAPI.Migrations
                     b.Property<double>("vipDiscount")
                         .HasColumnType("float");
 
-                    b.Property<int>("vipStatus")
-                        .HasColumnType("int");
+                    b.Property<string>("vipImage")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("vipType")
-                        .HasColumnType("int");
+                    b.Property<string>("vipStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("vipType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("vipID");
 
@@ -526,11 +582,19 @@ namespace BM.WebAPI.Migrations
                 {
                     b.HasOne("BM.Auth.Domain.AuthCustomer", "AuthCustomer")
                         .WithMany("AuthCusPromos")
+                        .HasForeignKey("customerID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BM.Auth.Domain.AuthPromotion", "AuthPromotion")
+                        .WithMany("AuthCusPromos")
                         .HasForeignKey("promoID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("AuthCustomer");
+
+                    b.Navigation("AuthPromotion");
                 });
 
             modelBuilder.Entity("BM.Auth.Domain.AuthCustomer", b =>
@@ -659,6 +723,11 @@ namespace BM.WebAPI.Migrations
             modelBuilder.Entity("BM.Auth.Domain.AuthPosition", b =>
                 {
                     b.Navigation("AuthEmps");
+                });
+
+            modelBuilder.Entity("BM.Auth.Domain.AuthPromotion", b =>
+                {
+                    b.Navigation("AuthCusPromos");
                 });
 
             modelBuilder.Entity("BM.Auth.Domain.AuthRole", b =>

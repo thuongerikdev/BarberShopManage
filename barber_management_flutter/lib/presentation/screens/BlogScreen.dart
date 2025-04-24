@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class BlogScreen extends StatefulWidget {
+  const BlogScreen({super.key});
+
   @override
   _BlogScreenState createState() => _BlogScreenState();
 }

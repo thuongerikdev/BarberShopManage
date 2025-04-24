@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
-import '../entities/user.dart';
-import '../repositories/auth_repository.dart';
+// import 'package:barbermanagemobile/data/models/user_model.dart';
+import 'package:barbermanagemobile/domain/entities/user.dart';
+import 'package:barbermanagemobile/domain/repositories/auth_repository.dart';
 
 class LoginUseCase {
   final AuthRepository repository;
@@ -11,11 +12,7 @@ class LoginUseCase {
     final result = await repository.login(email, password);
     return result.fold(
       (failure) => Left(failure),
-      (userModel) => Right(User(
-        name: userModel.name,
-        userId: userModel.userId,
-        token: userModel.token,
-      )),
+      (userModel) => Right(userModel),
     );
   }
 }

@@ -24,7 +24,9 @@ namespace BM.Booking.Domain
 
         public virtual BookingInvoice BookingInvoice { get; set; }
         public virtual ICollection< BookingAppointment> BookingAppointments { get; set; }
-   
+        public virtual ICollection<BookingOrderProduct> BookingOrderProducts { get; set; }
+        public virtual BookingReview BookingReview { get; set; }
+
 
     }
 }

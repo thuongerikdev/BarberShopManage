@@ -12,7 +12,7 @@ namespace BM.Constant
         {
             return new ResponeDto
             {
-                ErrorCode = 0,
+                ErrorCode = 200,
                 ErrorMessager = errorMessage,
                 Data = data ?? new List<object>() // Nếu không có dữ liệu, trả về danh sách rỗng
             };

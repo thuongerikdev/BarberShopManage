@@ -4,6 +4,7 @@ using BM.Auth.Domain;
 using BM.Auth.Dtos.User;
 using BM.Auth.Infrastructure;
 using BM.Constant;
+using BM.Shared.ApplicationService;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -15,20 +16,31 @@ namespace BM.Auth.ApplicationService.VipModule.Implements
 {
     public class AuthVipService : AuthServiceBase, IAuthVipService
     {
-        public AuthVipService(ILogger<AuthVipService> logger, AuthDbContext dbContext) : base(logger, dbContext)
+        protected readonly ICloudinaryService _cloudinaryService;
+        public AuthVipService(ILogger<AuthVipService> logger, AuthDbContext dbContext , ICloudinaryService cloudinaryService) : base(logger, dbContext)
         {
+          
+            _cloudinaryService = cloudinaryService; 
         }
         public async Task<ResponeDto> AuthCreateVip(AuthCreateVip authCreateVip)
         {
             _logger.LogInformation("AuthCreateVip");
             try
             {
+
+                var img = await _cloudinaryService.UploadImageAsync(authCreateVip.Image);
+                if (img == null)
+                {
+                    return ErrorConst.Error(500, "Tải ảnh lên thất bại");
+                }
+
                 var vip = new AuthVip
                 {
                     vipCost = authCreateVip.vipCost,
                     vipDiscount = authCreateVip.vipDiscount,
                     vipStatus = authCreateVip.vipStatus,
-                    vipType = authCreateVip.vipType
+                    vipType = authCreateVip.vipType,
+                    vipImage = img,
                 };
                 _dbContext.Vips.Add(vip);
                 await _dbContext.SaveChangesAsync();
@@ -46,6 +58,7 @@ namespace BM.Auth.ApplicationService.VipModule.Implements
             try
             {
                 var vip = await _dbContext.Vips.FindAsync(authUpdateVip.vipID);
+                var img = await _cloudinaryService.UploadImageAsync(authUpdateVip.Image);
                 if (vip == null)
                 {
                     return ErrorConst.Error(500, "Không tìm thấy vip");
@@ -54,6 +67,7 @@ namespace BM.Auth.ApplicationService.VipModule.Implements
                 vip.vipDiscount = authUpdateVip.vipDiscount;
                 vip.vipStatus = authUpdateVip.vipStatus;
                 vip.vipType = authUpdateVip.vipType;
+                vip.vipImage = img;
                 await _dbContext.SaveChangesAsync();
                 return ErrorConst.Success("Cập nhật vip thành công", vip);
 

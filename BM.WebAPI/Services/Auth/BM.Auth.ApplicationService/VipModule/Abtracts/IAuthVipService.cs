@@ -37,4 +37,12 @@ namespace BM.Auth.ApplicationService.VipModule.Abtracts
         Task<ResponeDto> AuthGetCusPromo(int cusPromoID);
         Task<ResponeDto> AuthGetAllCusPromo();
     }
+    public interface IAuthPromoService
+    {
+        Task<ResponeDto> AuthCreatePromo(AuthCreatePromo authCreatePromo);
+        Task<ResponeDto> AuthUpdatePromo(AuthUpdatePromo authUpdatePromo);
+        Task<ResponeDto> AuthDeletePromo(int promoID);
+        Task<ResponeDto> AuthGetPromo(int promoID);
+        Task<ResponeDto> AuthGetAllPromo();
+    }
 }

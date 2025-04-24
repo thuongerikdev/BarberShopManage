@@ -13,6 +13,8 @@ namespace BM.Social.Dtos
         public string blogContent { get; set; }
         public string blogStatus { get; set; }
         public int blogLike { get; set; } = 0;
+        public string blogDescription { get; set; }
+        public IFormFile blogImage { get; set; }
     }
     public class SocialUpdateBlogDto
     {
@@ -21,6 +23,8 @@ namespace BM.Social.Dtos
         public string blogContent { get; set; }
         public string blogStatus { get; set; }
         public int blogLike { get; set; }
+        public string blogDescription { get; set; }
+        public IFormFile blogImage { get; set; }
     }
     public class SocialCreateCommentDto
     {
@@ -29,6 +33,8 @@ namespace BM.Social.Dtos
         public string commentContent { get; set; }
         public string commentStatus { get; set; }
         public int commentLike { get; set; }
+
+
     }
     public class SocialUpdateCommentDto
     {

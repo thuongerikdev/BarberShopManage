@@ -34,4 +34,21 @@ namespace BM.Booking.Dtos.CRUDdtos
         public string servStatus { get; set; }
         public string servImage { get; set; }
     }
+
+
+    public class BookingCreateServiceDetailDto
+    {
+      
+        public int servID { get; set; }
+        public double servPrice { get; set; }
+        public IFormFile servImage { get; set; }
+        public string servName { get; set; }
+        public string servDescription { get; set; }
+        public string servStatus { get; set; }
+    }
+    public class BookingUpdateServiceDetailDto : BookingCreateServiceDetailDto
+    {
+        public int serviceDetailID { get; set; }
+   
+    }
 }

@@ -28,7 +28,7 @@ namespace BM.Booking.ApplicationService.BookingModule.Implements
                 {
                     appStatus = a.appStatus,
                     empID = a.empID,
-                    servID = a.servID,
+                    serviceDetailID = a.servID,
                     orderID = a.orderID,
 
                 }).ToList();
@@ -54,7 +54,7 @@ namespace BM.Booking.ApplicationService.BookingModule.Implements
                 }
                 appoint.appStatus = bookingUpdateAppointDto.appStatus;
                 appoint.empID = bookingUpdateAppointDto.empID;
-                appoint.servID = bookingUpdateAppointDto.servID;
+                appoint.serviceDetailID = bookingUpdateAppointDto.servID;
                 appoint.orderID = bookingUpdateAppointDto.orderID;
                 await _dbContext.SaveChangesAsync();
                 return ErrorConst.Success("Cập nhật dịch vụ thành công", appoint);

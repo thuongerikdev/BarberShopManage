@@ -15,27 +15,30 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             _authScheduleService = authScheduleService;
         }
         [HttpPost("create")]
-        public async Task<IActionResult> AuthCreateSchedule([FromBody] AuthCreateScheduleDto authCreateScheduleDto)
+        [HttpPost]
+        public async Task<IActionResult> AuthCreateSchedule([FromBody] List<AuthCreateScheduleDto> authCreateScheduleDtos)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ErrorConst.Error(500, "Đầu vào không hợp lệ"));
             }
+
             try
             {
-                var result = await _authScheduleService.AuthCreateSchedule(authCreateScheduleDto);
+                var result = await _authScheduleService.AuthCreateSchedule(authCreateScheduleDtos);
                 if (result == null)
                 {
-                    return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));
+                    return BadRequest(ErrorConst.Error(500, "Không thể tạo lịch"));
                 }
+
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(ErrorConst.Error(500, ex.Message));
             }
-
         }
+
         [HttpPut("update")]
         public async Task<IActionResult> AuthUpdateSchedule([FromBody] AuthUpdateScheduleDto authUpdateScheduleDto)
         {
@@ -121,7 +124,7 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             }
         }
         [HttpGet("getEmpByDate")]
-        public async Task<IActionResult> AuthGetEmpByDate(DateTime date)
+        public async Task<IActionResult> AuthGetEmpByDate(DateTime date , int branchesID)
         {
             if (!ModelState.IsValid)
             {
@@ -129,7 +132,7 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             }
             try
             {
-                var result = await _authScheduleService.AuthGetEmpByDate(date);
+                var result = await _authScheduleService.GetEmployeesByDateAndBranch(date , branchesID);
                 if (result == null)
                 {
                     return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));

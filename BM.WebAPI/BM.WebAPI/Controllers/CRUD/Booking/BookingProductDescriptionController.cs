@@ -1,5 +1,5 @@
-﻿using BM.Booking.ApplicationService.PaymentModule.Abtracts;
-using BM.Booking.Dtos.CRUDdtos;
+﻿using BM.Booking.ApplicationService.BookingModule.Abtracts;
+using BM.Booking.Dtos.CRUDDtos.BM.Booking.Application.DTOs;
 using BM.Constant;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,15 +7,15 @@ namespace BM.WebAPI.Controllers.CRUD.Booking
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class BookingPromotionController : Controller
+    public class BookingProductDescriptionController : Controller
     {
-        protected readonly IBookingPromoService _bookingPromoService;
-        public BookingPromotionController(IBookingPromoService bookingPromoService)
+        protected readonly IBookingProductDescriptionService _bookingProductDescriptionService;
+        public BookingProductDescriptionController(IBookingProductDescriptionService bookingProductDescriptionService)
         {
-            _bookingPromoService = bookingPromoService;
+            _bookingProductDescriptionService = bookingProductDescriptionService;
         }
         [HttpPost("create")]
-        public async Task<IActionResult> Create([FromBody] BookingCreatePromotDto bookingCreatePromoDto)
+        public async Task<IActionResult> Create([FromForm] BookingCreateProductDescriptionDto bookingCreateProductDescriptionDto)
         {
             if (!ModelState.IsValid)
             {
@@ -23,7 +23,7 @@ namespace BM.WebAPI.Controllers.CRUD.Booking
             }
             try
             {
-                var result = await _bookingPromoService.BookingCreatePromo(bookingCreatePromoDto);
+                var result = await _bookingProductDescriptionService.BookingCreateProductDescription(bookingCreateProductDescriptionDto);
                 if (result == null)
                 {
                     return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));
@@ -35,8 +35,8 @@ namespace BM.WebAPI.Controllers.CRUD.Booking
                 return BadRequest(ErrorConst.Error(500, ex.Message));
             }
         }
-        [HttpPost("update")]
-        public async Task<IActionResult> Update([FromBody] BookingUpdatePromotDto bookingUpdatePromoDto)
+        [HttpPut("update")]
+        public async Task<IActionResult> Update([FromForm] BookingUpdateProductDescriptionDto bookingUpdateProductDescriptionDto)
         {
             if (!ModelState.IsValid)
             {
@@ -44,7 +44,7 @@ namespace BM.WebAPI.Controllers.CRUD.Booking
             }
             try
             {
-                var result = await _bookingPromoService.BookingUpdatePromo(bookingUpdatePromoDto);
+                var result = await _bookingProductDescriptionService.BookingUpdateProductDescription(bookingUpdateProductDescriptionDto);
                 if (result == null)
                 {
                     return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));
@@ -56,8 +56,8 @@ namespace BM.WebAPI.Controllers.CRUD.Booking
                 return BadRequest(ErrorConst.Error(500, ex.Message));
             }
         }
-        [HttpDelete("delete/{promoID}")]
-        public async Task<IActionResult> Delete(int promoID)
+        [HttpDelete("delete/{productDescriptionID}")]
+        public async Task<IActionResult> Delete(int productDescriptionID)
         {
             if (!ModelState.IsValid)
             {
@@ -65,7 +65,7 @@ namespace BM.WebAPI.Controllers.CRUD.Booking
             }
             try
             {
-                var result = await _bookingPromoService.BookingDeletePromo(promoID);
+                var result = await _bookingProductDescriptionService.BookingDeleteProductDescription(productDescriptionID);
                 if (result == null)
                 {
                     return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));
@@ -76,18 +76,18 @@ namespace BM.WebAPI.Controllers.CRUD.Booking
             {
                 return BadRequest(ErrorConst.Error(500, ex.Message));
             }
-        }
-        [HttpGet("get/{promoID}")]
-        public async Task<IActionResult> Get(int promoID)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ErrorConst.Error(500, "Đầu vào không hợp lệ"));
 
+        }
+        [HttpGet("get/{productDescriptionID}")]
+        public async Task<IActionResult> Get(int productDescriptionID)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ErrorConst.Error(500, "Đầu vào không hợp lệ"));
             }
             try
             {
-                var result = await _bookingPromoService.BookingGetPromo(promoID);
+                var result = await _bookingProductDescriptionService.BookingGetProductDescription(productDescriptionID);
                 if (result == null)
                 {
                     return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));
@@ -108,7 +108,7 @@ namespace BM.WebAPI.Controllers.CRUD.Booking
             }
             try
             {
-                var result = await _bookingPromoService.BookingGetAllPromo();
+                var result = await _bookingProductDescriptionService.BookingGetAllProductDescription();
                 if (result == null)
                 {
                     return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));
