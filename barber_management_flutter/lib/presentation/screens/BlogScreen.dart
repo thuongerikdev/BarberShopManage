@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
+import 'package:barbermanagemobile/domain/entities/blog.dart';
+import 'package:barbermanagemobile/domain/usecases/get_blogs_use_case.dart';
+import 'package:barbermanagemobile/presentation/screens/BlogDetailScreen.dart';
 
 class BlogScreen extends StatefulWidget {
   const BlogScreen({super.key});
@@ -8,23 +12,7 @@ class BlogScreen extends StatefulWidget {
 }
 
 class _BlogScreenState extends State<BlogScreen> {
-  final List<Map<String, String>> blogs = [
-    {
-      'title': 'Top 10 Kiểu Tóc Đẹp 2023',
-      'summary': 'Khám phá những kiểu tóc hot nhất năm nay.',
-      'image': 'https://via.placeholder.com/150',
-    },
-    {
-      'title': 'Cách Chăm Sóc Tóc Tại Nhà',
-      'summary': 'Bí quyết giữ tóc khỏe mạnh không cần salon.',
-      'image': 'https://via.placeholder.com/150',
-    },
-    {
-      'title': 'Xu Hướng Nhuộm Tóc Mới',
-      'summary': 'Những màu tóc đang dẫn đầu xu hướng.',
-      'image': 'https://via.placeholder.com/150',
-    },
-  ];
+  final GetBlogsUseCase _getBlogsUseCase = GetIt.instance<GetBlogsUseCase>();
 
   static const primaryColor = Color(0xFF4E342E);
   static const backgroundColor = Color(0xFF212121);
@@ -32,11 +20,8 @@ class _BlogScreenState extends State<BlogScreen> {
   static const accentColor = Color(0xFF8D6E63);
 
   Future<void> _refreshData() async {
-    // Giả lập làm mới dữ liệu
     await Future.delayed(Duration(seconds: 1)); // Giả lập thời gian load
-    setState(() {
-      // Cập nhật giao diện hoặc gọi API nếu có
-    });
+    setState(() {});
     _showSnackBar(context, "Dữ liệu blog đã được làm mới");
   }
 
@@ -65,68 +50,99 @@ class _BlogScreenState extends State<BlogScreen> {
                   ),
                 ),
               ),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: blogs.length,
-                itemBuilder: (context, index) {
-                  return Card(
-                    margin: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    elevation: 8,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    color: primaryColor.withOpacity(0.9),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.network(
-                              blogs[index]['image']!,
-                              width: 60,
-                              height: 60,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => Icon(Icons.broken_image, color: Colors.redAccent),
+              FutureBuilder<List<Blog>>(
+                future: _getBlogsUseCase.call(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(accentColor)));
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Lỗi: ${snapshot.error}', style: TextStyle(color: Colors.redAccent, fontSize: 14)));
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(child: Text('Không có dữ liệu blog', style: TextStyle(color: textColor, fontSize: 14)));
+                  }
+
+                  final blogs = snapshot.data!;
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: blogs.length,
+                    itemBuilder: (context, index) {
+                      final blog = blogs[index];
+                      final blogImage = blog.blogImage.isNotEmpty
+                          ? blog.blogImage
+                          : 'https://via.placeholder.com/150';
+                      final blogTitle = blog.blogTitle.isNotEmpty ? blog.blogTitle : 'Không có tiêu đề';
+                      final blogDescription = blog.blogDescription.isNotEmpty ? blog.blogDescription : 'Không có mô tả';
+
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => BlogDetailScreen(blogId: blog.blogID),
                             ),
-                          ),
-                          SizedBox(width: 16), // Khoảng cách giữa ảnh và chữ
-                          Expanded(
-                            child: Column(
+                          );
+                        },
+                        child: Card(
+                          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          elevation: 8,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          color: primaryColor.withOpacity(0.9),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  blogs[index]['title']!,
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    color: textColor,
-                                    fontFamily: 'Poppins',
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    blogImage,
+                                    width: 60,
+                                    height: 60,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) => Icon(Icons.broken_image, color: Colors.redAccent),
                                   ),
                                 ),
-                                SizedBox(height: 8),
-                                Text(
-                                  blogs[index]['summary']!,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[400],
-                                    fontFamily: 'Poppins',
+                                SizedBox(width: 16), // Khoảng cách giữa ảnh và chữ
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        blogTitle,
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w600,
+                                          color: textColor,
+                                          fontFamily: 'Poppins',
+                                        ),
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        blogDescription,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey[400],
+                                          fontFamily: 'Poppins',
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
                                   ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                SizedBox(width: 10),
+                                Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 22,
+                                  color: accentColor,
                                 ),
                               ],
                             ),
                           ),
-                          SizedBox(width: 10),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            size: 22,
-                            color: accentColor,
-                          ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      );
+                    },
                   );
                 },
               ),
@@ -142,7 +158,7 @@ class _BlogScreenState extends State<BlogScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          "Đã chọn $message",
+          message,
           style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w500, color: Colors.white),
         ),
         behavior: SnackBarBehavior.floating,

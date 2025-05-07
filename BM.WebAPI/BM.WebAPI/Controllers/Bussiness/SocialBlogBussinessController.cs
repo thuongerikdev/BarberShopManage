@@ -16,36 +16,37 @@ namespace BM.WebAPI.Controllers.Bussiness
             _socialBussiness = socialBussiness;
         }
 
-        [HttpGet("create")] // Route: api/SocialBlogBussiness/create
-        public IActionResult Create()
-        {
-            return View();
-        }
 
-        [HttpPost("createBlog")]
-        public async Task<IActionResult> Create([FromForm] CreateBlogRequestDto request)
+
+        [HttpPost("createBlog")] // Route: api/SocialBlogBussiness/createBlog
+        public async Task<IActionResult> Create([FromForm] SocicalCreateBlogBussiness socicalCreateBlogBussiness)
         {
-            if (!ModelState.IsValid || request == null)
+            if (!ModelState.IsValid)
             {
-                return BadRequest(ErrorConst.Error(400, "Dữ liệu đầu vào không hợp lệ"));
+                return BadRequest(ErrorConst.Error(400, "Invalid input data."));
             }
-
+            // Validate the input data
             try
             {
-                var sections = request.Topics.Select((t, i) => (topic: t, content: request.Contents[i], image: i < request.Images.Count ? request.Images[i] : null)).ToList();
-                var blogResponse = await _socialBussiness.CreateBlogAsync(request.BlogTitle, request.BlogStatus, sections);
-
-                if (blogResponse.ErrorCode != 0) // Sửa từ 200 thành 0
+                if (socicalCreateBlogBussiness == null)
                 {
-                    return BadRequest(blogResponse);
+
+                    return BadRequest(ErrorConst.Error(400, "Invalid blog data provided."));
                 }
 
-                return Ok(blogResponse);
+                var result = await _socialBussiness.CreateBlogAsync(socicalCreateBlogBussiness);
+                if (result.ErrorCode != 200)
+                {
+                    return BadRequest(result);
+                }
+
+                return Ok(result);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ErrorConst.Error(500, $"Lỗi hệ thống: {ex.Message}"));
+                return BadRequest(ErrorConst.Error(500, ex.Message));
             }
+            
         }
 
         [HttpGet("detail/{id}")] // Route: api/SocialBlogBussiness/detail/{id}

@@ -177,5 +177,28 @@ namespace BM.Auth.ApplicationService.VipModule.Implements
                 return ErrorConst.Error(500, ex.Message);
             }
         }
+        public async Task <ResponeDto> GetCusPromoByCustomerID (int customerID)
+        {
+            _logger.LogInformation("AuthGetCusPromoByCustomer");
+            try
+            {
+                var cusPromo = await _dbContext.CusPromos
+                    .Where(x => x.customerID == customerID)
+                    .Include(x => x.AuthCustomer)
+                    .Include(x => x.AuthPromotion)
+                    .Select(x => x.AuthPromotion )
+                    .ToListAsync();
+                if (cusPromo == null || !cusPromo.Any())
+                {
+                    return ErrorConst.Error(500, "Không tìm thấy khuyến mãi cho khách hàng này");
+                }
+                return ErrorConst.Success("Lấy khuyến mãi khách hàng thành công", cusPromo);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
     }
 }

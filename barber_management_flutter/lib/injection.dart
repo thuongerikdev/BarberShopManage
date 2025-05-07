@@ -9,6 +9,8 @@ import 'package:barbermanagemobile/data/datasources/promotion_remote_data_source
 import 'package:barbermanagemobile/data/datasources/slider_remote_data_source.dart';
 import 'package:barbermanagemobile/data/datasources/booking_category_remote_data_source.dart';
 import 'package:barbermanagemobile/data/datasources/vip_remote_data_source.dart';
+import 'package:barbermanagemobile/data/datasources/blog_remote_data_source.dart';
+import 'package:barbermanagemobile/data/datasources/customer_promotion_remote_data_source.dart';
 import 'package:barbermanagemobile/data/repositories/auth_repository_impl.dart';
 import 'package:barbermanagemobile/data/repositories/booking_order_repository_impl.dart';
 import 'package:barbermanagemobile/data/repositories/booking_service_repository_impl.dart';
@@ -19,6 +21,8 @@ import 'package:barbermanagemobile/data/repositories/promotion_repository_impl.d
 import 'package:barbermanagemobile/data/repositories/slider_repository_impl.dart';
 import 'package:barbermanagemobile/data/repositories/booking_category_repository_impl.dart';
 import 'package:barbermanagemobile/data/repositories/vip_repository_impl.dart';
+import 'package:barbermanagemobile/data/repositories/blog_repository_impl.dart';
+import 'package:barbermanagemobile/data/repositories/customer_promotion_repository_impl.dart';
 import 'package:barbermanagemobile/domain/repositories/auth_repository.dart';
 import 'package:barbermanagemobile/domain/repositories/booking_order_repository.dart';
 import 'package:barbermanagemobile/domain/repositories/booking_service_repository.dart';
@@ -29,6 +33,8 @@ import 'package:barbermanagemobile/domain/repositories/promotion_repository.dart
 import 'package:barbermanagemobile/domain/repositories/slider_repository.dart';
 import 'package:barbermanagemobile/domain/repositories/booking_category_repository.dart';
 import 'package:barbermanagemobile/domain/repositories/vip_repository.dart';
+import 'package:barbermanagemobile/domain/repositories/blog_repository.dart';
+import 'package:barbermanagemobile/domain/repositories/customer_promotion_repository.dart';
 import 'package:barbermanagemobile/domain/usecases/create_booking_order_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/get_all_branches_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/get_booking_service_detail_use_case.dart';
@@ -45,9 +51,14 @@ import 'package:barbermanagemobile/domain/usecases/get_vips_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/get_branches_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/get_user_by_id_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/login_use_case.dart';
-import 'package:barbermanagemobile/presentation/providers/auth_provider.dart';
+import 'package:barbermanagemobile/domain/usecases/register_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/delete_booking_order_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/pay_booking_order_use_case.dart';
+import 'package:barbermanagemobile/domain/usecases/get_blogs_use_case.dart';
+import 'package:barbermanagemobile/domain/usecases/get_blog_detail_use_case.dart';
+import 'package:barbermanagemobile/domain/usecases/get_customer_promotions_use_case.dart';
+import 'package:barbermanagemobile/domain/usecases/create_customer_promotion_use_case.dart';
+import 'package:barbermanagemobile/presentation/providers/auth_provider.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -65,8 +76,11 @@ void _registerAuthDependencies(GetIt sl) {
   sl.registerLazySingleton<GetUserByIDUseCase>(
     () => GetUserByIDUseCase(sl<AuthRepository>()),
   );
+  sl.registerLazySingleton<RegisterUseCase>(
+    () => RegisterUseCase(sl<AuthRepository>()),
+  );
   sl.registerFactory<AuthProvider>(
-    () => AuthProvider(sl<LoginUseCase>()),
+    () => AuthProvider(sl<LoginUseCase>(), sl<RegisterUseCase>()),
   );
 }
 
@@ -122,8 +136,8 @@ void _registerBookingDependencies(GetIt sl) {
     () => DeleteBookingOrderUseCase(sl<BookingOrderRepository>()),
   );
   sl.registerLazySingleton<PayBookingOrderUseCase>(
-  () => PayBookingOrderUseCase(sl<BookingOrderRepository>()),
-);
+    () => PayBookingOrderUseCase(sl<BookingOrderRepository>()),
+  );
 }
 
 // Register dependencies for Employee module
@@ -204,6 +218,38 @@ void _registerBranchDependencies(GetIt sl) {
   );
 }
 
+// Register dependencies for Blog module
+void _registerBlogDependencies(GetIt sl) {
+  sl.registerLazySingleton<BlogRemoteDataSource>(
+    () => BlogRemoteDataSourceImpl(),
+  );
+  sl.registerLazySingleton<BlogRepository>(
+    () => BlogRepositoryImpl(sl<BlogRemoteDataSource>()),
+  );
+  sl.registerLazySingleton<GetBlogsUseCase>(
+    () => GetBlogsUseCase(sl<BlogRepository>()),
+  );
+  sl.registerLazySingleton<GetBlogDetailUseCase>(
+    () => GetBlogDetailUseCase(sl<BlogRepository>()),
+  );
+}
+
+// Register dependencies for Customer Promotion module
+void _registerCustomerPromotionDependencies(GetIt sl) {
+  sl.registerLazySingleton<CustomerPromotionRemoteDataSource>(
+    () => CustomerPromotionRemoteDataSourceImpl(),
+  );
+  sl.registerLazySingleton<CustomerPromotionRepository>(
+    () => CustomerPromotionRepositoryImpl(sl<CustomerPromotionRemoteDataSource>()),
+  );
+  sl.registerLazySingleton<GetCustomerPromotionsUseCase>(
+    () => GetCustomerPromotionsUseCase(sl<CustomerPromotionRepository>()),
+  );
+  sl.registerLazySingleton<CreateCustomerPromotionUseCase>(
+    () => CreateCustomerPromotionUseCase(sl<CustomerPromotionRepository>()),
+  );
+}
+
 // Setup all dependencies
 void setupDependencies() {
   final sl = getIt;
@@ -216,6 +262,8 @@ void setupDependencies() {
   _registerPromotionDependencies(sl);
   _registerVipDependencies(sl);
   _registerBranchDependencies(sl);
+  _registerBlogDependencies(sl);
+  _registerCustomerPromotionDependencies(sl);
 }
 
 // Verify that critical dependencies are registered
@@ -250,11 +298,20 @@ void verifyDependencies() {
   if (!getIt.isRegistered<BranchRepository>()) {
     throw Exception('BranchRepository is not registered');
   }
+  if (!getIt.isRegistered<BlogRepository>()) {
+    throw Exception('BlogRepository is not registered');
+  }
+  if (!getIt.isRegistered<CustomerPromotionRepository>()) {
+    throw Exception('CustomerPromotionRepository is not registered');
+  }
   if (!getIt.isRegistered<LoginUseCase>()) {
     throw Exception('LoginUseCase is not registered');
   }
   if (!getIt.isRegistered<GetUserByIDUseCase>()) {
     throw Exception('GetUserByIDUseCase is not registered');
+  }
+  if (!getIt.isRegistered<RegisterUseCase>()) {
+    throw Exception('RegisterUseCase is not registered');
   }
   if (!getIt.isRegistered<GetCustomerByUserIDUseCase>()) {
     throw Exception('GetCustomerByUserIDUseCase is not registered');
@@ -290,6 +347,18 @@ void verifyDependencies() {
     throw Exception('DeleteBookingOrderUseCase is not registered');
   }
   if (!getIt.isRegistered<PayBookingOrderUseCase>()) {
-  throw Exception('PayBookingOrderUseCase is not registered');
-}
+    throw Exception('PayBookingOrderUseCase is not registered');
+  }
+  if (!getIt.isRegistered<GetBlogsUseCase>()) {
+    throw Exception('GetBlogsUseCase is not registered');
+  }
+  if (!getIt.isRegistered<GetBlogDetailUseCase>()) {
+    throw Exception('GetBlogDetailUseCase is not registered');
+  }
+  if (!getIt.isRegistered<GetCustomerPromotionsUseCase>()) {
+    throw Exception('GetCustomerPromotionsUseCase is not registered');
+  }
+  if (!getIt.isRegistered<CreateCustomerPromotionUseCase>()) {
+    throw Exception('CreateCustomerPromotionUseCase is not registered');
+  }
 }

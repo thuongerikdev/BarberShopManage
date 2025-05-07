@@ -28,4 +28,9 @@ namespace BM.Auth.Dtos
         public string? customerType { get; set; }
         public string? customerStatus { get; set; }
     }
+    public class AuthUpdateVipCustomerDto
+    {
+        public int customerID { get; set; }
+        public double totalAmount { get; set; }
+    }
 }

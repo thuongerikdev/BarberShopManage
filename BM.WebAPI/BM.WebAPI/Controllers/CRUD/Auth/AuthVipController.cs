@@ -115,6 +115,27 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
                 return BadRequest(ErrorConst.Error(500, ex.Message));
             }
         }
+        [HttpGet("getvipbyuser/{userID}")]
+        public async Task<IActionResult> GetAllVipByUser(int userID)
+        {
+            if (userID <= 0)
+            {
+                return BadRequest(ErrorConst.Error(400, "UserID không hợp lệ."));
+            }
+            try
+            {
+                var result = await _authVipService.AuthGetVipByUserID(userID);
+                if (result == null)
+                {
+                    return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));
+                }
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ErrorConst.Error(500, ex.Message));
+            }
+        }
 
     }
 }

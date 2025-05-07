@@ -9,6 +9,8 @@ import 'package:barbermanagemobile/domain/usecases/get_employees_by_branch_use_c
 import 'package:barbermanagemobile/domain/usecases/get_employees_by_date_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/get_customer_by_user_id_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/get_promotions_use_case.dart';
+import 'package:barbermanagemobile/domain/usecases/get_customer_promotions_use_case.dart';
+import 'package:barbermanagemobile/domain/usecases/create_customer_promotion_use_case.dart';
 import 'package:barbermanagemobile/presentation/providers/auth_provider.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
@@ -31,12 +33,15 @@ class _BookingScreenState extends State<BookingScreen> {
   final CreateBookingOrderUseCase _createBookingOrderUseCase = GetIt.instance<CreateBookingOrderUseCase>();
   final GetCustomerByUserIDUseCase _getCustomerByUserIDUseCase = GetIt.instance<GetCustomerByUserIDUseCase>();
   final GetPromotionsUseCase _getPromotionsUseCase = GetIt.instance<GetPromotionsUseCase>();
+  final GetCustomerPromotionsUseCase _getCustomerPromotionsUseCase = GetIt.instance<GetCustomerPromotionsUseCase>();
+  final CreateCustomerPromotionUseCase _createCustomerPromotionUseCase = GetIt.instance<CreateCustomerPromotionUseCase>();
 
   List<Map<String, dynamic>> branches = [];
   List<Map<String, dynamic>> employees = [];
   List<Map<String, dynamic>> availableEmployeesByDate = [];
   List<Map<String, dynamic>> serviceDetails = [];
   List<PromotionModel> promotions = [];
+  Set<int> customerPromoIds = {};
   PromotionModel? selectedPromotion;
 
   String? selectedBranch;
@@ -77,7 +82,7 @@ class _BookingScreenState extends State<BookingScreen> {
     }
 
     final userId = user.userId;
-    if ( userId.isEmpty || int.tryParse(userId) == null) {
+    if (userId.isEmpty || int.tryParse(userId) == null) {
       setState(() {
         errorMessage = 'Thông tin người dùng không hợp lệ (userId không khả dụng)';
       });
@@ -102,6 +107,8 @@ class _BookingScreenState extends State<BookingScreen> {
           isLoading = false;
         }),
       );
+      // Load customer promotions after getting custID
+      await _loadCustomerPromotions();
     } catch (e) {
       setState(() {
         isLoading = false;
@@ -113,6 +120,31 @@ class _BookingScreenState extends State<BookingScreen> {
             content: Text('Lỗi khi lấy thông tin khách hàng: $e'),
             backgroundColor: primaryColor,
           ),
+        );
+      }
+    }
+  }
+
+  Future<void> _loadCustomerPromotions() async {
+    if (custID == null) return;
+    setState(() => isLoading = true);
+    try {
+      final customerPromotions = await _getCustomerPromotionsUseCase.call(custID!);
+      setState(() {
+        customerPromoIds = customerPromotions.map((p) => p.promoID).toSet();
+        isLoading = false;
+      });
+      if (kDebugMode) {
+        print('Loaded customer promotion IDs: $customerPromoIds');
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Lỗi khi lấy danh sách mã giảm giá của khách hàng: $e';
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi khi lấy danh sách mã giảm giá của khách hàng: $e'), backgroundColor: primaryColor),
         );
       }
     }
@@ -140,7 +172,9 @@ class _BookingScreenState extends State<BookingScreen> {
     setState(() => isLoading = true);
     try {
       employees = await _getEmployeesByBranchUseCase.call(branchID);
-      print('Loaded employees for branch $branchID: $employees');
+      if (kDebugMode) {
+        print('Loaded employees for branch $branchID: $employees');
+      }
       setState(() => isLoading = false);
     } catch (e) {
       setState(() {
@@ -159,7 +193,9 @@ class _BookingScreenState extends State<BookingScreen> {
     setState(() => isLoading = true);
     try {
       availableEmployeesByDate = await _getEmployeesByDateUseCase.call(date, branchID);
-      print('Loaded employees by date $date, branch $branchID: $availableEmployeesByDate');
+      if (kDebugMode) {
+        print('Loaded employees by date $date, branch $branchID: $availableEmployeesByDate');
+      }
       setState(() => isLoading = false);
     } catch (e) {
       setState(() {
@@ -178,7 +214,9 @@ class _BookingScreenState extends State<BookingScreen> {
     setState(() => isLoading = true);
     try {
       serviceDetails = await _getBookingServiceDetailUseCase.call(defaultServiceID);
-      print('Loaded service details for service $defaultServiceID: $serviceDetails');
+      if (kDebugMode) {
+        print('Loaded service details for service $defaultServiceID: $serviceDetails');
+      }
       setState(() => isLoading = false);
     } catch (e) {
       setState(() {
@@ -204,10 +242,16 @@ class _BookingScreenState extends State<BookingScreen> {
           promoDescription: '',
           promoDiscount: 0.0,
           promoImage: '',
+          promoStart: DateTime.now(),
+          promoEnd: DateTime.now(),
+          promoStatus: 'OK',
+          promoType: 'none',
         ),
         ...fetchedPromotions,
       ];
-      print('Loaded promotions: $promotions');
+      if (kDebugMode) {
+        print('Loaded promotions: $promotions');
+      }
       setState(() => isLoading = false);
     } catch (e) {
       setState(() {
@@ -219,6 +263,50 @@ class _BookingScreenState extends State<BookingScreen> {
           SnackBar(content: Text('Lỗi khi lấy danh sách khuyến mãi: $e'), backgroundColor: primaryColor),
         );
       }
+    }
+  }
+
+  Future<void> _claimPromotion(int promoId, String promoName) async {
+    if (custID == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Vui lòng đăng nhập để lấy mã giảm giá'),
+          backgroundColor: primaryColor,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
+    try {
+      await _createCustomerPromotionUseCase.call(custID!, promoId, 'Active');
+      await _loadCustomerPromotions(); // Refresh customer promotions
+      await _loadPromotions(); // Refresh all promotions
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Đã lấy mã: $promoName', style: TextStyle(color: textColor)),
+            backgroundColor: primaryColor,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi lấy mã: $e', style: TextStyle(color: textColor)),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } finally {
+      setState(() => isLoading = false);
     }
   }
 
@@ -269,7 +357,7 @@ class _BookingScreenState extends State<BookingScreen> {
                               child: ListView(
                                 children: branches.map((branch) {
                                   return ListTile(
-                                    leading: Icon(Icons.store, color: Colors.red),
+                                    leading: Icon(Icons.store, color: textColor),
                                     title: Text(branch['branchName'], style: TextStyle(color: dropdownTextColor)),
                                     onTap: () {
                                       setState(() {
@@ -381,8 +469,8 @@ class _BookingScreenState extends State<BookingScreen> {
                                             ),
                                           ),
                                           child: child!,
-                                        );
-                                      },
+                                      );
+                                    },
                                     );
                                     if (time != null && mounted) {
                                       setState(() {
@@ -453,22 +541,54 @@ class _BookingScreenState extends State<BookingScreen> {
                                   color: primaryColor.withOpacity(0.9),
                                   child: ListView(
                                     children: promotions.map((promo) {
+                                      final isCustomerOwned = customerPromoIds.contains(promo.promoID) || promo.promoID == 0;
                                       return ListTile(
                                         leading: Icon(Icons.local_offer, color: textColor),
                                         title: Text(
                                           "${promo.promoName} (${(promo.promoDiscount * 100).toInt()}%)",
-                                          style: TextStyle(color: dropdownTextColor),
+                                          style: TextStyle(
+                                            color: isCustomerOwned ? dropdownTextColor : dropdownTextColor.withOpacity(0.5),
+                                          ),
                                         ),
                                         subtitle: Text(
                                           promo.promoDescription,
-                                          style: TextStyle(color: dropdownTextColor.withOpacity(0.7)),
+                                          style: TextStyle(
+                                            color: isCustomerOwned
+                                                ? dropdownTextColor.withOpacity(0.7)
+                                                : dropdownTextColor.withOpacity(0.3),
+                                          ),
                                         ),
-                                        onTap: () {
-                                          setState(() {
-                                            selectedPromotion = promo;
-                                          });
-                                          Navigator.pop(context);
-                                        },
+                                        trailing: !isCustomerOwned
+                                            ? ElevatedButton(
+                                                onPressed: () async {
+                                                  Navigator.pop(context);
+                                                  await _claimPromotion(promo.promoID, promo.promoName);
+                                                },
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: accentColor,
+                                                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                                  elevation: 0,
+                                                ),
+                                                child: Text(
+                                                  'Lấy mã',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: textColor,
+                                                    fontFamily: 'Poppins',
+                                                  ),
+                                                ),
+                                              )
+                                            : null,
+                                        onTap: isCustomerOwned
+                                            ? () {
+                                                setState(() {
+                                                  selectedPromotion = promo;
+                                                });
+                                                Navigator.pop(context);
+                                              }
+                                            : null,
                                       );
                                     }).toList(),
                                   ),

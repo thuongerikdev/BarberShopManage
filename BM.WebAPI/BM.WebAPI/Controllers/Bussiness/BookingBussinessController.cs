@@ -1,11 +1,15 @@
-﻿using BM.Auth.Dtos;
+﻿using BM.Auth.ApplicationService.UserModule.Abtracts;
+using BM.Auth.Dtos;
 using BM.Booking.ApplicationService.BussinessModule.Abtracts;
+using BM.Booking.ApplicationService.BussinessModule.Implements;
 using BM.Booking.ApplicationService.PaymentModule.Abtracts;
+using BM.Booking.Domain;
 using BM.Booking.Dtos.BussinessDtos;
 using BM.Booking.Dtos.CRUDdtos;
 using BM.Booking.Dtos.CRUDDtos;
 using BM.Constant;
 using Microsoft.AspNetCore.Mvc;
+using BookingOrder = BM.Booking.Domain.BookingOrder;
 
 namespace BM.WebAPI.Controllers.Bussiness
 {
@@ -16,17 +20,21 @@ namespace BM.WebAPI.Controllers.Bussiness
         private readonly IBookingBussinessService _bookingBussinessService;
         protected readonly IBookingInvoiceService _bookingInvoiceService;
         protected readonly IBookingOrderService _bookingOrderService;
+        private readonly IAuthCustomerService _authCustomerService;
+
 
         public BookingBussinessController(
             IBookingBussinessService bookingBussinessService,
             IBookingInvoiceService invoiceService,
-            IBookingOrderService bookingOrderService
+            IBookingOrderService bookingOrderService,
+            IAuthCustomerService authCustomerService
 
             )
         {
             _bookingBussinessService = bookingBussinessService;
             _bookingInvoiceService = invoiceService;
             _bookingOrderService = bookingOrderService;
+            _authCustomerService = authCustomerService;
         }
         //public async Task<IActionResult> CreateOrderAppoint([FromBody] BookingCreateOrderRequestDto request)
 
@@ -66,20 +74,60 @@ namespace BM.WebAPI.Controllers.Bussiness
         public async Task<IActionResult> PaymentCallbackVnpay()
         {
             var vnpOrderInfo = Request.Query["vnp_OrderInfo"].ToString(); // Lấy OrderInfo
-            var totalMoneyString = Request.Query["vnp_Amount"]; // Lấy giá trị Amount dưới dạng StringValues
+            var totalMoneyString = Request.Query["vnp_Amount"]; // Lấy giá trị Amount
 
             // Chuyển đổi giá trị Amount từ StringValues sang decimal
             double totalAmount;
             if (!double.TryParse(totalMoneyString, out totalAmount))
             {
-                return BadRequest(new { message = "Invalid total amount", code = "400" });
+                return Content(@"
+                <!DOCTYPE html>
+                <html lang='en'>
+                <head>
+                    <meta charset='UTF-8'>
+                    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                    <title>Payment Error</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+                        .error { color: red; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Payment Failed</h1>
+                    <p class='error'>Invalid total amount</p>
+                    <p>Error Code: 400</p>
+                    <a href='/'>Return to Home</a>
+                </body>
+                </html>", "text/html");
             }
 
             var orderID = ExtractTournamentIdFromOrderInfo(vnpOrderInfo);
+            var order = await _bookingOrderService.BookingGetOrder(orderID);
+            if (order == null)
+            {
+                return Content(@"
+                <!DOCTYPE html>
+                <html lang='en'>
+                <head>
+                    <meta charset='UTF-8'>
+                    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                    <title>Payment Error</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+                        .error { color: red; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Payment Failed</h1>
+                    <p class='error'>Order not found</p>
+                    <p>Error Code: 404</p>
+                    <a href='/'>Return to Home</a>
+                </body>
+                </html>", "text/html");
+            }
 
+            var orderData = order.Data as BookingOrder;
             var response = _bookingBussinessService.PaymentExecute(Request.Query);
-
-            //return Json(new { orderID });
 
             var invoice = new BookingCreateInvoiceDto
             {
@@ -89,22 +137,68 @@ namespace BM.WebAPI.Controllers.Bussiness
                 totalAmount = totalAmount,
                 invoiceDate = DateTime.Now,
                 paymentMethod = "VnPay"
-
             };
-            //var invoiceCreate = await _bookingInvoiceService.BookingCreateInvoice(invoice);
+
+            var updateDto = new AuthUpdateVipCustomerDto
+            {
+                customerID = orderData.custID,
+                totalAmount = totalAmount
+            };
 
             if (response.VnPayResponseCode == "00")
             {
-                //await _emailService.SendInvoiceEmail(tournamentId);
                 await _bookingInvoiceService.BookingCreateInvoice(invoice);
                 await _bookingOrderService.BookingConfirmOrder(orderID);
+                await _authCustomerService.AuthUpdateVipCustomer(updateDto);
 
-                return Json(new { response, orderID });
+                return Content($@"
+                <!DOCTYPE html>
+                <html lang='en'>
+                <head>
+                    <meta charset='UTF-8'>
+                    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                    <title>Payment Success</title>
+                    <style>
+                        body {{ font-family: Arial, sans-serif; text-align: center; padding: 50px; }}
+                        .success {{ color: green; }}
+                        .details {{ margin-top: 20px; text-align: left; display: inline-block; }}
+                    </style>
+                </head>
+                <body>
+                    <h1>Payment Successful</h1>
+                    <p class='success'>Your payment has been processed successfully!</p>
+                    <div class='details'>
+                        <p><strong>Order ID:</strong> {orderID}</p>
+                        <p><strong>Total Amount:</strong> {totalAmount:C}</p>
+                        <p><strong>Payment Method:</strong> VnPay</p>
+                        <p><strong>Invoice Date:</strong> {DateTime.Now:dd/MM/yyyy HH:mm:ss}</p>
+                    </div>
+                    <p>An invoice has been sent to your email.</p>
+                    <a href='/'>Return to Home</a>
+                </body>
+                </html>", "text/html");
             }
 
-            return BadRequest(new { message = "Payment failed", code = response.VnPayResponseCode });
+            return Content($@"
+            <!DOCTYPE html>
+            <html lang='en'>
+            <head>
+                <meta charset='UTF-8'>
+                <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                <title>Payment Error</title>
+                <style>
+                    body {{ font-family: Arial, sans-serif; text-align: center; padding: 50px; }}
+                    .error {{ color: red; }}
+                </style>
+            </head>
+            <body>
+                <h1>Payment Failed</h1>
+                <p class='error'>Payment processing failed</p>
+                <p>Error Code: {response.VnPayResponseCode}</p>
+                <a href='/'>Return to Home</a>
+            </body>
+            </html>", "text/html");
         }
-
         // Hàm hỗ trợ tách TournamentID
         private int ExtractTournamentIdFromOrderInfo(string orderInfo)
         {

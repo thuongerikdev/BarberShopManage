@@ -157,5 +157,35 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                 return ErrorConst.Error(500, ex.Message);
             }
         }
+        public async Task <ResponeDto> AuthUpdateVipCustomer(AuthUpdateVipCustomerDto authUpdateVipCustomerDto)
+        {
+            try
+            {
+                var customer = await _dbContext.Customers.FindAsync(authUpdateVipCustomerDto.customerID);
+                if (customer == null)
+                {
+                    return ErrorConst.Error(500, "Không tìm thấy khách hàng");
+                }
+                var vipCustomer = await _dbContext.Vips.FindAsync(customer.vipID);
+                if (vipCustomer == null)
+                {
+                    return ErrorConst.Error(500, "Không tìm thấy khách hàng vip");
+                }
+                customer.totalSpent += authUpdateVipCustomerDto.totalAmount;
+                customer.loyaltyPoints += authUpdateVipCustomerDto.totalAmount *10/100 ;
+                var totalLoyaltyPoints = customer.loyaltyPoints;
+                if (totalLoyaltyPoints > vipCustomer.vipCost)
+                {
+                    customer.vipID += 1;
+                }
+                await _dbContext.SaveChangesAsync();
+                return ErrorConst.Success("Cập nhật khách hàng vip thành công", customer);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
     }
 }

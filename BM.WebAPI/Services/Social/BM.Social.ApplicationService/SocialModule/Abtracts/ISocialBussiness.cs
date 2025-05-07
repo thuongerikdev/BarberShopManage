@@ -12,7 +12,7 @@ namespace BM.Social.ApplicationService.SocialModule.Abtracts
 {
     public interface ISocialBussiness
     {
-        Task<ResponeDto> CreateBlogAsync(string title, string status, List<(string topic, string content, IFormFile? image)> sections);
+        Task<ResponeDto> CreateBlogAsync(SocicalCreateBlogBussiness socicalCreateBlogBussiness);
         Task<ResponeDto> GetBlogAsync(int blogId);
 
     }

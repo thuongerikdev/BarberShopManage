@@ -16,6 +16,30 @@ namespace BM.Social.ApplicationService.SocialModule.Abtracts
         public Task<ResponeDto> SocialGetBlog(int blogID);
         public Task<ResponeDto> SocialGetAllBlog();
     }
+    public interface ISocialBlogTopicService
+    {
+        public Task<ResponeDto> SocialCreateBlogTopic(SocialCreateBlogTopicDto socialCreateBlogTopicDto);
+        public Task<ResponeDto> SocialUpdateBlogTopic(SocialUpdateBlogTopicDto socialUpdateBlogTopicDto);
+        public Task<ResponeDto> SocialDeleteBlogTopic(int blogTopicID);
+        public Task<ResponeDto> SocialGetBlogTopic(int blogTopicID);
+        public Task<ResponeDto> SocialGetAllBlogTopic();
+    }
+    public interface ISocialBlogImageService
+    {
+        public Task<ResponeDto> SocialCreateBlogImage(SocialCreateBlogImageDto socialCreateBlogImageDto);
+        public Task<ResponeDto> SocialUpdateBlogImage(SocialUpdateBlogImageDto socialUpdateBlogImageDto);
+        public Task<ResponeDto> SocialDeleteBlogImage(int blogImageID);
+        public Task<ResponeDto> SocialGetBlogImage(int blogImageID);
+        public Task<ResponeDto> SocialGetAllBlogImage();
+    }
+    public interface ISocialBlogContentService
+    {
+        public Task<ResponeDto> SocialCreateBlogContent(SocialCreateBlogContentDto socialCreateBlogContentDto);
+        public Task<ResponeDto> SocialUpdateBlogContent(SocialUpdateBlogContentDto socialUpdateBlogContentDto);
+        public Task<ResponeDto> SocialDeleteBlogContent(int blogContentID);
+        public Task<ResponeDto> SocialGetBlogContent(int blogContentID);
+        public Task<ResponeDto> SocialGetAllBlogContent();
+    }
     public interface ISocialCommentService
     {
         public Task<ResponeDto> SocialCreateComment(SocialCreateCommentDto socialCreateCommentDto);

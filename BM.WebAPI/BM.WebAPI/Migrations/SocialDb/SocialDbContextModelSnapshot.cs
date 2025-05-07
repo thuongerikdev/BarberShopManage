@@ -22,6 +22,45 @@ namespace BM.WebAPI.Migrations.SocialDb
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("BM.Social.Domain.SocailBlogTopic", b =>
+                {
+                    b.Property<int>("topicID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("topicID"));
+
+                    b.Property<int>("blogID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("position")
+                        .HasColumnType("int");
+
+                    b.Property<string>("topicContent")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("topicDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("topicStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("topicTitle")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("updateAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("topicID");
+
+                    b.HasIndex("blogID");
+
+                    b.ToTable("socialBlogTopics");
+                });
+
             modelBuilder.Entity("BM.Social.Domain.SocialBlog", b =>
                 {
                     b.Property<int>("blogID")
@@ -36,6 +75,14 @@ namespace BM.WebAPI.Migrations.SocialDb
 
                     b.Property<DateTime>("blogDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("blogDescription")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("blogImage")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("blogLike")
                         .HasColumnType("int");
@@ -92,6 +139,80 @@ namespace BM.WebAPI.Migrations.SocialDb
                     b.HasIndex("blogID");
 
                     b.ToTable("socialBlogComments");
+                });
+
+            modelBuilder.Entity("BM.Social.Domain.SocialBlogContent", b =>
+                {
+                    b.Property<int>("contentID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("contentID"));
+
+                    b.Property<int>("blogID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("contentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("contentTitle")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("position")
+                        .HasColumnType("int");
+
+                    b.Property<string>("status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("updateAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("contentID");
+
+                    b.HasIndex("blogID");
+
+                    b.ToTable("socialBlogContents");
+                });
+
+            modelBuilder.Entity("BM.Social.Domain.SocialBlogImage", b =>
+                {
+                    b.Property<int>("blogImageID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("blogImageID"));
+
+                    b.Property<int>("blogID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("position")
+                        .HasColumnType("int");
+
+                    b.Property<string>("srcImage")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("topicImageDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("updateAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("blogImageID");
+
+                    b.HasIndex("blogID");
+
+                    b.ToTable("socialBlogImages");
                 });
 
             modelBuilder.Entity("BM.Social.Domain.SocialGroup", b =>
@@ -225,65 +346,43 @@ namespace BM.WebAPI.Migrations.SocialDb
                     b.ToTable("SocialSrc", "social");
                 });
 
-            modelBuilder.Entity("BM.Social.Domain.SocialSrcBlog", b =>
+            modelBuilder.Entity("BM.Social.Domain.SocailBlogTopic", b =>
                 {
-                    b.Property<int>("srcBlogID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                    b.HasOne("BM.Social.Domain.SocialBlog", "SocialBlog")
+                        .WithMany("SocialBlogTopics")
+                        .HasForeignKey("blogID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("srcBlogID"));
-
-                    b.Property<int>("blogID")
-                        .HasColumnType("int");
-
-                    b.Property<int>("position")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("srcBlogDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("srcID")
-                        .HasColumnType("int");
-
-                    b.HasKey("srcBlogID");
-
-                    b.HasIndex("blogID");
-
-                    b.HasIndex("srcID");
-
-                    b.ToTable("socialSrcBlogs");
-                });
-
-            modelBuilder.Entity("BM.Social.Domain.SocialSrcMessage", b =>
-                {
-                    b.Property<int>("srcMessageID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("srcMessageID"));
-
-                    b.Property<int>("messageID")
-                        .HasColumnType("int");
-
-                    b.Property<int>("srcID")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("srcMessageDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("srcMessageID");
-
-                    b.HasIndex("messageID");
-
-                    b.HasIndex("srcID");
-
-                    b.ToTable("socialSrcMessages");
+                    b.Navigation("SocialBlog");
                 });
 
             modelBuilder.Entity("BM.Social.Domain.SocialBlogComment", b =>
                 {
                     b.HasOne("BM.Social.Domain.SocialBlog", "SocialBlog")
                         .WithMany("SocialBlogComments")
+                        .HasForeignKey("blogID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SocialBlog");
+                });
+
+            modelBuilder.Entity("BM.Social.Domain.SocialBlogContent", b =>
+                {
+                    b.HasOne("BM.Social.Domain.SocialBlog", "SocialBlog")
+                        .WithMany("SocialBlogContents")
+                        .HasForeignKey("blogID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SocialBlog");
+                });
+
+            modelBuilder.Entity("BM.Social.Domain.SocialBlogImage", b =>
+                {
+                    b.HasOne("BM.Social.Domain.SocialBlog", "SocialBlog")
+                        .WithMany("SocialBlogImages")
                         .HasForeignKey("blogID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -313,49 +412,15 @@ namespace BM.WebAPI.Migrations.SocialDb
                     b.Navigation("SocialGroup");
                 });
 
-            modelBuilder.Entity("BM.Social.Domain.SocialSrcBlog", b =>
-                {
-                    b.HasOne("BM.Social.Domain.SocialBlog", "SocialBlog")
-                        .WithMany("SocialSrcBlogs")
-                        .HasForeignKey("blogID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BM.Social.Domain.SocialSrc", "SocialSrc")
-                        .WithMany("SocialSrcBlogs")
-                        .HasForeignKey("srcID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SocialBlog");
-
-                    b.Navigation("SocialSrc");
-                });
-
-            modelBuilder.Entity("BM.Social.Domain.SocialSrcMessage", b =>
-                {
-                    b.HasOne("BM.Social.Domain.SocialMessage", "SocialMessage")
-                        .WithMany("SocialSrcMessages")
-                        .HasForeignKey("messageID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BM.Social.Domain.SocialSrc", "SocialSrc")
-                        .WithMany("SocialSrcMessages")
-                        .HasForeignKey("srcID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SocialMessage");
-
-                    b.Navigation("SocialSrc");
-                });
-
             modelBuilder.Entity("BM.Social.Domain.SocialBlog", b =>
                 {
                     b.Navigation("SocialBlogComments");
 
-                    b.Navigation("SocialSrcBlogs");
+                    b.Navigation("SocialBlogContents");
+
+                    b.Navigation("SocialBlogImages");
+
+                    b.Navigation("SocialBlogTopics");
                 });
 
             modelBuilder.Entity("BM.Social.Domain.SocialGroup", b =>
@@ -363,18 +428,6 @@ namespace BM.WebAPI.Migrations.SocialDb
                     b.Navigation("SocialGroupUsers");
 
                     b.Navigation("SocialMessages");
-                });
-
-            modelBuilder.Entity("BM.Social.Domain.SocialMessage", b =>
-                {
-                    b.Navigation("SocialSrcMessages");
-                });
-
-            modelBuilder.Entity("BM.Social.Domain.SocialSrc", b =>
-                {
-                    b.Navigation("SocialSrcBlogs");
-
-                    b.Navigation("SocialSrcMessages");
                 });
 #pragma warning restore 612, 618
         }

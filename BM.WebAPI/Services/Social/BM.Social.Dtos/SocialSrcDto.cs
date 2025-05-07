@@ -48,23 +48,24 @@ namespace BM.Social.Dtos
         public int messageID { get; set; }
     }
 
-    public class SocialBlogCacheDto
-    {
-        public int BlogID { get; set; }
-        public string BlogTitle { get; set; }
-        public string BlogContent { get; set; }
-        public string BlogStatus { get; set; }
-        public int BlogLike { get; set; }
-        public DateTime CreatedDate { get; set; }
-        // Không bao gồm SocialSrcBlogs để tránh vòng lặp
-    }
+    //public class SocialBlogCacheDto
+    //{
+    //    public int BlogID { get; set; }
+    //    public string BlogTitle { get; set; }
+    //    public string BlogContent { get; set; }
+    //    public string BlogStatus { get; set; }
+    //    public int BlogLike { get; set; }
+    //    public DateTime CreatedDate { get; set; }
+    //    public List<BlogImageDto> Images { get; set; } = new List<BlogImageDto>();
+    //    // Không bao gồm SocialSrcBlogs để tránh vòng lặp
+    //}
 
-    public class ResponeCacheDto
-    {
-        public int ErrorCode { get; set; }
-        public string ErrorMessager { get; set; }
-        public SocialBlogCacheDto Data { get; set; }
-    }
+    //public class ResponeCacheDto
+    //{
+    //    public int ErrorCode { get; set; }
+    //    public string ErrorMessager { get; set; }
+    //    public SocialBlogCacheDto Data { get; set; }
+    //}
     public class SocialCreateSrcUserDto
     {
         public int srcID { get; set; }

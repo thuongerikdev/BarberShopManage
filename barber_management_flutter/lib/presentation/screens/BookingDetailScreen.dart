@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:barbermanagemobile/domain/usecases/get_booking_service_detail_use_case.dart';
+import 'package:barbermanagemobile/presentation/screens/BookingScreen.dart'; // Import BookingScreen
 
 class BookingDetailScreen extends StatefulWidget {
   final int serviceID;
@@ -40,6 +41,19 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         );
       }
     }
+  }
+
+  void _navigateToBookingScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BookingScreen(
+          onBack: () {
+            Navigator.pop(context); // Pop BookingScreen to return to BookingDetailScreen
+          },
+        ),
+      ),
+    );
   }
 
   @override
@@ -97,7 +111,6 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                           ),
                           // Danh sách các ServiceDetail
                           ..._serviceDetails!.asMap().entries.map((entry) {
-                            // final index = entry.key;
                             final serviceDetail = entry.value;
                             return Card(
                               margin: EdgeInsets.only(bottom: 16),
@@ -410,11 +423,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                       child: SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {
-                            // TODO: Thêm logic đặt lịch cho tất cả dịch vụ
-                          },
+                          onPressed: _navigateToBookingScreen, // Navigate to BookingScreen
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF8D6E63), // Màu sáng hơn, dễ nhìn
+                            backgroundColor: Color(0xFF8D6E63),
                             padding: EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -425,7 +436,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFFEFEBE9), // Text trắng để dễ đọc
+                              color: Color(0xFFEFEBE9),
                               fontFamily: 'Poppins',
                             ),
                           ),

@@ -141,5 +141,27 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             }
 
         }
+
+        [HttpGet("getcuspromobycustomerid/{customerID}")]
+        public async Task<IActionResult> GetCusPromoByCustomerID(int customerID)
+        {
+            if (customerID <= 0)
+            {
+                return BadRequest(ErrorConst.Error(400, "customerID không hợp lệ"));
+            }
+            try
+            {
+                var result = await _authCusPromoService.GetCusPromoByCustomerID(customerID);
+                if (result == null)
+                {
+                    return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));
+                }
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ErrorConst.Error(500, ex.Message));
+            }
+        }
     }
 }

@@ -16,6 +16,7 @@ namespace BM.Auth.ApplicationService.VipModule.Abtracts
 
         Task<ResponeDto> AuthGetVip(int vipID);
         Task<ResponeDto> AuthGetAllVip();
+        public Task<ResponeDto> AuthGetVipByUserID(int userID);
         //Task<ResponeDto> AuthGetVipByType(int vipType);
 
 
@@ -36,6 +37,8 @@ namespace BM.Auth.ApplicationService.VipModule.Abtracts
         Task<ResponeDto> AuthDeleteCusPromo(int cusPromoID);
         Task<ResponeDto> AuthGetCusPromo(int cusPromoID);
         Task<ResponeDto> AuthGetAllCusPromo();
+        //Task<ResponeDto> GetCustomerAndPromotionAsync(int customerID, int promoID);
+        Task<ResponeDto> GetCusPromoByCustomerID(int customerID);
     }
     public interface IAuthPromoService
     {

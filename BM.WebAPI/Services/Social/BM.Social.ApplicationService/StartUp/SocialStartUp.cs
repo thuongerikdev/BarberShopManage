@@ -84,9 +84,14 @@ namespace BM.Social.ApplicationService.StartUp
             builder.Services.AddScoped<ISocialGroupService, SocialGroupService>();
             builder.Services.AddScoped<ISocialGroupUserService, SocialGroupUserService>();
             builder.Services.AddScoped<ISocialMessageService, SocialMessageService>();
-            builder.Services.AddScoped<ISocialSrcBlogService, SocialSrcBlogService>();
+            builder.Services.AddScoped<ISocialBlogTopicService, SocialBlogTopicService>();
+            builder.Services.AddScoped<ISocialBlogContentService, SocialBlogContentService>();
+            builder.Services.AddScoped<ISocialBlogImageService, SocialBlogImageService>();
+
+
+            //builder.Services.AddScoped<ISocialSrcBlogService, SocialSrcBlogService>();
             builder.Services.AddScoped<ISocialSrcService, SocialSrcService>();
-            builder.Services.AddScoped<ISocialSrcMessageService, SocialSrcMessageService>();
+            //builder.Services.AddScoped<ISocialSrcMessageService, SocialSrcMessageService>();
 
 
             // JWT configuration

@@ -41,6 +41,8 @@ namespace BM.Social.ApplicationService.SocialModule.Implements.Social
                     blogStatus = socialCreateBlogDto.blogStatus,
                     blogLike = socialCreateBlogDto.blogLike,
                     blogDate = DateTime.Now,
+                    updateAt = DateTime.Now,
+                    blogDescription = socialCreateBlogDto.blogDescription,
                     blogImage = img,
                 };
                 _dbContext.socialBlogs.Add(blog);
@@ -74,6 +76,9 @@ namespace BM.Social.ApplicationService.SocialModule.Implements.Social
                 blog.blogStatus = socialUpdateBlogDto.blogStatus;
                 blog.blogLike = socialUpdateBlogDto.blogLike;
                 blog.blogImage = img;
+                blog.blogDate = DateTime.Now;
+                blog.updateAt = DateTime.Now;
+                blog.blogDescription = socialUpdateBlogDto.blogDescription;
                 await _dbContext.SaveChangesAsync();
                 return ErrorConst.Success("Cập nhật blog thành công", blog);
             }
@@ -105,23 +110,28 @@ namespace BM.Social.ApplicationService.SocialModule.Implements.Social
         }
         public async Task<ResponeDto> SocialGetBlog(int blogID)
         {
-            _logger.LogInformation("SocialGetBlog called");
+            _logger.LogInformation("SocialGetBlog called for blogID: {BlogID}", blogID);
+
             try
             {
-                var blog = await _dbContext.socialBlogs
-                                .Include(b => b.SocialSrcBlogs)
-                                .ThenInclude(sb => sb.SocialSrc)
-                                .FirstOrDefaultAsync(b => b.blogID == blogID);
+              
+
+                var blog = await _dbContext.socialBlogs.Where(x => x.blogID == blogID).FirstOrDefaultAsync();
+
                 if (blog == null)
                 {
-                    return ErrorConst.Error(500, "Không tìm thấy blog");
+                    _logger.LogWarning("Blog not found for blogID: {BlogID}", blogID);
+                    return ErrorConst.Error(404, "Không tìm thấy blog");
                 }
+
+ 
+
                 return ErrorConst.Success("Lấy blog thành công", blog);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
-                return ErrorConst.Error(500, ex.Message);
+                _logger.LogError(ex, "Error occurred while getting blog with blogID: {BlogID}", blogID);
+                return ErrorConst.Error(500, $"Lỗi hệ thống khi lấy blog: {ex.Message}");
             }
         }
         public async Task<ResponeDto> SocialGetAllBlog()

@@ -5,6 +5,7 @@ using BM.Auth.Dtos.User;
 using BM.Auth.Infrastructure;
 using BM.Constant;
 using BM.Shared.ApplicationService;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -17,10 +18,10 @@ namespace BM.Auth.ApplicationService.VipModule.Implements
     public class AuthVipService : AuthServiceBase, IAuthVipService
     {
         protected readonly ICloudinaryService _cloudinaryService;
-        public AuthVipService(ILogger<AuthVipService> logger, AuthDbContext dbContext , ICloudinaryService cloudinaryService) : base(logger, dbContext)
+        public AuthVipService(ILogger<AuthVipService> logger, AuthDbContext dbContext, ICloudinaryService cloudinaryService) : base(logger, dbContext)
         {
-          
-            _cloudinaryService = cloudinaryService; 
+
+            _cloudinaryService = cloudinaryService;
         }
         public async Task<ResponeDto> AuthCreateVip(AuthCreateVip authCreateVip)
         {
@@ -123,6 +124,42 @@ namespace BM.Auth.ApplicationService.VipModule.Implements
             {
                 var vips = _dbContext.Vips.ToList();
                 return ErrorConst.Success("Lấy danh sách vip thành công", vips);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+        public async Task<ResponeDto> AuthGetVipByUserID(int userID)
+        {
+            _logger.LogInformation("AuthGetVipByUserID");
+            try
+            {
+                var vip = await _dbContext.Customers.Where(x => x.userID == userID)
+                                                    .Include(x => x.AuthVip)
+                                                    .Include(x => x.AuthUser)
+                                                    .Select(x => new
+                                                    {
+                                                        x.totalSpent,
+                                                        x.loyaltyPoints,
+                                                        x.percentDiscount,
+                                                        x.AuthVip.vipCost,
+                                                        x.AuthVip.vipDiscount,
+                                                        x.AuthVip.vipStatus,
+                                                        x.AuthVip.vipType,
+                                                        x.AuthVip.vipImage,
+                                                        x.AuthUser.fullName,
+                                                        x.AuthUser.avatar
+
+                                                    }).FirstOrDefaultAsync();
+
+
+                if (vip == null)
+                {
+                    return ErrorConst.Error(500, "Không tìm thấy vip");
+                }
+                return ErrorConst.Success("Lấy vip thành công", vip);
             }
             catch (Exception ex)
             {

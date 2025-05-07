@@ -120,6 +120,34 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _navigateToVipScreen(BuildContext context) async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final user = authProvider.user;
+
+    if (user?.userId != null && int.tryParse(user!.userId) != null) {
+      final userIdInt = int.parse(user.userId);
+      if (kDebugMode) {
+        print('Navigating to VipScreen with userId: $userIdInt');
+      }
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => VipScreen(userId: userIdInt),
+        ),
+      );
+    } else {
+      if (kDebugMode) {
+        print('Invalid userId: ${user?.userId}');
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Không tìm thấy thông tin người dùng"),
+          backgroundColor: primaryColor,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -147,12 +175,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: _buildQuickActionButton(Icons.local_offer, "Ưu đãi", accentColor),
                     ),
                     GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => VipScreen()),
-                        );
-                      },
+                      onTap: () => _navigateToVipScreen(context),
                       child: _buildQuickActionButton(Icons.star, "Shine Member", accentColor),
                     ),
                     GestureDetector(

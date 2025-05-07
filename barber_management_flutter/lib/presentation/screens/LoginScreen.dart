@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import 'MainScreen.dart';
+import 'RegisterScreen.dart';
 
 class LoginScreen extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
@@ -104,6 +105,19 @@ class LoginScreen extends StatelessWidget {
                           style: TextStyle(fontSize: 18, color: Colors.white, fontFamily: 'Poppins'),
                         ),
                       ),
+                SizedBox(height: 20),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => RegisterScreen()),
+                    );
+                  },
+                  child: Text(
+                    "Chưa có tài khoản? Đăng ký",
+                    style: TextStyle(color: accentColor, fontFamily: 'Poppins'),
+                  ),
+                ),
               ],
             ),
           ),

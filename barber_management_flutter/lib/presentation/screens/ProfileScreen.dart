@@ -4,7 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:provider/provider.dart';
 import 'package:barbermanagemobile/domain/usecases/get_customer_by_user_id_use_case.dart';
 import 'package:barbermanagemobile/presentation/screens/AccountInfoScreen.dart';
-import 'package:barbermanagemobile/presentation/screens/AddressScreen.dart'; // Add this import
+import 'package:barbermanagemobile/presentation/screens/AddressScreen.dart';
 import 'package:barbermanagemobile/presentation/screens/BookingHistoryScreen.dart';
 import 'package:barbermanagemobile/presentation/screens/LoginScreen.dart';
 import 'package:barbermanagemobile/presentation/screens/PromotionScreen.dart';
@@ -39,10 +39,7 @@ class ProfileScreen extends StatelessWidget {
             color: dropdownTextColor,
           ),
         ),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: dropdownTextColor),
-          onPressed: () => Navigator.pop(context),
-        ),
+        automaticallyImplyLeading: false, // Remove the back button
       ),
       body: ListView(
         children: [
@@ -85,10 +82,26 @@ class ProfileScreen extends StatelessWidget {
           _buildProfileItem(context, Icons.shopping_cart, "Đơn hàng", () async {}),
           _buildSectionTitle("Thành Viên & Ưu Đãi"),
           _buildProfileItem(context, Icons.star, "Vip Member", () async {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => VipScreen()),
-            );
+            if (user?.userId != null && int.tryParse(user!.userId) != null) {
+              final userIdInt = int.parse(user.userId);
+              if (kDebugMode) {
+                print('Navigating to VipScreen with userId: $userIdInt');
+              }
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => VipScreen(userId: userIdInt)),
+              );
+            } else {
+              if (kDebugMode) {
+                print('Invalid userId: ${user?.userId}');
+              }
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text("Không tìm thấy thông tin người dùng"),
+                  backgroundColor: primaryColor,
+                ),
+              );
+            }
           }),
           _buildProfileItem(context, Icons.local_offer, "Ưu đãi", () async {
             Navigator.push(

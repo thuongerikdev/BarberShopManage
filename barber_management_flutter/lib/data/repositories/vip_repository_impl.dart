@@ -1,4 +1,5 @@
 import 'package:barbermanagemobile/data/datasources/vip_remote_data_source.dart';
+import 'package:barbermanagemobile/data/models/vip_model.dart';
 import 'package:barbermanagemobile/domain/entities/vip.dart';
 import 'package:barbermanagemobile/domain/repositories/vip_repository.dart';
 
@@ -10,8 +11,8 @@ class VipRepositoryImpl implements VipRepository {
   @override
   Future<List<Vip>> getVips() async {
     try {
-      final vips = await remoteDataSource.getVips();
-      return vips;
+      final List<VipModel> vipModels = await remoteDataSource.getVips();
+      return vipModels.map((vipModel) => vipModel.toEntity()).toList();
     } catch (e) {
       throw Exception('Failed to fetch VIPs: $e');
     }
