@@ -108,5 +108,22 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
                 return BadRequest(ex.Message);
             }
         }
+        [HttpGet("getScheEmpByEmpID/{empID}")]
+        public async Task<IActionResult> AuthGetScheEmpByEmpID(int empID)
+        {
+            try
+            {
+                var result = await _authScheEmpService.AuthGetEmployeeSchedule(empID);
+                if (result == null)
+                {
+                    return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));
+                }
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

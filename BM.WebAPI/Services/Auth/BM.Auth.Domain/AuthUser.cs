@@ -80,11 +80,11 @@ namespace BM.Auth.Domain
         public string? customerType { get; set; }
         public string? customerStatus { get; set; }
         public double totalSpent { get; set; }
-        public double percentDiscount { get; set; }
         public virtual  AuthVip AuthVip { get; set; }
 
         public virtual AuthUser AuthUser { get; set; }
         public virtual ICollection<AuthCusPromo> AuthCusPromos { get; set; }
+        public virtual ICollection<AuthCustomerCheckIn> AuthCustomerCheckIns { get; set; }
 
 
     }
@@ -151,6 +151,9 @@ namespace BM.Auth.Domain
         public int customerID { get; set; }
         public int promoID { get; set; }
         public string cusPromoStatus { get; set; }
+        public int promoCount { get; set; }
+        public DateTime createAt { get; set; }
+        public DateTime updateAt { get; set; }
         public virtual AuthCustomer AuthCustomer { get; set; }
         public virtual AuthPromotion AuthPromotion { get; set; }
     }
@@ -165,6 +168,7 @@ namespace BM.Auth.Domain
         [MaxLength(50)]
         public string promoDescription { get; set; }
         public double promoDiscount { get; set; }
+        public int pointToGet { get; set; }
         public DateTime promoStart { get; set; }
         public DateTime promoEnd { get; set; }
         public string promoStatus { get; set; }
@@ -172,6 +176,19 @@ namespace BM.Auth.Domain
         public string promoImage { get; set; }
         public virtual ICollection<AuthCusPromo> AuthCusPromos { get; set; }
 
+    }
+    public class AuthCustomerCheckIn
+    {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int customerCheckInID { get; set; }
+        public int customerID { get; set; }
+        public DateTime checkInDate { get; set; }
+        public string checkInStatus { get; set; }
+        public string checkInType { get; set; }
+        public DateTime createAt { get; set; }
+        public DateTime updateAt { get; set; }
+        public virtual AuthCustomer AuthCustomer { get; set; }
     }
 
 }

@@ -43,7 +43,24 @@ namespace BM.Booking.Domain
 
         public virtual BookingService BookingService { get; set; }
         public virtual ICollection<BookingAppointment> BookingAppointments { get; set; }
+        public virtual ICollection<BookingServiceDetailDescription> BookingServiceDetailDescriptions { get; set; }
 
+
+    }
+    public class  BookingServiceDetailDescription
+    {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int serviceDetailDescriptionID { get; set; }
+        public int serviceDetailID { get; set; }
+        public string servImage { get; set; }
+        public string servName { get; set; }
+        public string servDescription { get; set; }
+        public string servStatus { get; set; }
+        public string servType { get; set; }
+        public DateTime createAt { get; set; }
+        public DateTime updateAt { get; set; }
+        public virtual BookingServiceDetail BookingServiceDetails { get; set; }
 
     }
 }

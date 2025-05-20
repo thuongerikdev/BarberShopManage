@@ -2,19 +2,20 @@ import 'dart:convert';
 import '../../domain/entities/user.dart';
 
 class UserModel extends User {
-  final String? email;
-  final String? phoneNumber;
-  final String? dateOfBirth;
-  final String? gender;
-
   UserModel({
     required String name,
     required String userId,
     required String token,
-    this.email,
-    this.phoneNumber,
-    this.dateOfBirth,
-    this.gender,
+    String? email,
+    String? phoneNumber,
+    String? dateOfBirth,
+    String? gender,
+    int? roleID,
+    String? userName,
+    String? avatar,
+    bool? isEmp,
+    bool? isEmailVerified,
+    String? emailVerificationToken,
   }) : super(
           name: name,
           userId: userId,
@@ -23,6 +24,12 @@ class UserModel extends User {
           phoneNumber: phoneNumber,
           dateOfBirth: dateOfBirth,
           gender: gender,
+          roleID: roleID,
+          userName: userName,
+          avatar: avatar,
+          isEmp: isEmp,
+          isEmailVerified: isEmailVerified,
+          emailVerificationToken: emailVerificationToken,
         );
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -49,6 +56,12 @@ class UserModel extends User {
         phoneNumber: data['phoneNumber'] as String? ?? '',
         dateOfBirth: data['dateOfBirth'] as String? ?? '',
         gender: data['gender'] as String? ?? '',
+        roleID: data['roleID'] as int?,
+        userName: data['userName'] as String? ?? '',
+        avatar: data['avatar'] as String? ?? '',
+        isEmp: data['isEmp'] as bool?,
+        isEmailVerified: data['isEmailVerified'] as bool?,
+        emailVerificationToken: data['emailVerificationToken'] as String? ?? '',
       );
     }
     // Handle registration response (data is an empty array)
@@ -76,6 +89,12 @@ class UserModel extends User {
       'phoneNumber': phoneNumber,
       'dateOfBirth': dateOfBirth,
       'gender': gender,
+      'roleID': roleID,
+      'userName': userName,
+      'avatar': avatar,
+      'isEmp': isEmp,
+      'isEmailVerified': isEmailVerified,
+      'emailVerificationToken': emailVerificationToken,
     };
   }
 

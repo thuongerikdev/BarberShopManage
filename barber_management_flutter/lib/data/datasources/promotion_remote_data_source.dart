@@ -24,7 +24,7 @@ class PromotionRemoteDataSourceImpl implements PromotionRemoteDataSource {
             .map((json) => PromotionModel.fromJson(json))
             .toList();
       } else {
-        throw Exception(jsonData['errorMessager'] ?? 'Lấy khuyến mãi thất bại');
+        throw Exception(jsonData['errorMessager'] ?? 'Lấy danh sách ưu đãi thất bại');
       }
     } else {
       throw Exception('Lỗi server: ${response.statusCode}');

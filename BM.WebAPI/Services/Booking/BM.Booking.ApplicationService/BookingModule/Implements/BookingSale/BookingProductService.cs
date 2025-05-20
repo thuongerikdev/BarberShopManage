@@ -127,5 +127,25 @@ namespace BM.Booking.ApplicationService.BookingModule.Implements.BookingSale
                 return ErrorConst.Error(500, ex.Message);
             }
         }
+        public async Task<ResponeDto> BookingGetProductByCategory(int categoryID)
+        {
+            _logger.LogInformation("BookingGetProduct");
+            try
+            {
+                var bookingProduct = await _dbContext.BookingProducts.Where(x => x.categoryID == categoryID).ToListAsync();
+                if (bookingProduct == null)
+                {
+                    return ErrorConst.Error(500, "khong tim thay product");
+                }
+                return ErrorConst.Success("lay product thanh cong", bookingProduct);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+
+
     }
 }

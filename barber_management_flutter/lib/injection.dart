@@ -8,9 +8,11 @@ import 'package:barbermanagemobile/data/datasources/employee_remote_data_source.
 import 'package:barbermanagemobile/data/datasources/promotion_remote_data_source.dart';
 import 'package:barbermanagemobile/data/datasources/slider_remote_data_source.dart';
 import 'package:barbermanagemobile/data/datasources/booking_category_remote_data_source.dart';
+import 'package:barbermanagemobile/data/datasources/booking_product_remote_data_source.dart';
 import 'package:barbermanagemobile/data/datasources/vip_remote_data_source.dart';
 import 'package:barbermanagemobile/data/datasources/blog_remote_data_source.dart';
 import 'package:barbermanagemobile/data/datasources/customer_promotion_remote_data_source.dart';
+import 'package:barbermanagemobile/data/datasources/check_in_remote_data_source.dart';
 import 'package:barbermanagemobile/data/repositories/auth_repository_impl.dart';
 import 'package:barbermanagemobile/data/repositories/booking_order_repository_impl.dart';
 import 'package:barbermanagemobile/data/repositories/booking_service_repository_impl.dart';
@@ -20,9 +22,11 @@ import 'package:barbermanagemobile/data/repositories/employee_repository_impl.da
 import 'package:barbermanagemobile/data/repositories/promotion_repository_impl.dart';
 import 'package:barbermanagemobile/data/repositories/slider_repository_impl.dart';
 import 'package:barbermanagemobile/data/repositories/booking_category_repository_impl.dart';
+import 'package:barbermanagemobile/data/repositories/booking_product_repository_impl.dart';
 import 'package:barbermanagemobile/data/repositories/vip_repository_impl.dart';
 import 'package:barbermanagemobile/data/repositories/blog_repository_impl.dart';
 import 'package:barbermanagemobile/data/repositories/customer_promotion_repository_impl.dart';
+import 'package:barbermanagemobile/data/repositories/check_in_repository_impl.dart';
 import 'package:barbermanagemobile/domain/repositories/auth_repository.dart';
 import 'package:barbermanagemobile/domain/repositories/booking_order_repository.dart';
 import 'package:barbermanagemobile/domain/repositories/booking_service_repository.dart';
@@ -32,9 +36,11 @@ import 'package:barbermanagemobile/domain/repositories/employee_repository.dart'
 import 'package:barbermanagemobile/domain/repositories/promotion_repository.dart';
 import 'package:barbermanagemobile/domain/repositories/slider_repository.dart';
 import 'package:barbermanagemobile/domain/repositories/booking_category_repository.dart';
+import 'package:barbermanagemobile/domain/repositories/booking_product_repository.dart';
 import 'package:barbermanagemobile/domain/repositories/vip_repository.dart';
 import 'package:barbermanagemobile/domain/repositories/blog_repository.dart';
 import 'package:barbermanagemobile/domain/repositories/customer_promotion_repository.dart';
+import 'package:barbermanagemobile/domain/repositories/check_in_repository.dart';
 import 'package:barbermanagemobile/domain/usecases/create_booking_order_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/get_all_branches_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/get_booking_service_detail_use_case.dart';
@@ -47,6 +53,9 @@ import 'package:barbermanagemobile/domain/usecases/get_orders_by_customer_use_ca
 import 'package:barbermanagemobile/domain/usecases/get_promotions_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/get_slider_images_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/get_booking_categories_use_case.dart';
+import 'package:barbermanagemobile/domain/usecases/get_booking_products_use_case.dart';
+import 'package:barbermanagemobile/domain/usecases/get_booking_product_by_id_use_case.dart';
+import 'package:barbermanagemobile/domain/usecases/get_booking_products_by_category_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/get_vips_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/get_branches_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/get_user_by_id_use_case.dart';
@@ -58,6 +67,13 @@ import 'package:barbermanagemobile/domain/usecases/get_blogs_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/get_blog_detail_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/get_customer_promotions_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/create_customer_promotion_use_case.dart';
+import 'package:barbermanagemobile/domain/usecases/get_service_by_id_use_case.dart';
+import 'package:barbermanagemobile/domain/usecases/get_invoice_by_order_id_use_case.dart';
+import 'package:barbermanagemobile/domain/usecases/get_employee_by_id_use_case.dart';
+import 'package:barbermanagemobile/domain/usecases/get_emp_by_user_id_use_case.dart';
+import 'package:barbermanagemobile/domain/usecases/create_check_in_use_case.dart';
+import 'package:barbermanagemobile/domain/usecases/get_check_in_history_use_case.dart';
+import 'package:barbermanagemobile/domain/usecases/update_avatar_use_case.dart';
 import 'package:barbermanagemobile/presentation/providers/auth_provider.dart';
 
 final GetIt getIt = GetIt.instance;
@@ -66,21 +82,31 @@ final GetIt getIt = GetIt.instance;
 void _registerAuthDependencies(GetIt sl) {
   sl.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(),
+    // Handles authentication API calls (login, getUser, register, updateAvatar)
   );
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(sl<AuthRemoteDataSource>()),
+    // Manages auth data access
   );
   sl.registerLazySingleton<LoginUseCase>(
     () => LoginUseCase(sl<AuthRepository>()),
+    // Handles user login
   );
   sl.registerLazySingleton<GetUserByIDUseCase>(
     () => GetUserByIDUseCase(sl<AuthRepository>()),
+    // Fetches user by ID
   );
   sl.registerLazySingleton<RegisterUseCase>(
     () => RegisterUseCase(sl<AuthRepository>()),
+    // Handles user registration
+  );
+  sl.registerLazySingleton<UpdateAvatarUseCase>(
+    () => UpdateAvatarUseCase(sl<AuthRepository>()),
+    // Handles avatar updates
   );
   sl.registerFactory<AuthProvider>(
     () => AuthProvider(sl<LoginUseCase>(), sl<RegisterUseCase>()),
+    // Provides auth state management
   );
 }
 
@@ -88,12 +114,15 @@ void _registerAuthDependencies(GetIt sl) {
 void _registerCustomerDependencies(GetIt sl) {
   sl.registerLazySingleton<CustomerRemoteDataSource>(
     () => CustomerRemoteDataSourceImpl(),
+    // Handles customer API calls
   );
   sl.registerLazySingleton<CustomerRepository>(
     () => CustomerRepositoryImpl(sl<CustomerRemoteDataSource>()),
+    // Manages customer data access
   );
   sl.registerLazySingleton<GetCustomerByUserIDUseCase>(
     () => GetCustomerByUserIDUseCase(sl<CustomerRepository>()),
+    // Fetches customer by user ID
   );
 }
 
@@ -101,42 +130,63 @@ void _registerCustomerDependencies(GetIt sl) {
 void _registerBookingDependencies(GetIt sl) {
   sl.registerLazySingleton<BookingServiceRemoteDataSource>(
     () => BookingServiceRemoteDataSourceImpl(),
+    // Provides API calls for booking services, including getServiceById
   );
   sl.registerLazySingleton<BookingServiceRepository>(
     () => BookingServiceRepositoryImpl(sl<BookingServiceRemoteDataSource>()),
+    // Manages booking service data access
   );
   sl.registerLazySingleton<BookingOrderRemoteDataSource>(
     () => BookingOrderRemoteDataSourceImpl(),
+    // Handles booking order API calls
   );
   sl.registerLazySingleton<BookingOrderRepository>(
     () => BookingOrderRepositoryImpl(sl<BookingOrderRemoteDataSource>()),
+    // Manages booking order data access
   );
   sl.registerLazySingleton<GetBookingServicesUseCase>(
     () => GetBookingServicesUseCase(sl<BookingServiceRepository>()),
+    // Fetches all booking services
   );
   sl.registerLazySingleton<GetBookingServiceDetailUseCase>(
     () => GetBookingServiceDetailUseCase(sl<BookingServiceRepository>()),
+    // Fetches detailed service info
   );
   sl.registerLazySingleton<CreateBookingOrderUseCase>(
     () => CreateBookingOrderUseCase(sl<BookingOrderRepository>()),
+    // Creates a new booking order
   );
   sl.registerLazySingleton<GetAllBranchesUseCase>(
     () => GetAllBranchesUseCase(sl<BookingServiceRepository>()),
+    // Fetches all branches
   );
   sl.registerLazySingleton<GetEmployeesByBranchUseCase>(
     () => GetEmployeesByBranchUseCase(sl<BookingServiceRepository>()),
+    // Fetches employees by branch
   );
   sl.registerLazySingleton<GetEmployeesByDateUseCase>(
     () => GetEmployeesByDateUseCase(sl<BookingServiceRepository>()),
+    // Fetches employees by date
   );
   sl.registerLazySingleton<GetOrdersByCustomerUseCase>(
     () => GetOrdersByCustomerUseCase(sl<BookingOrderRepository>()),
+    // Fetches customer orders
   );
   sl.registerLazySingleton<DeleteBookingOrderUseCase>(
     () => DeleteBookingOrderUseCase(sl<BookingOrderRepository>()),
+    // Deletes a booking order
   );
   sl.registerLazySingleton<PayBookingOrderUseCase>(
     () => PayBookingOrderUseCase(sl<BookingOrderRepository>()),
+    // Processes payment for a booking order
+  );
+  sl.registerLazySingleton<GetServiceByIdUseCase>(
+    () => GetServiceByIdUseCase(sl<BookingServiceRepository>()),
+    // Fetches a specific service by its ID
+  );
+  sl.registerLazySingleton<GetInvoiceByOrderIdUseCase>(
+    () => GetInvoiceByOrderIdUseCase(sl<BookingServiceRepository>()),
+    // Fetches invoice by order ID
   );
 }
 
@@ -144,12 +194,23 @@ void _registerBookingDependencies(GetIt sl) {
 void _registerEmployeeDependencies(GetIt sl) {
   sl.registerLazySingleton<EmployeeRemoteDataSource>(
     () => EmployeeRemoteDataSourceImpl(),
+    // Handles employee API calls
   );
   sl.registerLazySingleton<EmployeeRepository>(
     () => EmployeeRepositoryImpl(sl<EmployeeRemoteDataSource>()),
+    // Manages employee data access
   );
   sl.registerLazySingleton<GetEmployeesUseCase>(
     () => GetEmployeesUseCase(sl<EmployeeRepository>()),
+    // Fetches all employees
+  );
+  sl.registerLazySingleton<GetEmployeeByIdUseCase>(
+    () => GetEmployeeByIdUseCase(sl<EmployeeRepository>()),
+    // Fetches employee by empID
+  );
+  sl.registerLazySingleton<GetEmpByUserIDUseCase>(
+    () => GetEmpByUserIDUseCase(sl<EmployeeRepository>()),
+    // Fetches employee by userID
   );
 }
 
@@ -157,12 +218,15 @@ void _registerEmployeeDependencies(GetIt sl) {
 void _registerSliderDependencies(GetIt sl) {
   sl.registerLazySingleton<SliderRemoteDataSource>(
     () => SliderRemoteDataSourceImpl(),
+    // Handles slider image API calls
   );
   sl.registerLazySingleton<SliderRepository>(
     () => SliderRepositoryImpl(sl<SliderRemoteDataSource>()),
+    // Manages slider data access
   );
   sl.registerLazySingleton<GetSliderImagesUseCase>(
     () => GetSliderImagesUseCase(sl<SliderRepository>()),
+    // Fetches slider images
   );
 }
 
@@ -170,12 +234,39 @@ void _registerSliderDependencies(GetIt sl) {
 void _registerBookingCategoryDependencies(GetIt sl) {
   sl.registerLazySingleton<BookingCategoryRemoteDataSource>(
     () => BookingCategoryRemoteDataSourceImpl(),
+    // Handles booking category API calls
   );
   sl.registerLazySingleton<BookingCategoryRepository>(
     () => BookingCategoryRepositoryImpl(sl<BookingCategoryRemoteDataSource>()),
+    // Manages booking category data access
   );
   sl.registerLazySingleton<GetBookingCategoriesUseCase>(
     () => GetBookingCategoriesUseCase(sl<BookingCategoryRepository>()),
+    // Fetches booking categories
+  );
+}
+
+// Register dependencies for Booking Product module
+void _registerBookingProductDependencies(GetIt sl) {
+  sl.registerLazySingleton<BookingProductRemoteDataSource>(
+    () => BookingProductRemoteDataSourceImpl(),
+    // Handles booking product API calls
+  );
+  sl.registerLazySingleton<BookingProductRepository>(
+    () => BookingProductRepositoryImpl(sl<BookingProductRemoteDataSource>()),
+    // Manages booking product data access
+  );
+  sl.registerLazySingleton<GetBookingProductsUseCase>(
+    () => GetBookingProductsUseCase(sl<BookingProductRepository>()),
+    // Fetches booking products
+  );
+  sl.registerLazySingleton<GetBookingProductByIdUseCase>(
+    () => GetBookingProductByIdUseCase(sl<BookingProductRepository>()),
+    // Fetches a specific booking product by ID
+  );
+  sl.registerLazySingleton<GetBookingProductsByCategoryUseCase>(
+    () => GetBookingProductsByCategoryUseCase(sl<BookingProductRepository>()),
+    // Fetches booking products by category
   );
 }
 
@@ -183,12 +274,15 @@ void _registerBookingCategoryDependencies(GetIt sl) {
 void _registerPromotionDependencies(GetIt sl) {
   sl.registerLazySingleton<PromotionRemoteDataSource>(
     () => PromotionRemoteDataSourceImpl(),
+    // Handles promotion API calls
   );
   sl.registerLazySingleton<PromotionRepository>(
     () => PromotionRepositoryImpl(sl<PromotionRemoteDataSource>()),
+    // Manages promotion data access
   );
   sl.registerLazySingleton<GetPromotionsUseCase>(
     () => GetPromotionsUseCase(sl<PromotionRepository>()),
+    // Fetches promotions
   );
 }
 
@@ -196,12 +290,15 @@ void _registerPromotionDependencies(GetIt sl) {
 void _registerVipDependencies(GetIt sl) {
   sl.registerLazySingleton<VipRemoteDataSource>(
     () => VipRemoteDataSourceImpl(),
+    // Handles VIP API calls
   );
   sl.registerLazySingleton<VipRepository>(
     () => VipRepositoryImpl(sl<VipRemoteDataSource>()),
+    // Manages VIP data access
   );
   sl.registerLazySingleton<GetVipsUseCase>(
     () => GetVipsUseCase(sl<VipRepository>()),
+    // Fetches VIP data
   );
 }
 
@@ -209,12 +306,15 @@ void _registerVipDependencies(GetIt sl) {
 void _registerBranchDependencies(GetIt sl) {
   sl.registerLazySingleton<BranchRemoteDataSource>(
     () => BranchRemoteDataSourceImpl(),
+    // Handles branch API calls
   );
   sl.registerLazySingleton<BranchRepository>(
     () => BranchRepositoryImpl(sl<BranchRemoteDataSource>()),
+    // Manages branch data access
   );
   sl.registerLazySingleton<GetBranchesUseCase>(
     () => GetBranchesUseCase(sl<BranchRepository>()),
+    // Fetches branches
   );
 }
 
@@ -222,15 +322,19 @@ void _registerBranchDependencies(GetIt sl) {
 void _registerBlogDependencies(GetIt sl) {
   sl.registerLazySingleton<BlogRemoteDataSource>(
     () => BlogRemoteDataSourceImpl(),
+    // Handles blog API calls
   );
   sl.registerLazySingleton<BlogRepository>(
     () => BlogRepositoryImpl(sl<BlogRemoteDataSource>()),
+    // Manages blog data access
   );
   sl.registerLazySingleton<GetBlogsUseCase>(
     () => GetBlogsUseCase(sl<BlogRepository>()),
+    // Fetches blogs
   );
   sl.registerLazySingleton<GetBlogDetailUseCase>(
     () => GetBlogDetailUseCase(sl<BlogRepository>()),
+    // Fetches blog details
   );
 }
 
@@ -238,15 +342,39 @@ void _registerBlogDependencies(GetIt sl) {
 void _registerCustomerPromotionDependencies(GetIt sl) {
   sl.registerLazySingleton<CustomerPromotionRemoteDataSource>(
     () => CustomerPromotionRemoteDataSourceImpl(),
+    // Handles customer promotion API calls
   );
   sl.registerLazySingleton<CustomerPromotionRepository>(
     () => CustomerPromotionRepositoryImpl(sl<CustomerPromotionRemoteDataSource>()),
+    // Manages customer promotion data access
   );
   sl.registerLazySingleton<GetCustomerPromotionsUseCase>(
     () => GetCustomerPromotionsUseCase(sl<CustomerPromotionRepository>()),
+    // Fetches customer promotions
   );
   sl.registerLazySingleton<CreateCustomerPromotionUseCase>(
     () => CreateCustomerPromotionUseCase(sl<CustomerPromotionRepository>()),
+    // Creates customer promotions
+  );
+}
+
+// Register dependencies for Check-In module
+void _registerCheckInDependencies(GetIt sl) {
+  sl.registerLazySingleton<CheckInRemoteDataSource>(
+    () => CheckInRemoteDataSourceImpl(),
+    // Handles check-in API calls
+  );
+  sl.registerLazySingleton<CheckInRepository>(
+    () => CheckInRepositoryImpl(sl<CheckInRemoteDataSource>()),
+    // Manages check-in data access
+  );
+  sl.registerLazySingleton<CreateCheckInUseCase>(
+    () => CreateCheckInUseCase(sl<CheckInRepository>()),
+    // Creates a new check-in
+  );
+  sl.registerLazySingleton<GetCheckInHistoryUseCase>(
+    () => GetCheckInHistoryUseCase(sl<CheckInRepository>()),
+    // Fetches check-in history
   );
 }
 
@@ -259,11 +387,13 @@ void setupDependencies() {
   _registerEmployeeDependencies(sl);
   _registerSliderDependencies(sl);
   _registerBookingCategoryDependencies(sl);
+  _registerBookingProductDependencies(sl);
   _registerPromotionDependencies(sl);
   _registerVipDependencies(sl);
   _registerBranchDependencies(sl);
   _registerBlogDependencies(sl);
   _registerCustomerPromotionDependencies(sl);
+  _registerCheckInDependencies(sl);
 }
 
 // Verify that critical dependencies are registered
@@ -289,6 +419,9 @@ void verifyDependencies() {
   if (!getIt.isRegistered<BookingCategoryRepository>()) {
     throw Exception('BookingCategoryRepository is not registered');
   }
+  if (!getIt.isRegistered<BookingProductRepository>()) {
+    throw Exception('BookingProductRepository is not registered');
+  }
   if (!getIt.isRegistered<PromotionRepository>()) {
     throw Exception('PromotionRepository is not registered');
   }
@@ -304,6 +437,9 @@ void verifyDependencies() {
   if (!getIt.isRegistered<CustomerPromotionRepository>()) {
     throw Exception('CustomerPromotionRepository is not registered');
   }
+  if (!getIt.isRegistered<CheckInRepository>()) {
+    throw Exception('CheckInRepository is not registered');
+  }
   if (!getIt.isRegistered<LoginUseCase>()) {
     throw Exception('LoginUseCase is not registered');
   }
@@ -312,6 +448,9 @@ void verifyDependencies() {
   }
   if (!getIt.isRegistered<RegisterUseCase>()) {
     throw Exception('RegisterUseCase is not registered');
+  }
+  if (!getIt.isRegistered<UpdateAvatarUseCase>()) {
+    throw Exception('UpdateAvatarUseCase is not registered');
   }
   if (!getIt.isRegistered<GetCustomerByUserIDUseCase>()) {
     throw Exception('GetCustomerByUserIDUseCase is not registered');
@@ -360,5 +499,32 @@ void verifyDependencies() {
   }
   if (!getIt.isRegistered<CreateCustomerPromotionUseCase>()) {
     throw Exception('CreateCustomerPromotionUseCase is not registered');
+  }
+  if (!getIt.isRegistered<GetBookingProductsUseCase>()) {
+    throw Exception('GetBookingProductsUseCase is not registered');
+  }
+  if (!getIt.isRegistered<GetBookingProductByIdUseCase>()) {
+    throw Exception('GetBookingProductByIdUseCase is not registered');
+  }
+  if (!getIt.isRegistered<GetBookingProductsByCategoryUseCase>()) {
+    throw Exception('GetBookingProductsByCategoryUseCase is not registered');
+  }
+  if (!getIt.isRegistered<GetServiceByIdUseCase>()) {
+    throw Exception('GetServiceByIdUseCase is not registered');
+  }
+  if (!getIt.isRegistered<GetInvoiceByOrderIdUseCase>()) {
+    throw Exception('GetInvoiceByOrderIdUseCase is not registered');
+  }
+  if (!getIt.isRegistered<GetEmployeeByIdUseCase>()) {
+    throw Exception('GetEmployeeByIdUseCase is not registered');
+  }
+  if (!getIt.isRegistered<GetEmpByUserIDUseCase>()) {
+    throw Exception('GetEmpByUserIDUseCase is not registered');
+  }
+  if (!getIt.isRegistered<CreateCheckInUseCase>()) {
+    throw Exception('CreateCheckInUseCase is not registered');
+  }
+  if (!getIt.isRegistered<GetCheckInHistoryUseCase>()) {
+    throw Exception('GetCheckInHistoryUseCase is not registered');
   }
 }

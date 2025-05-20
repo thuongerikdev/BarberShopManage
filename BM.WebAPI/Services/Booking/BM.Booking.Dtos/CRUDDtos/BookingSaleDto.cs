@@ -50,34 +50,40 @@ namespace BM.Booking.Dtos.CRUDDtos
         }
 
         // -------------------- BookingProductDescription DTOs --------------------
-        public class BookingCreateProductDescriptionDto
-        {
-            public IFormFile productImage { get; set; }
-            public string productName { get; set; }
-            public string productDescription { get; set; }
-            public string productStatus { get; set; }
-            public string productColor { get; set; }
-            public string productSize { get; set; }
-            public string productType { get; set; }
-        }
+        //public class BookingCreateProductDescriptionDto
+        //{
+        //    public IFormFile productImage { get; set; }
+        //    public string productName { get; set; }
+        //    public string productDescription { get; set; }
+        //    public string productStatus { get; set; }
+        //    public string productColor { get; set; }
+        //    public string productSize { get; set; }
+        //    public string productType { get; set; }
+        //}
 
-        public class BookingUpdateProductDescriptionDto : BookingCreateProductDescriptionDto
-        {
-            public int productDescriptionID { get; set; }
-        }
+        //public class BookingUpdateProductDescriptionDto : BookingCreateProductDescriptionDto
+        //{
+        //    public int productDescriptionID { get; set; }
+        //}
 
-        public class BookingReadProductDescriptionDto : BookingUpdateProductDescriptionDto
-        {
-        }
+        //public class BookingReadProductDescriptionDto : BookingUpdateProductDescriptionDto
+        //{
+        //}
 
         // -------------------- BookingProductDetail DTOs --------------------
         public class BookingCreateProductDetailDto
         {
             public int productID { get; set; }
-            public int productDescriptionID { get; set; }
-            public int supplierID { get; set; }
             public double productPrice { get; set; }
             public int productQuantity { get; set; }
+            public string productStatus { get; set; }
+            public string productColor { get; set; }
+            public string productSize { get; set; }
+            public string productType { get; set; }
+            public string productDescription { get; set; }
+            public string productName { get; set; }
+            public IFormFile productImage { get; set; }
+            public string productNote { get; set; }
         }
 
         public class BookingUpdateProductDetailDto : BookingCreateProductDetailDto
@@ -87,9 +93,12 @@ namespace BM.Booking.Dtos.CRUDDtos
 
         public class BookingReadProductDetailDto : BookingUpdateProductDetailDto
         {
-            public string productName { get; set; }
-            public string supplierName { get; set; }
+           
+
+
         }
+
+
 
         // -------------------- BookingOrderProduct DTOs --------------------
         public class BookingCreateOrderProductDto
@@ -130,6 +139,30 @@ namespace BM.Booking.Dtos.CRUDDtos
         public class BookingReadSupplierDto : BookingUpdateSupplierDto
         {
         }
+        public class BookingCreateProductImageDto
+        {
+            public int productID { get; set; }
+            public IFormFile srcImage { get; set; }
+        }
+        public class BookingUpdateProductImageDto : BookingCreateProductImageDto
+        {
+            public int productImageID { get; set; }
+        }
+        public class BookingCreateSupplierProductDetailDto
+        {
+            
+            public int productDetailID { get; set; }
+            public int supplierID { get; set; }
+            public double productPrice { get; set; }
+            public int productQuantity { get; set; }
+            public string productStatus { get; set; }
+
+        }
+        public class BookingUpdateSupplierProductDetailDto : BookingCreateSupplierProductDetailDto
+        {
+            public int supplierProductDetailID { get; set; }
+        }
+
     }
 
 }

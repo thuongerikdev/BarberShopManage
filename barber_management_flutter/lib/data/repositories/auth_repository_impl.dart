@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_data_source.dart';
 import '../models/user_model.dart';
+import 'dart:io';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -51,6 +52,16 @@ class AuthRepositoryImpl implements AuthRepository {
         gender: gender,
       );
       return Right(userModel);
+    } catch (e) {
+      return Left(e.toString());
+    }
+  }
+
+  @override
+  Future<Either<String, void>> updateAvatar(int userID, File image) async {
+    try {
+      await remoteDataSource.updateAvatar(userID, image);
+      return Right(null);
     } catch (e) {
       return Left(e.toString());
     }

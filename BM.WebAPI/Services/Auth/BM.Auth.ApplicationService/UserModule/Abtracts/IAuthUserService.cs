@@ -14,13 +14,14 @@ namespace BM.Auth.ApplicationService.UserModule.Abtracts
     {
         public Task<ResponeDto> AuthLogin(AuthLoginDto authLoginDto);
         public Task<ResponeDto> AuthRegister(AuthRegisterDto authRegisterDto);
-        public Task<ResponeDto> AuthRegisterEmp(AuthRegisteEmprDto authRegisterDto);
+        public Task<ResponeDto> AuthRegisterEmp(List<AuthRegisteEmprDto> authRegisterDtos);
         public Task<ResponeDto> AuthUpdateUser(AuthUpdateUserDto authUpdateUserDto);
         public Task<ResponeDto> AuthDeleteUser(int userID);
         public Task<ResponeDto> VerifyEmail(int userId, string token);
         public Task<ResponeDto> AuthGetUser(int userID);
         public Task<ResponeDto> AuthGetAllUser();
         public Task<ResponeDto> AuthUpdateUserAvatar(int userID, IFormFile file);
+        Task<ResponeDto> AuthChangeUserFullName(int userID, string FullName);
 
     }
     public interface IAuthCustomerService
@@ -41,7 +42,9 @@ namespace BM.Auth.ApplicationService.UserModule.Abtracts
         public Task<ResponeDto> AuthGetEmp(int empID);
         public Task<ResponeDto> AuthGetAllEmp();
         public Task<ResponeDto> AuthGetAllUserEmp();
+        Task<ResponeDto> AuthGetEmpByUserID(int userID);
         //public Task<ResponeDto> CaculateSalary (int positionID, int specialtyID);
     }
+   
     
 }

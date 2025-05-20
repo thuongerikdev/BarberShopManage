@@ -6,6 +6,12 @@ class User {
   final String? phoneNumber;
   final String? dateOfBirth;
   final String? gender;
+  final int? roleID;
+  final String? userName;
+  final String? avatar;
+  final bool? isEmp;
+  final bool? isEmailVerified;
+  final String? emailVerificationToken;
 
   User({
     required this.name,
@@ -15,5 +21,11 @@ class User {
     this.phoneNumber,
     this.dateOfBirth,
     this.gender,
+    this.roleID,
+    this.userName,
+    this.avatar,
+    this.isEmp,
+    this.isEmailVerified,
+    this.emailVerificationToken,
   });
 }

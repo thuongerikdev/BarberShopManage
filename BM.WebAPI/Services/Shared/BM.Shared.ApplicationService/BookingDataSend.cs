@@ -14,5 +14,6 @@ namespace BM.Shared.ApplicationService
     public interface IGetPromotionShared
     {
         public  Task<ResponeDto> GetCustomerAndPromotionAsync(int customerID, int promoID);
+        Task<ResponeDto> AuthDecreasePromotion(int cuspromoID);
     }
 }

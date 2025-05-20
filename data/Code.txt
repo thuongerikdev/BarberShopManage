@@ -1,0 +1,190 @@
+15300 , 30156 , 70308 đang ở dòng 70308 của json tạo ra
+
+import random
+import json
+from datetime import datetime
+
+# Load employee data from ListEmp.json
+try:
+    with open("ListEmp.json", "r", encoding="utf-8") as f:
+        emp_data = json.load(f)
+        employees = emp_data["data"]
+except FileNotFoundError:
+    print("Error: ListEmp.json not found")
+    exit(1)
+except json.JSONDecodeError:
+    print("Error: Invalid JSON in ListEmp.json")
+    exit(1)
+
+# Load schedule data from ca làm từ 17-5 đến 2-12.json
+try:
+    with open("ca làm từ 17-5 đến 2-12.json", "r", encoding="utf-8") as f:
+        schedule_data = json.load(f)
+        schedules = schedule_data["data"]
+except FileNotFoundError:
+    print("Error: ca làm từ 17-5 đến 2-12.json not found")
+    exit(1)
+except json.JSONDecodeError:
+    print("Error: Invalid JSON in ca làm từ 17-5 đến 2-12.json")
+    exit(1)
+
+# Hàm phân bổ nhân viên
+def assign_employees_to_shifts():
+    assignments = []
+    employees_per_shift = 50
+    employees_per_branch = 10
+    target_per_position = 5  # 5 position 1 và 5 position 2 mỗi chi nhánh
+    
+    # Nhóm nhân viên theo branchID và positionID
+    employee_groups = {branch: {1: [], 2: []} for branch in range(1, 6)}
+    for emp in employees:
+        branch = emp["branchID"]
+        position = emp["positionID"]
+        employee_groups[branch][position].append(emp)
+    
+    # Kiểm tra đủ nhân viên tối thiểu
+    for branch in range(1, 6):
+        for pos in (1, 2):
+            if len(employee_groups[branch][pos]) < target_per_position:
+                print(f"Error: Not enough employees in branch {branch}, position {pos}. Need at least {target_per_position}, got {len(employee_groups[branch][pos])}")
+                exit(1)
+    
+    # Theo dõi nhân viên đã phân bổ
+    employee_shift_count = {emp["empID"]: 0 for emp in employees}
+    employee_daily_shifts = {emp["empID"]: {} for emp in employees}  # Theo dõi ca mỗi ngày
+    
+    # Phân bổ cho từng ca
+    for shift in schedules:
+        shift_id = shift["scheduleID"]
+        shift_date = shift["startDate"][:10]
+        current_shift_assignments = []
+        used_employees_this_shift = set()
+        
+        for branch in range(1, 6):
+            # Lấy tất cả nhân viên, ưu tiên những người ít ca hơn
+            available_pos1 = sorted(employee_groups[branch][1], key=lambda x: employee_shift_count[x["empID"]])
+            available_pos2 = sorted(employee_groups[branch][2], key=lambda x: employee_shift_count[x["empID"]])
+            
+            # Nếu không đủ nhân viên, sử dụng danh sách gốc
+            if len(available_pos1) < target_per_position:
+                print(f"Warning: Not enough position 1 employees in branch {branch} for shift {shift_id}. Using available employees.")
+                available_pos1 = employee_groups[branch][1]
+            if len(available_pos2) < target_per_position:
+                print(f"Warning: Not enough position 2 employees in branch {branch} for shift {shift_id}. Using available employees.")
+                available_pos2 = employee_groups[branch][2]
+            
+            # Chọn 5 nhân viên position 1 và 5 nhân viên position 2
+            selected_pos1 = random.sample(available_pos1, min(target_per_position, len(available_pos1)))
+            selected_pos2 = random.sample(available_pos2, min(target_per_position, len(available_pos2)))
+            selected_employees = selected_pos1 + selected_pos2
+            
+            # Thêm vào danh sách phân bổ
+            for emp in selected_employees:
+                current_shift_assignments.append({
+                    "empID": emp["empID"],
+                    "scheduleID": shift_id,
+                    "status": "ASSIGNED",
+                    "note": shift["note"],
+                    "startDate": shift["startDate"],
+                    "endDate": shift["endDate"]
+                })
+                employee_shift_count[emp["empID"]] += 1
+                used_employees_this_shift.add(emp["empID"])
+                # Cập nhật ca mỗi ngày
+                if shift_date not in employee_daily_shifts[emp["empID"]]:
+                    employee_daily_shifts[emp["empID"]][shift_date] = 0
+                employee_daily_shifts[emp["empID"]][shift_date] += 1
+        
+        # Kiểm tra số lượng nhân viên trong ca
+        if len(current_shift_assignments) != employees_per_shift:
+            print(f"Error: Shift {shift_id} has {len(current_shift_assignments)} employees, expected {employees_per_shift}")
+            # Bù thêm nhân viên nếu thiếu
+            remaining = employees_per_shift - len(current_shift_assignments)
+            available_employees = [emp for emp in employees if emp["empID"] not in used_employees_this_shift]
+            if available_employees:
+                extra_employees = random.sample(available_employees, min(remaining, len(available_employees)))
+                for emp in extra_employees:
+                    current_shift_assignments.append({
+                        "empID": emp["empID"],
+                        "scheduleID": shift_id,
+                        "status": "ASSIGNED",
+                        "note": shift["note"],
+                        "startDate": shift["startDate"],
+                        "endDate": shift["endDate"]
+                    })
+                    employee_shift_count[emp["empID"]] += 1
+                    if shift_date not in employee_daily_shifts[emp["empID"]]:
+                        employee_daily_shifts[emp["empID"]][shift_date] = 0
+                    employee_daily_shifts[emp["empID"]][shift_date] += 1
+        
+        if len(current_shift_assignments) != employees_per_shift:
+            print(f"Error: Shift {shift_id} still has {len(current_shift_assignments)} employees after filling, expected {employees_per_shift}")
+            exit(1)
+        
+        assignments.extend(current_shift_assignments)
+    
+    # Kiểm tra tất cả nhân viên có ít nhất 1 ca
+    unassigned_employees = [emp for emp in employees if employee_shift_count[emp["empID"]] == 0]
+    if unassigned_employees:
+        print(f"Warning: {len(unassigned_employees)} employees not assigned any shift")
+    
+    return assignments, employee_shift_count, employee_daily_shifts
+
+# Chạy phân bổ và xuất JSON
+random.seed(42)  # Đặt seed để kết quả có thể tái lập
+assignments, employee_shift_count, employee_daily_shifts = assign_employees_to_shifts()
+output = {"errorCode": 200, "errorMessager": "Phân bổ ca làm thành công", "data": assignments}
+
+# Lưu vào tệp JSON
+try:
+    with open("shift_assignments.json", "w", encoding="utf-8") as f:
+        json.dump(output, f, ensure_ascii=False, indent=2)
+    print("Phân bổ ca làm đã được lưu vào shift_assignments.json")
+except Exception as e:
+    print(f"Error writing to shift_assignments.json: {e}")
+
+# Kiểm tra phân bổ
+assigned_employees = set(a["empID"] for a in assignments)
+print(f"\nKiểm tra phân bổ:")
+print(f"Tổng số nhân viên được phân ca: {len(assigned_employees)}/{len(employees)}")
+for shift in schedules[:9]:  # Chỉ in 3 ngày đầu
+    shift_id = shift["scheduleID"]
+    shift_count = len([a for a in assignments if a["scheduleID"] == shift_id])
+    print(f"Ca {shift['scheduleName']} (ID {shift_id}): {shift_count} nhân viên")
+
+# Kiểm tra phân bổ theo chi nhánh cho 3 ngày đầu
+print("\nPhân bổ theo chi nhánh (3 ngày đầu):")
+for shift in schedules[:9]:
+    shift_id = shift["scheduleID"]
+    print(f"\nCa {shift['scheduleName']} (ID {shift_id}):")
+    for branch in range(1, 6):
+        branch_count = len([a for a in assignments if a["scheduleID"] == shift_id and employees[[e["empID"] for e in employees].index(a["empID"])]["branchID"] == branch])
+        pos1_count = len([a for a in assignments if a["scheduleID"] == shift_id and employees[[e["empID"] for e in employees].index(a["empID"])]["branchID"] == branch and employees[[e["empID"] for e in employees].index(a["empID"])]["positionID"] == 1])
+        pos2_count = len([a for a in assignments if a["scheduleID"] == shift_id and employees[[e["empID"] for e in employees].index(a["empID"])]["branchID"] == branch and employees[[e["empID"] for e in employees].index(a["empID"])]["positionID"] == 2])
+        print(f"Chi nhánh {branch}: {branch_count} nhân viên (Position 1: {pos1_count}, Position 2: {pos2_count})")
+        if branch_count != 10 or pos1_count != 5 or pos2_count != 5:
+            print(f"Cảnh báo: Chi nhánh {branch} không đạt yêu cầu (10 nhân viên, 5 position 1, 5 position 2)")
+
+# Báo cáo số ca mỗi ngày cho 3 ngày đầu
+print("\nSố ca mỗi ngày của nhân viên (3 ngày đầu):")
+dates = sorted(set(a["startDate"][:10] for a in assignments))[:3]
+for date in dates:
+    print(f"\nNgày {date}:")
+    daily_distribution = {1: 0, 2: 0, 3: 0}
+    for emp in employees:
+        daily_count = employee_daily_shifts[emp["empID"]].get(date, 0)
+        if daily_count in daily_distribution:
+            daily_distribution[daily_count] += 1
+    for shifts, count in daily_distribution.items():
+        if count > 0:
+            print(f"{count} nhân viên làm {shifts} ca")
+
+# Báo cáo số ca tổng cộng của nhân viên
+print("\nPhân bổ số ca tổng cộng của nhân viên:")
+shift_distribution = {}
+for count in employee_shift_count.values():
+    shift_distribution[count] = shift_distribution.get(count, 0) + 1
+for shifts in sorted(shift_distribution.keys()):
+    count = shift_distribution[shifts]
+    if count > 0:
+        print(f"{count} nhân viên được phân {shifts} ca")

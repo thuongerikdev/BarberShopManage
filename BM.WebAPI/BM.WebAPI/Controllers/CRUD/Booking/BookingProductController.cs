@@ -121,5 +121,26 @@ namespace BM.WebAPI.Controllers.CRUD.Booking
                 return BadRequest(ErrorConst.Error(500, ex.Message));
             }
         }
+        [HttpGet("getbycategory/{categoryID}")]
+        public async Task<IActionResult> GetByCategory(int categoryID)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ErrorConst.Error(500, "Đầu vào không hợp lệ"));
+            }
+            try
+            {
+                var result = await _bookingProductService.BookingGetProductByCategory(categoryID);
+                if (result == null)
+                {
+                    return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));
+                }
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ErrorConst.Error(500, ex.Message));
+            }
+        }
     }
 }

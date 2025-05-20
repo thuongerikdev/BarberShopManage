@@ -6,6 +6,7 @@ using BM.Booking.Domain;
 using BM.Booking.Dtos.BussinessDtos;
 using BM.Booking.Dtos.CRUDdtos;
 using BM.Booking.Dtos.CRUDDtos;
+using BM.Booking.Dtos.CRUDDtos.BM.Booking.Application.DTOs;
 using BM.Booking.Infrastructure;
 using BM.Constant;
 using BM.Constant.Dto;
@@ -32,12 +33,14 @@ namespace BM.Booking.ApplicationService.BussinessModule.Implements
         protected readonly IGetPromotionShared  _getPromotionShared;
         protected readonly IBookingServService _bookingServService;
         protected readonly IBookingInvoiceService _bookingInvoiceService;
+        protected readonly IBookingOrderProductService _bookingOrderProductService;
         private readonly IConfiguration _configuration;
         public BookingBussinessService( 
             ILogger<BookingBussinessService> logger,
             BookingDbContext dbContext , 
             IBookingAppointService bookingAppointService,
             IGetPromotionShared getPromotionShared,
+            IBookingOrderProductService bookingOrderProductService,
             //IBookingPromoService bookingPromoService,
             IConfiguration configuration,
             IBookingServService bookingServService,
@@ -51,6 +54,7 @@ namespace BM.Booking.ApplicationService.BussinessModule.Implements
             _configuration = configuration;
             _bookingInvoiceService = bookingInvoiceService;
             _getPromotionShared = getPromotionShared;
+            _bookingOrderProductService = bookingOrderProductService;
         }
         public async Task<ResponeDto> CreateOrderAppoint(List<BookingCreateBussinessAppointDto> appoint, BookingCreateOrderBussinessDto order, int promoID)
         {
@@ -73,7 +77,7 @@ namespace BM.Booking.ApplicationService.BussinessModule.Implements
                 }
 
                 // Lấy phần trăm ưu đãi từ CustomerData
-                double percentDiscount = promoData.CustomerData.PercentDiscount;
+                double percentDiscount = promoData.PromotionData.PromoDiscount;
                 if (percentDiscount < 0 || percentDiscount > 100)
                 {
                     _logger.LogWarning($"Invalid percentDiscount value: {percentDiscount} for customerID: {order.custID}");
@@ -114,6 +118,149 @@ namespace BM.Booking.ApplicationService.BussinessModule.Implements
                     return ErrorConst.Error(500, "Tổng tiền sau giảm giá không hợp lệ.");
                 }
 
+                // Sử dụng transaction để đảm bảo tính toàn vẹn dữ liệu
+                using var transaction = await _dbContext.Database.BeginTransactionAsync();
+                try
+                {
+                    // Tạo order
+                    var orderFinal = new BookingCreateOrderDto
+                    {
+                        orderDate = DateTime.Now,
+                        orderStatus = "UnConfirm",
+                        orderTotal = totalMoney,
+                        createAt = DateTime.Now,
+                        custID = order.custID,
+                    };
+
+                    var orderCreate = await _bookingOrderService.BookingCreateOrder(orderFinal);
+                    if (orderCreate.ErrorCode != 200)
+                    {
+                        _logger.LogError($"Failed to create order: {orderCreate.ErrorMessager}");
+                        await transaction.RollbackAsync();
+                        return orderCreate;
+                    }
+
+                    var orderData = orderCreate.Data as BookingOrder;
+                    if (orderData == null)
+                    {
+                        _logger.LogError("Failed to retrieve order data after creation.");
+                        await transaction.RollbackAsync();
+                        return ErrorConst.Error(500, "Không thể lấy thông tin đơn hàng sau khi tạo.");
+                    }
+
+                    // Tạo danh sách appointment
+                    var createAppoint = appoint.Select(a => new BookingCreateAppointDto
+                    {
+                        appStatus = a.appStatus,
+                        empID = a.empID,
+                        servID = a.servID,
+                        orderID = orderData.orderID,
+                    }).ToList();
+
+                    // Tạo appointment
+                    var appointCreate = await _bookingAppointService.BookingCreateAppoint(createAppoint);
+                    if (appointCreate.ErrorCode != 200)
+                    {
+                        _logger.LogError($"Failed to create appointments: {appointCreate.ErrorMessager}");
+                        await transaction.RollbackAsync();
+                        return appointCreate;
+                    }
+
+                    // Cập nhật trạng thái khuyến mãi
+                    var cusPromo = await _getPromotionShared.AuthDecreasePromotion(promoData.cusPromoID);
+                    if (cusPromo == null || cusPromo.ErrorCode != 200)
+                    {
+                        _logger.LogWarning($"Failed to decrease promotion for customerID: {order.custID}, promoID: {promoID}");
+                        await transaction.RollbackAsync();
+                        return ErrorConst.Error(404, "Không tìm thấy thông tin khuyến mãi hoặc khách hàng.");
+                    }
+
+                    // Lưu thay đổi vào database
+                    await _dbContext.SaveChangesAsync();
+
+                    // Commit transaction
+                    await transaction.CommitAsync();
+
+                    _logger.LogInformation($"Successfully created order {orderData.orderID} for customer {order.custID}");
+                    return ErrorConst.Success("Tạo order, hóa đơn và dịch vụ thành công");
+                }
+                catch (Exception ex)
+                {
+                    // Rollback transaction nếu có lỗi
+                    await transaction.RollbackAsync();
+                    _logger.LogError(ex, "Error while creating order and appointments within transaction");
+                    return ErrorConst.Error(500, ex.Message);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while creating order and appointments");
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+
+
+        public async Task<ResponeDto> CreateOrderSale(List<BookingCreateOrderProductDto> orderproduct, BookingCreateOrderBussinessDto order, int promoID)
+        {
+            try
+            {
+                // Lấy thông tin khuyến mãi và khách hàng
+                var promo = await _getPromotionShared.GetCustomerAndPromotionAsync(order.custID, promoID);
+                if (promo == null || promo.ErrorCode != 200)
+                {
+                    _logger.LogWarning($"Failed to get promotion for customerID: {order.custID}, promoID: {promoID}");
+                    return ErrorConst.Error(404, "Không tìm thấy thông tin khuyến mãi hoặc khách hàng.");
+                }
+
+                // Ép kiểu promo.Data sang CustomerPromotionDto
+                var promoData = promo.Data as CustomerPromotionDto;
+                if (promoData == null || promoData.CustomerData == null)
+                {
+                    _logger.LogError($"Invalid promo data structure. Data: {JsonSerializer.Serialize(promo.Data)}");
+                    return ErrorConst.Error(500, "Dữ liệu khuyến mãi không hợp lệ.");
+                }
+
+                // Lấy phần trăm ưu đãi từ CustomerData
+                double percentDiscount = promoData.PromotionData.PromoDiscount;
+                if (percentDiscount < 0 || percentDiscount > 100)
+                {
+                    _logger.LogWarning($"Invalid percentDiscount value: {percentDiscount} for customerID: {order.custID}");
+                    return ErrorConst.Error(400, "Phần trăm ưu đãi không hợp lệ.");
+                }
+
+                // Lấy danh sách servID từ appoint
+                var listProduct = orderproduct.Select(item => item.productDetailID).ToList();
+                if (!listProduct.Any())
+                {
+                    _logger.LogWarning("No products provided in the appointment list.");
+                    return ErrorConst.Error(400, "Danh sách dịch vụ trống.");
+                }
+
+                // Lấy danh sách dịch vụ
+                var products = await  _dbContext.BookingProductDetails.Where(x =>  listProduct.Contains(x.productDetailID))
+                    .ToListAsync();
+                if (products.Count != listProduct.Count)
+                {
+                    _logger.LogWarning($"Mismatch in service count. Expected: {listProduct.Count}, Found: {products.Count}");
+                    return ErrorConst.Error(404, "Không tìm thấy một số dịch vụ.");
+                }
+
+                // Tính tổng tiền từ danh sách dịch vụ
+                double totalMoneyOfAppoint = products.Sum(item => item.productPrice);
+                if (totalMoneyOfAppoint <= 0)
+                {
+                    _logger.LogWarning("Total money calculated as zero or negative.");
+                    return ErrorConst.Error(400, "Tổng tiền dịch vụ không hợp lệ.");
+                }
+
+                // Tính tổng tiền sau khi áp dụng ưu đãi
+                double totalMoney = totalMoneyOfAppoint - (totalMoneyOfAppoint * percentDiscount / 100);
+                if (totalMoney < 0)
+                {
+                    _logger.LogWarning($"Total money after discount is negative: {totalMoney}");
+                    return ErrorConst.Error(500, "Tổng tiền sau giảm giá không hợp lệ.");
+                }
+
                 // Tạo order
                 var orderFinal = new BookingCreateOrderDto
                 {
@@ -139,34 +286,17 @@ namespace BM.Booking.ApplicationService.BussinessModule.Implements
                 }
 
                 // Tạo danh sách appointment
-                var createAppoint = appoint.Select(a => new BookingCreateAppointDto
+                var createAppoint = orderproduct.Select(x => new BookingCreateOrderProductDto
                 {
-                    appStatus = a.appStatus,
-                    empID = a.empID,
-                    servID = a.servID,
-                    orderID = orderData.orderID,
+                    orderID = x.orderID,
+                    productDetailID = x.productDetailID,
+                    productPrice = x.productPrice,
+                    quantity = x.quantity,
                 }).ToList();
 
-                // Tạo invoice
-                //var invoice = new BookingCreateInvoiceDto
-                //{
-                //    orderID = orderData.orderID,
-                //    paymentTerms = "**Điều khoản thanh toán:**\r\n\r\n1. **Thời gian thanh toán:** Hóa đơn này phải được thanh toán trong vòng 30 ngày kể từ ngày lập hóa đơn (Invoice Date). Nếu không nhận được thanh toán trong thời gian quy định, chúng tôi có quyền áp dụng lãi suất 1.5% mỗi tháng trên số tiền chưa thanh toán.\r\n\r\n2. **Phương thức thanh toán:** Khách hàng có thể thực hiện thanh toán qua các phương thức sau:\r\n   - Chuyển khoản ngân hàng trực tiếp vào tài khoản ngân hàng của chúng tôi.\r\n   - Thanh toán bằng thẻ tín dụng thông qua hệ thống thanh toán trực tuyến của chúng tôi.\r\n   - Tiền mặt tại văn phòng của chúng tôi trong giờ làm việc.\r\n\r\n3. **Chi phí phát sinh:** Tất cả các chi phí phát sinh liên quan đến việc thu hồi khoản nợ sẽ do khách hàng chịu. Điều này bao gồm nhưng không giới hạn ở chi phí pháp lý, phí thu hồi nợ, và các chi phí khác phát sinh trong quá trình thu hồi.\r\n\r\n4. **Khách hàng có trách nhiệm:** Khách hàng có trách nhiệm kiểm tra thông tin trên hóa đơn và thông báo ngay cho chúng tôi nếu có bất kỳ sự không chính xác nào trong vòng 7 ngày kể từ ngày nhận hóa đơn.\r\n\r\n5. **Điều kiện hủy bỏ:** Nếu khách hàng không thanh toán đúng hạn, chúng tôi có quyền hủy bỏ hoặc tạm dừng tất cả các dịch vụ đang cung cấp cho khách hàng cho đến khi khoản nợ được thanh toán đầy đủ.",
-                //    status = "UnPaid",
-                //    totalAmount = totalMoney,
-                //    invoiceDate = DateTime.Now,
-                //    paymentMethod = ""
-                //};
-
-                //var invoiceCreate = await _bookingInvoiceService.BookingCreateInvoice(invoice);
-                //if (invoiceCreate.ErrorCode != 200)
-                //{
-                //    _logger.LogError($"Failed to create invoice: {invoiceCreate.ErrorMessager}");
-                //    return invoiceCreate;
-                //}
 
                 // Tạo appointment
-                var appointCreate = await _bookingAppointService.BookingCreateAppoint(createAppoint);
+                var appointCreate = await _bookingOrderProductService.BookingCreateOrderProduct(createAppoint);
                 if (appointCreate.ErrorCode != 200)
                 {
                     _logger.LogError($"Failed to create appointments: {appointCreate.ErrorMessager}");
@@ -185,141 +315,6 @@ namespace BM.Booking.ApplicationService.BussinessModule.Implements
                 return ErrorConst.Error(500, ex.Message);
             }
         }
-
-        //public async Task<ResponeDto> CreateOrderSale(List<BookingCreateBussinessAppointDto> appoint, BookingCreateOrderBussinessDto order, int promoID)
-        //{
-        //    try
-        //    {
-        //        // Lấy thông tin khuyến mãi và khách hàng
-        //        var promo = await _getPromotionShared.GetCustomerAndPromotionAsync(promoID, order.custID);
-        //        if (promo == null || promo.ErrorCode != 200)
-        //        {
-        //            _logger.LogWarning($"Failed to get promotion for customerID: {order.custID}, promoID: {promoID}");
-        //            return ErrorConst.Error(404, "Không tìm thấy thông tin khuyến mãi hoặc khách hàng.");
-        //        }
-
-        //        // Ép kiểu promo.Data để truy cập Customer và Promotion
-        //        var promoData = promo.Data as dynamic; // Sử dụng dynamic để truy cập anonymous object
-        //        if (promoData == null || promoData.Customer == null)
-        //        {
-        //            _logger.LogError("Invalid promo data structure.");
-        //            return ErrorConst.Error(500, "Dữ liệu khuyến mãi không hợp lệ.");
-        //        }
-
-        //        // Lấy phần trăm ưu đãi từ Customer
-        //        double percentDiscount = promoData.Customer.percentDiscount;
-        //        if (percentDiscount < 0 || percentDiscount > 100)
-        //        {
-        //            _logger.LogWarning($"Invalid percentDiscount value: {percentDiscount} for customerID: {order.custID}");
-        //            return ErrorConst.Error(400, "Phần trăm ưu đãi không hợp lệ.");
-        //        }
-
-        //        // Lấy danh sách servID từ appoint
-        //        var listAppoint = appoint.Select(item => item.servID).ToList();
-        //        if (!listAppoint.Any())
-        //        {
-        //            _logger.LogWarning("No services provided in the appointment list.");
-        //            return ErrorConst.Error(400, "Danh sách dịch vụ trống.");
-        //        }
-
-        //        // Lấy danh sách dịch vụ
-        //        var services = await _dbContext.BookingServiceDetails
-        //            .Where(s => listAppoint.Contains(s.servID))
-        //            .ToListAsync();
-        //        if (services.Count != listAppoint.Count)
-        //        {
-        //            _logger.LogWarning($"Mismatch in service count. Expected: {listAppoint.Count}, Found: {services.Count}");
-        //            return ErrorConst.Error(404, "Không tìm thấy một số dịch vụ.");
-        //        }
-
-        //        // Tính tổng tiền từ danh sách dịch vụ
-        //        double totalMoneyOfAppoint = services.Sum(item => item.servPrice);
-        //        if (totalMoneyOfAppoint <= 0)
-        //        {
-        //            _logger.LogWarning("Total money calculated as zero or negative.");
-        //            return ErrorConst.Error(400, "Tổng tiền dịch vụ không hợp lệ.");
-        //        }
-
-        //        // Tính tổng tiền sau khi áp dụng ưu đãi
-        //        double totalMoney = totalMoneyOfAppoint - (totalMoneyOfAppoint * percentDiscount / 100);
-        //        if (totalMoney < 0)
-        //        {
-        //            _logger.LogWarning($"Total money after discount is negative: {totalMoney}");
-        //            return ErrorConst.Error(500, "Tổng tiền sau giảm giá không hợp lệ.");
-        //        }
-
-        //        // Tạo order
-        //        var orderFinal = new BookingCreateOrderDto
-        //        {
-        //            orderDate = DateTime.Now,
-        //            orderStatus = "UnConfirm",
-        //            orderTotal = totalMoney,
-        //            createAt = DateTime.Now,
-        //            custID = order.custID,
-        //        };
-
-        //        var orderCreate = await _bookingOrderService.BookingCreateOrder(orderFinal);
-        //        if (orderCreate.ErrorCode != 200)
-        //        {
-        //            _logger.LogError($"Failed to create order: {orderCreate.ErrorMessager}");
-        //            return orderCreate;
-        //        }
-
-        //        var orderData = orderCreate.Data as BookingOrder;
-        //        if (orderData == null)
-        //        {
-        //            _logger.LogError("Failed to retrieve order data after creation.");
-        //            return ErrorConst.Error(500, "Không thể lấy thông tin đơn hàng sau khi tạo.");
-        //        }
-
-        //        // Tạo danh sách appointment
-        //        var createAppoint = appoint.Select(a => new BookingCreateAppointDto
-        //        {
-        //            appStatus = a.appStatus,
-        //            empID = a.empID,
-        //            servID = a.servID,
-        //            orderID = orderData.orderID,
-        //        }).ToList();
-
-        //        // Tạo invoice
-        //        var invoice = new BookingCreateInvoiceDto
-        //        {
-        //            orderID = orderData.orderID,
-        //            paymentTerms = "**Điều khoản thanh toán:**\r\n\r\n1. **Thời gian thanh toán:** Hóa đơn này phải được thanh toán trong vòng 30 ngày kể từ ngày lập hóa đơn (Invoice Date). Nếu không nhận được thanh toán trong thời gian quy định, chúng tôi có quyền áp dụng lãi suất 1.5% mỗi tháng trên số tiền chưa thanh toán.\r\n\r\n2. **Phương thức thanh toán:** Khách hàng có thể thực hiện thanh toán qua các phương thức sau:\r\n   - Chuyển khoản ngân hàng trực tiếp vào tài khoản ngân hàng của chúng tôi.\r\n   - Thanh toán bằng thẻ tín dụng thông qua hệ thống thanh toán trực tuyến của chúng tôi.\r\n   - Tiền mặt tại văn phòng của chúng tôi trong giờ làm việc.\r\n\r\n3. **Chi phí phát sinh:** Tất cả các chi phí phát sinh liên quan đến việc thu hồi khoản nợ sẽ do khách hàng chịu. Điều này bao gồm nhưng không giới hạn ở chi phí pháp lý, phí thu hồi nợ, và các chi phí khác phát sinh trong quá trình thu hồi.\r\n\r\n4. **Khách hàng có trách nhiệm:** Khách hàng có trách nhiệm kiểm tra thông tin trên hóa đơn và thông báo ngay cho chúng tôi nếu có bất kỳ sự không chính xác nào trong vòng 7 ngày kể từ ngày nhận hóa đơn.\r\n\r\n5. **Điều kiện hủy bỏ:** Nếu khách hàng không thanh toán đúng hạn, chúng tôi có quyền hủy bỏ hoặc tạm dừng tất cả các dịch vụ đang cung cấp cho khách hàng cho đến khi khoản nợ được thanh toán đầy đủ.",
-        //            status = "UnPaid",
-        //            totalAmount = totalMoney,
-        //            invoiceDate = DateTime.Now,
-        //        };
-
-        //        var invoiceCreate = await _bookingInvoiceService.BookingCreateInvoice(invoice);
-        //        if (invoiceCreate.ErrorCode != 200)
-        //        {
-        //            _logger.LogError($"Failed to create invoice: {invoiceCreate.ErrorMessager}");
-        //            return invoiceCreate;
-        //        }
-
-        //        // Tạo appointment
-        //        var appointCreate = await _bookingAppointService.BookingCreateAppoint(createAppoint);
-        //        if (appointCreate.ErrorCode != 200)
-        //        {
-        //            _logger.LogError($"Failed to create appointments: {appointCreate.ErrorMessager}");
-        //            return appointCreate;
-        //        }
-
-        //        // Lưu thay đổi vào database
-        //        await _dbContext.SaveChangesAsync();
-
-        //        _logger.LogInformation($"Successfully created order {orderData.orderID} for customer {order.custID}");
-        //        return ErrorConst.Success("Tạo order, hóa đơn và dịch vụ thành công");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Error while creating order and appointments");
-        //        return ErrorConst.Error(500, ex.Message);
-        //    }
-        //}
-
-
 
         public async Task<ResponeDto> GetOrderToOtherDomain(int orderID)
         {

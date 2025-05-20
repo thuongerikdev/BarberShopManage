@@ -14,6 +14,7 @@ namespace BM.Auth.Dtos.User
         public string promoName { get; set; }
         public string promoDescription { get; set; }
         public double promoDiscount { get; set; }
+        public int pointToGet { get; set; }
         public DateTime promoStart { get; set; }
         public DateTime promoEnd { get; set; }
         public string promoStatus { get; set; }
@@ -25,6 +26,7 @@ namespace BM.Auth.Dtos.User
         public string promoName { get; set; }
         public string promoDescription { get; set; }
         public double promoDiscount { get; set; }
+        public int pointToGet { get; set; }
         public DateTime promoStart { get; set; }
         public DateTime promoEnd { get; set; }
         public string promoStatus { get; set; }

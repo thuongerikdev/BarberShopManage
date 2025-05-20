@@ -1,6 +1,7 @@
 ﻿using BM.Auth.ApplicationService.Common;
 using BM.Auth.ApplicationService.VipModule.Abtracts;
 using BM.Auth.Domain;
+using BM.Auth.Dtos;
 using BM.Auth.Dtos.User;
 using BM.Auth.Infrastructure;
 using BM.Constant;
@@ -8,6 +9,7 @@ using BM.Constant.Dto;
 using BM.Shared.ApplicationService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +18,7 @@ using System.Threading.Tasks;
 
 namespace BM.Auth.ApplicationService.VipModule.Implements
 {
-    public class AuthCusPromoService : AuthServiceBase, IAuthCusPromoService  , IGetPromotionShared
+    public class AuthCusPromoService : AuthServiceBase, IAuthCusPromoService, IGetPromotionShared
     {
         public AuthCusPromoService(ILogger<AuthCusPromoService> logger, AuthDbContext dbContext) : base(logger, dbContext)
         {
@@ -30,7 +32,11 @@ namespace BM.Auth.ApplicationService.VipModule.Implements
                 {
                     customerID = authCreateCusPromo.customerID,
                     promoID = authCreateCusPromo.promoID,
-                    cusPromoStatus = authCreateCusPromo.cusPromoStatus
+                    cusPromoStatus = authCreateCusPromo.cusPromoStatus,
+                    createAt = DateTime.Now,
+                    promoCount = authCreateCusPromo.promoCount,
+                    updateAt = DateTime.Now
+
                 };
                 _dbContext.CusPromos.Add(cusPromo);
                 await _dbContext.SaveChangesAsync();
@@ -55,6 +61,9 @@ namespace BM.Auth.ApplicationService.VipModule.Implements
                 cusPromo.customerID = authUpdateCusPromo.customerID;
                 cusPromo.promoID = authUpdateCusPromo.promoID;
                 cusPromo.cusPromoStatus = authUpdateCusPromo.cusPromoStatus;
+                cusPromo.promoCount = authUpdateCusPromo.promoCount;
+                cusPromo.updateAt = DateTime.Now;
+
                 await _dbContext.SaveChangesAsync();
                 return ErrorConst.Success("Cập nhật khuyến mãi khách hàng thành công", cusPromo);
 
@@ -155,7 +164,7 @@ namespace BM.Auth.ApplicationService.VipModule.Implements
                         CustomerType = cusPromo.AuthCustomer.customerType,
                         CustomerStatus = cusPromo.AuthCustomer.customerStatus,
                         TotalSpent = cusPromo.AuthCustomer.totalSpent,
-                        PercentDiscount = cusPromo.AuthCustomer.percentDiscount
+
                     },
                     PromotionData = new PromotionDto
                     {
@@ -166,7 +175,10 @@ namespace BM.Auth.ApplicationService.VipModule.Implements
                         PromoStart = cusPromo.AuthPromotion.promoStart,
                         PromoEnd = cusPromo.AuthPromotion.promoEnd,
                         PromoStatus = cusPromo.AuthPromotion.promoStatus
-                    }
+                    },
+                    promoCount = cusPromo.promoCount,
+                    cusPromoID = cusPromo.cusPromoID,
+
                 };
 
                 return ErrorConst.Success("Lấy thông tin khuyến mãi và khách hàng thành công", result);
@@ -177,7 +189,7 @@ namespace BM.Auth.ApplicationService.VipModule.Implements
                 return ErrorConst.Error(500, ex.Message);
             }
         }
-        public async Task <ResponeDto> GetCusPromoByCustomerID (int customerID)
+        public async Task<ResponeDto> GetCusPromoByCustomerID(int customerID)
         {
             _logger.LogInformation("AuthGetCusPromoByCustomer");
             try
@@ -186,13 +198,186 @@ namespace BM.Auth.ApplicationService.VipModule.Implements
                     .Where(x => x.customerID == customerID)
                     .Include(x => x.AuthCustomer)
                     .Include(x => x.AuthPromotion)
-                    .Select(x => x.AuthPromotion )
+                    .Select(x => x.AuthPromotion)
                     .ToListAsync();
                 if (cusPromo == null || !cusPromo.Any())
                 {
                     return ErrorConst.Error(500, "Không tìm thấy khuyến mãi cho khách hàng này");
                 }
                 return ErrorConst.Success("Lấy khuyến mãi khách hàng thành công", cusPromo);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+        public async Task<ResponeDto> AuthDecreasePromotion(int cuspromoID)
+        {
+            _logger.LogInformation("AuthDecreasePromotion");
+            try
+            {
+                var cusPromo = await _dbContext.CusPromos.FindAsync(cuspromoID);
+                if (cusPromo == null)
+                {
+                    return ErrorConst.Error(500, "Không tìm thấy khuyến mãi khách hàng");
+                }
+                if (cusPromo.promoCount > 0)
+                {
+                    cusPromo.promoCount--;
+                    await _dbContext.SaveChangesAsync();
+                    return ErrorConst.Success("Giảm số lượng khuyến mãi thành công", cusPromo);
+                }
+                else
+                {
+                    return ErrorConst.Error(500, "Số lượng khuyến mãi đã hết");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+
+        }
+        public async Task<ResponeDto> AuthIncreasePromotion(int cuspromoID)
+        {
+            _logger.LogInformation("AuthIncreasePromotion");
+            try
+            {
+                var cusPromo = await _dbContext.CusPromos.FindAsync(cuspromoID);
+                if (cusPromo == null)
+                {
+                    return ErrorConst.Error(500, "Không tìm thấy khuyến mãi khách hàng");
+                }
+                cusPromo.promoCount++;
+                await _dbContext.SaveChangesAsync();
+                return ErrorConst.Success("Tăng số lượng khuyến mãi thành công", cusPromo);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+        public async Task<ResponeDto> AuthCustomerGetPromo(AuthCreateCusPromo authCreateCusPromo)
+        {
+            _logger.LogInformation("AuthCustomerGetPromo");
+            try
+            {
+                // Kiểm tra khách hàng
+                var customer = await _dbContext.Customers
+                    .Where(x => x.customerID == authCreateCusPromo.customerID)
+                    .FirstOrDefaultAsync();
+                if (customer == null)
+                {
+                    return ErrorConst.Error(500, "Không tìm thấy khách hàng");
+                }
+
+                // Kiểm tra khuyến mãi
+                var promo = await _dbContext.Promos
+                    .Where(x => x.promoID == authCreateCusPromo.promoID)
+                    .FirstOrDefaultAsync();
+                if (promo == null)
+                {
+                    return ErrorConst.Error(500, "Không tìm thấy khuyến mãi");
+                }
+
+                // Kiểm tra nếu promoType là VipPromotion
+                if (promo.promoType == "VipPromotion")
+                {
+                    return ErrorConst.Error(500, "Khuyến mãi VIP không được phép đổi");
+                }
+
+                var cusPromo = await _dbContext.CusPromos
+                    .Where(x => x.customerID == authCreateCusPromo.customerID && x.promoID == authCreateCusPromo.promoID)
+                    .FirstOrDefaultAsync();
+                if (cusPromo != null)
+                {
+                    cusPromo.promoCount++;
+                    await _dbContext.SaveChangesAsync();
+
+                    var cusPromoResponse = new CusPromoResponseDto
+                    {
+                        CustomerID = cusPromo.customerID,
+                        PromoID = cusPromo.promoID,
+                        CusPromoStatus = cusPromo.cusPromoStatus,
+                        PromoCount = cusPromo.promoCount,
+                        CreateAt = cusPromo.createAt,
+                        UpdateAt = cusPromo.updateAt
+                    };
+                    return ErrorConst.Success("Khách hàng đã nhận khuyến mãi thành công", cusPromoResponse);
+                }
+
+                if (customer.loyaltyPoints < promo.pointToGet)
+                {
+                    return ErrorConst.Error(500, "Điểm thưởng không đủ để nhận khuyến mãi");
+                }
+
+                // Sử dụng giao dịch để đảm bảo tính toàn vẹn
+                using var transaction = await _dbContext.Database.BeginTransactionAsync();
+                try
+                {
+                    // Thêm bản ghi CusPromos
+                    var cusPromocreate = new Domain.AuthCusPromo
+                    {
+                        customerID = authCreateCusPromo.customerID,
+                        promoID = authCreateCusPromo.promoID,
+                        cusPromoStatus = authCreateCusPromo.cusPromoStatus,
+                        createAt = DateTime.Now,
+                        promoCount = authCreateCusPromo.promoCount,
+                        updateAt = DateTime.Now
+                    };
+                    _dbContext.CusPromos.Add(cusPromocreate);
+
+                    // Cập nhật điểm thưởng
+                    customer.loyaltyPoints -= promo.pointToGet;
+
+                    // Lưu tất cả thay đổi trong một lần
+                    await _dbContext.SaveChangesAsync();
+
+                    // Commit giao dịch
+                    await transaction.CommitAsync();
+
+                    var cusPromoResponse = new CusPromoResponseDto
+                    {
+                        CustomerID = cusPromocreate.customerID,
+                        PromoID = cusPromocreate.promoID,
+                        CusPromoStatus = cusPromocreate.cusPromoStatus,
+                        PromoCount = cusPromocreate.promoCount,
+                        CreateAt = cusPromocreate.createAt,
+                        UpdateAt = cusPromocreate.updateAt
+                    };
+                    return ErrorConst.Success("Khách hàng đã nhận khuyến mãi thành công", cusPromoResponse);
+                }
+                catch (Exception ex)
+                {
+                    // Rollback giao dịch nếu có lỗi
+                    await transaction.RollbackAsync();
+                    _logger.LogError(ex, "Lỗi khi cấp khuyến mãi");
+                    return ErrorConst.Error(500, ex.Message);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi xử lý AuthCustomerGetPromo");
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+        public async Task<ResponeDto> AuthCustomerGetFreePromotion(int cusPromoID)
+        {
+            _logger.LogInformation("AuthGetPromoByCusPromoID");
+            try
+            {
+                var cusPromo = await _dbContext.CusPromos
+                    .Where(x => x.cusPromoID == cusPromoID)
+                    .Include(x => x.AuthPromotion)
+                    .FirstOrDefaultAsync();
+                if (cusPromo == null)
+                {
+                    return ErrorConst.Error(500, "Không tìm thấy khuyến mãi khách hàng");
+                }
+                return ErrorConst.Success("Lấy thông tin khuyến mãi thành công", cusPromo.AuthPromotion);
             }
             catch (Exception ex)
             {

@@ -143,7 +143,6 @@ namespace BM.Auth.ApplicationService.VipModule.Implements
                                                     {
                                                         x.totalSpent,
                                                         x.loyaltyPoints,
-                                                        x.percentDiscount,
                                                         x.AuthVip.vipCost,
                                                         x.AuthVip.vipDiscount,
                                                         x.AuthVip.vipStatus,
@@ -167,6 +166,42 @@ namespace BM.Auth.ApplicationService.VipModule.Implements
                 return ErrorConst.Error(500, ex.Message);
             }
         }
+        public async Task<ResponeDto> AuthGetVipByType(string vipType)
+        {
+            _logger.LogInformation("AuthGetVipByType");
+            try
+            {
+                var vip = await _dbContext.Vips.Where(x => x.vipType == vipType).ToListAsync();
+                if (vip == null)
+                {
+                    return ErrorConst.Error(500, "Không tìm thấy vip");
+                }
+                return ErrorConst.Success("Lấy vip thành công", vip);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+        //public async Task<ResponeDto> AuthUpdateType(string vipType, int userID)
+        //{
+        //    _logger.LogInformation("AuthGetVipByType");
+        //    try
+        //    {
+        //        var vip = await _dbContext.Vips.Where(x => x.vipType == vipType).ToListAsync();
+        //        if (vip == null)
+        //        {
+        //            return ErrorConst.Error(500, "Không tìm thấy vip");
+        //        }
+        //        return ErrorConst.Success("Lấy vip thành công", vip);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex.Message);
+        //        return ErrorConst.Error(500, ex.Message);
+        //    }
+        //}
     }
 }
 

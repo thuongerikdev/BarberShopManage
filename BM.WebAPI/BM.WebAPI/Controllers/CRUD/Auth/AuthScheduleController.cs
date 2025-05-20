@@ -124,7 +124,7 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             }
         }
         [HttpGet("getEmpByDate")]
-        public async Task<IActionResult> AuthGetEmpByDate(DateTime date , int branchesID)
+        public async Task<IActionResult> AuthGetEmpByDate(DateTime date , int branchesID, string typeOfEmp)
         {
             if (!ModelState.IsValid)
             {
@@ -132,7 +132,7 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             }
             try
             {
-                var result = await _authScheduleService.GetEmployeesByDateAndBranch(date , branchesID);
+                var result = await _authScheduleService.GetEmployeesByDateAndBranch(date , branchesID , typeOfEmp);
                 if (result == null)
                 {
                     return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));

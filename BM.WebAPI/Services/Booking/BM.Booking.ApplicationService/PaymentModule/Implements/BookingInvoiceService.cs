@@ -121,5 +121,64 @@ namespace BM.Booking.ApplicationService.PaymentModule.Implements
                 return ErrorConst.Error(500, ex.Message);
             }
         }
-    }
+        public async Task<ResponeDto> BookingGetInvoiceByOrderID(int orderID)
+        {
+            _logger.LogInformation("BookingGetInvoiceByOrderID for orderID: {OrderID}", orderID);
+
+            // Validate input
+            if (orderID <= 0)
+            {
+                return ErrorConst.Error(400, "OrderID phải lớn hơn 0");
+            }
+
+            try
+            {
+                var invoice = await _dbContext.BookingInvoices
+
+                    .Where(x => x.orderID == orderID)
+                    .Select(x => new 
+                    {
+                        InvoiceID = x.invoiceID,
+                        InvoiceDate = x.invoiceDate,
+                        Status = x.status,
+                        TotalAmount = x.totalAmount,
+                        OrderID = x.orderID,
+                        PaymentTerms = x.paymentTerms,
+                        PaymentMethod = x.paymentMethod,
+                        Order = new 
+                        {
+                            OrderID = x.BookingOrder.orderID,
+                            CustID = x.BookingOrder.custID,
+                            OrderStatus = x.BookingOrder.orderStatus,
+                            Appointments = x.BookingOrder.BookingAppointments
+                                .Select(y => new 
+                                {
+                                    AppointmentID = y.appID,
+                                    EmpID = y.empID,
+                                    AppointmentStatus = y.appStatus,
+                                    Service = y.serviceDetailID,
+
+
+
+                                })
+                                .ToList()
+                        }
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (invoice == null)
+                {
+                    return ErrorConst.Error(404, "Không tìm thấy invoice cho orderID này");
+                }
+
+                return ErrorConst.Success("Lấy invoice thành công", invoice);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy invoice cho orderID: {OrderID}", orderID);
+                return ErrorConst.Error(500, "Đã xảy ra lỗi khi xử lý yêu cầu");
+            }
+        }
+
+        }
 }

@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Org.BouncyCastle.Asn1.Ocsp;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace BM.Auth.ApplicationService.UserModule.Implements
@@ -85,20 +87,66 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
 
         public async Task<ResponeDto> AuthRegister(AuthRegisterDto authRegisterDto)
         {
-            _logger.LogInformation("AuthRegister");
+            _logger.LogInformation("Starting AuthRegister process");
+
+            if (authRegisterDto == null)
+            {
+                return ErrorConst.Error(400, "Dữ liệu đăng ký không hợp lệ.");
+            }
+
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
             try
             {
-                var existingUser = await _dbContext.Users.FirstOrDefaultAsync(x => x.userName == authRegisterDto.userName);
+                // Validate input
+                if (string.IsNullOrWhiteSpace(authRegisterDto.userName) ||
+                    string.IsNullOrWhiteSpace(authRegisterDto.email) ||
+                    string.IsNullOrWhiteSpace(authRegisterDto.password))
+                {
+                    return ErrorConst.Error(400, "Dữ liệu đầu vào không hợp lệ.");
+                }
+
+                // Validate email format
+                var emailRegex = @"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$";
+                if (!Regex.IsMatch(authRegisterDto.email, emailRegex))
+                {
+                    return ErrorConst.Error(400, "Định dạng email không hợp lệ.");
+                }
+
+                // Validate phone number (10-11 digits, starts with 0, optional)
+                if (!string.IsNullOrWhiteSpace(authRegisterDto.phoneNumber))
+                {
+                    var phoneRegex = @"^0\d{9,10}$";
+                    if (!Regex.IsMatch(authRegisterDto.phoneNumber, phoneRegex))
+                    {
+                        return ErrorConst.Error(400, "Số điện thoại không hợp lệ. Phải bắt đầu bằng 0 và có 10-11 chữ số.");
+                    }
+                }
+
+                // Kiểm tra user tồn tại
+                var existingUser = await _dbContext.Users
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.userName == authRegisterDto.userName);
+
                 if (existingUser != null)
                 {
-                    return ErrorConst.Error(500, "Người dùng đã tồn tại.");
+                    return ErrorConst.Error(409, "Người dùng đã tồn tại.");
                 }
+
+                // Kiểm tra email đã được sử dụng
+                //var existingEmail = await _dbContext.Users
+                //    .AsNoTracking()
+                //    .AnyAsync(x => x.email == authRegisterDto.email);
+
+                //if (existingEmail)
+                //{
+                //    return ErrorConst.Error(409, "Email đã được sử dụng.");
+                //}
 
                 // Băm mật khẩu
                 var (passwordHash, passwordSalt) = PasswordHasher.HashPassword(authRegisterDto.password);
-
                 var verificationToken = GenerateVerificationToken();
 
+                // Tạo user mới
                 var user = new AuthUser
                 {
                     userName = authRegisterDto.userName,
@@ -113,107 +161,199 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                     roleID = authRegisterDto.roleID,
                     token = "",
                     isEmailVerified = false,
-                    isEmp = false ,
+                    isEmp = false,
                     emailVerificationToken = verificationToken
                 };
 
-                _dbContext.Users.Add(user);
+                await _dbContext.Users.AddAsync(user);
                 await _dbContext.SaveChangesAsync();
 
-                
+                // Lấy user vừa tạo
+                var userRes = await _dbContext.Users
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.userName == authRegisterDto.userName);
 
-             
-
-                var userRes = await _dbContext.Users.FirstOrDefaultAsync(x => x.userName == authRegisterDto.userName);
                 if (userRes == null)
                 {
+                    await transaction.RollbackAsync();
                     return ErrorConst.Error(500, "Không thể tìm thấy người dùng vừa tạo.");
                 }
 
+                // Tạo customer
                 var customer = new AuthCreateCustomerDto
                 {
                     userID = userRes.userID,
                     customerStatus = "OK",
                     customerType = "Normal",
                     vipID = 1
-
-
                 };
-                await _authCustomerService.AuthCreateCustomer(customer);
+
+                var customerResult = await _authCustomerService.AuthCreateCustomer(customer);
+                if (customerResult.ErrorCode != 200)
+                {
+                    await transaction.RollbackAsync();
+                    return ErrorConst.Error(500, "Tạo khách hàng thất bại.");
+                }
+
                 await _dbContext.SaveChangesAsync();
 
+                // Gửi email xác thực
                 await _emailService.SendVerificationEmail(userRes.userID, userRes.email, verificationToken);
+
+                await transaction.CommitAsync();
                 return ErrorConst.Success("Đăng ký thành công. Vui lòng kiểm tra email để xác nhận.", null);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "Error in AuthRegister: {Message}", ex.Message);
                 return ErrorConst.Error(500, ex.Message);
             }
         }
-        public async Task<ResponeDto> AuthRegisterEmp(AuthRegisteEmprDto authRegisterDto)
+        public async Task<ResponeDto> AuthRegisterEmp(List<AuthRegisteEmprDto> authRegisterDtos)
         {
-            _logger.LogInformation("AuthRegister");
-            try
+            _logger.LogInformation("Starting AuthRegisterEmp process for {Count} users", authRegisterDtos?.Count ?? 0);
+
+            if (authRegisterDtos == null || !authRegisterDtos.Any())
             {
-                var existingUser = await _dbContext.Users.FirstOrDefaultAsync(x => x.userName == authRegisterDto.userName);
-                if (existingUser != null)
-                {
-                    return ErrorConst.Error(500, "Người dùng đã tồn tại.");
-                }
-
-                // Băm mật khẩu
-                var (passwordHash, passwordSalt) = PasswordHasher.HashPassword(authRegisterDto.password);
-
-                var verificationToken = GenerateVerificationToken();
-
-                var user = new AuthUser
-                {
-                    userName = authRegisterDto.userName,
-                    passwordHash = passwordHash,
-                    passwordSalt = passwordSalt,
-                    email = authRegisterDto.email,
-                    phoneNumber = authRegisterDto.phoneNumber,
-                    fullName = authRegisterDto.fullName,
-                    avatar = "",
-                    dateOfBirth = authRegisterDto.dateOfBirth,
-                    gender = authRegisterDto.gender,
-                    roleID = authRegisterDto.roleID,
-                    token = "",
-                    isEmailVerified = false,
-                    isEmp = true,
-                    emailVerificationToken = verificationToken
-                };
-               
-
-                _dbContext.Users.Add(user);
-                await _dbContext.SaveChangesAsync();
-
-                var userRes = await _dbContext.Users.FirstOrDefaultAsync(x => x.userName == authRegisterDto.userName);
-
-                var emp = new AuthCreateEmpDto
-                {
-                    userID = userRes.userID,
-                    positionID = authRegisterDto.positionID,
-                    specialtyID = authRegisterDto.specialtyID,
-                    startDate = authRegisterDto.startDate,
-                    branchID = authRegisterDto.branchID,
-                };
-                await _authEmpService.AuthCreateEmp(emp);
-                await _dbContext.SaveChangesAsync();
-                if (userRes == null)
-                {
-                    return ErrorConst.Error(500, "Không thể tìm thấy người dùng vừa tạo.");
-                }
-
-                await _emailService.SendVerificationEmail(userRes.userID, userRes.email, verificationToken);
-                return ErrorConst.Success("Đăng ký thành công. Vui lòng kiểm tra email để xác nhận.", null);
+                return ErrorConst.Error(400, "Danh sách thông tin đăng ký không hợp lệ.");
             }
-            catch (Exception ex)
+
+            var results = new List<string>();
+            var failedCount = 0;
+
+            foreach (var authRegisterDto in authRegisterDtos)
             {
-                _logger.LogError(ex.Message);
-                return ErrorConst.Error(500, ex.Message);
+                using var transaction = await _dbContext.Database.BeginTransactionAsync();
+                try
+                {
+                    // Validate input
+                    if (string.IsNullOrWhiteSpace(authRegisterDto.userName) ||
+                        string.IsNullOrWhiteSpace(authRegisterDto.email) ||
+                        string.IsNullOrWhiteSpace(authRegisterDto.password))
+                    {
+                        results.Add($"Thất bại: Dữ liệu đầu vào không hợp lệ cho user {authRegisterDto.userName}.");
+                        failedCount++;
+                        await transaction.RollbackAsync();
+                        continue;
+                    }
+
+                    // Validate email format
+                    var emailRegex = @"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$";
+                    if (!Regex.IsMatch(authRegisterDto.email, emailRegex))
+                    {
+                        results.Add($"Thất bại: Định dạng email không hợp lệ cho user {authRegisterDto.userName}.");
+                        failedCount++;
+                        await transaction.RollbackAsync();
+                        continue;
+                    }
+
+                    // Validate phone number (10-11 digits, starts with 0, optional)
+                    if (!string.IsNullOrWhiteSpace(authRegisterDto.phoneNumber))
+                    {
+                        var phoneRegex = @"^0\d{9,10}$";
+                        if (!Regex.IsMatch(authRegisterDto.phoneNumber, phoneRegex))
+                        {
+                            results.Add($"Thất bại: Số điện thoại không hợp lệ cho user {authRegisterDto.userName}.");
+                            failedCount++;
+                            await transaction.RollbackAsync();
+                            continue;
+                        }
+                    }
+
+                    // Kiểm tra user tồn tại
+                    var existingUser = await _dbContext.Users
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(x => x.userName == authRegisterDto.userName);
+
+                    if (existingUser != null)
+                    {
+                        results.Add($"Thất bại: Người dùng {authRegisterDto.userName} đã tồn tại.");
+                        failedCount++;
+                        await transaction.RollbackAsync();
+                        continue;
+                    }
+
+                    // Băm mật khẩu
+                    var (passwordHash, passwordSalt) = PasswordHasher.HashPassword(authRegisterDto.password);
+                    var verificationToken = GenerateVerificationToken();
+
+                    // Tạo user mới
+                    var user = new AuthUser
+                    {
+                        userName = authRegisterDto.userName,
+                        passwordHash = passwordHash,
+                        passwordSalt = passwordSalt,
+                        email = authRegisterDto.email,
+                        phoneNumber = authRegisterDto.phoneNumber,
+                        fullName = authRegisterDto.fullName,
+                        avatar = "",
+                        dateOfBirth = authRegisterDto.dateOfBirth,
+                        gender = authRegisterDto.gender,
+                        roleID = authRegisterDto.roleID,
+                        token = "",
+                        isEmailVerified = false,
+                        isEmp = true,
+                        emailVerificationToken = verificationToken
+                    };
+
+                    await _dbContext.Users.AddAsync(user);
+                    await _dbContext.SaveChangesAsync();
+
+                    // Lấy user vừa tạo
+                    var userRes = await _dbContext.Users
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(x => x.userName == authRegisterDto.userName);
+
+                    if (userRes == null)
+                    {
+                        results.Add($"Thất bại: Không thể tìm thấy người dùng vừa tạo cho user {authRegisterDto.userName}.");
+                        failedCount++;
+                        await transaction.RollbackAsync();
+                        continue;
+                    }
+
+                    // Tạo employee
+                    var emp = new AuthCreateEmpDto
+                    {
+                        userID = userRes.userID,
+                        positionID = authRegisterDto.positionID,
+                        specialtyID = authRegisterDto.specialtyID,
+                        startDate = authRegisterDto.startDate,
+                        branchID = authRegisterDto.branchID,
+                    };
+
+                    var empResult = await _authEmpService.AuthCreateEmp(emp);
+                    if (empResult.ErrorCode != 200)
+                    {
+                        results.Add($"Thất bại: Tạo employee thất bại cho user {authRegisterDto.userName}.");
+                        failedCount++;
+                        await transaction.RollbackAsync();
+                        continue;
+                    }
+
+                    await _dbContext.SaveChangesAsync();
+
+                    // Gửi email xác thực
+                    await _emailService.SendVerificationEmail(userRes.userID, userRes.email, verificationToken);
+
+                    await transaction.CommitAsync();
+                    results.Add($"Thành công: Đăng ký thành công cho user {authRegisterDto.userName}. Vui lòng kiểm tra email để xác nhận.");
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    _logger.LogError(ex, "Error in AuthRegisterEmp for user {UserName}: {Message}", authRegisterDto.userName, ex.Message);
+                    results.Add($"Thất bại: Lỗi hệ thống khi đăng ký user {authRegisterDto.userName}.");
+                    failedCount++;
+                }
             }
+
+            var message = failedCount == 0
+                ? "Đăng ký tất cả tài khoản thành công."
+                : $"Đăng ký hoàn tất với {authRegisterDtos.Count - failedCount} tài khoản thành công, {failedCount} tài khoản thất bại.";
+
+            return ErrorConst.Success(message, results);
         }
 
         public async Task<ResponeDto> AuthLogin(AuthLoginDto authLoginDto)
@@ -493,5 +633,27 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                 return ErrorConst.Error(500, ex.Message);
             }
         }
-    }
+        public async Task<ResponeDto> AuthChangeUserFullName(int userID , string FullName)
+        {
+            _logger.LogInformation("Update user FullName");
+            try
+            {
+                var user = await _dbContext.Users.FindAsync(userID);
+                if (user == null)
+                {
+                    return ErrorConst.Error(500, "khong tim thay user");
+                }
+                user.fullName = FullName;
+                await _dbContext.SaveChangesAsync();
+                return ErrorConst.Success("cap nhat avatar thanh cong", null);
+
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+       }
 }

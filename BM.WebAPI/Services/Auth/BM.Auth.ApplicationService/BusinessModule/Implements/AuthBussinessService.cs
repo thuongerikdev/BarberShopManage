@@ -85,14 +85,14 @@ namespace BM.Auth.ApplicationService.BusinessModule.Implements
                 if (vipLevels.TryGetValue(customer.customerType, out var level))
                 {
                     customer.loyaltyPoints += (int)(totalMoney * level.PointsMultiplier);
-                    customer.percentDiscount = level.Discount;
+                    
                 }
                 else
                 {
                     // Mặc định cho trường hợp không xác định
                     customer.customerType = "VIP0";
                     customer.loyaltyPoints += (int)totalMoney;
-                    customer.percentDiscount = 0;
+                    
                 }
 
                 // Cập nhật customerType dựa trên loyaltyPoints
@@ -131,7 +131,7 @@ namespace BM.Auth.ApplicationService.BusinessModule.Implements
                     customer.customerType,
                     customer.loyaltyPoints,
                     customer.totalSpent,
-                    customer.percentDiscount
+                   
                 });
             }
             catch (Exception ex)

@@ -42,6 +42,7 @@ namespace BM.Auth.ApplicationService.VipModule.Implements
                     promoEnd = authCreatePromo.promoEnd,
                     promoType = authCreatePromo.promoType,
                     promoImage = img,
+                    pointToGet = authCreatePromo.pointToGet,
                 };
                 _dbContext.Promos.Add(promo);
                 await _dbContext.SaveChangesAsync();
@@ -76,6 +77,7 @@ namespace BM.Auth.ApplicationService.VipModule.Implements
                 promo.promoStart = authUpdatePromo.promoStart;
                 promo.promoEnd = authUpdatePromo.promoEnd;
                 promo.promoType = authUpdatePromo.promoType;
+                promo.pointToGet = authUpdatePromo.pointToGet;
                 promo.promoImage = img;
                 await _dbContext.SaveChangesAsync();
                 return ErrorConst.Success("Cập nhật khuyến mãi thành công", promo);
@@ -132,6 +134,20 @@ namespace BM.Auth.ApplicationService.VipModule.Implements
             {
                 var promos = await _dbContext.Promos.ToListAsync();
                 return ErrorConst.Success("Lấy danh sách khuyến mãi thành công", promos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+        public async Task<ResponeDto> AuthGetPromoByType(string promoType)
+        {
+            _logger.LogInformation("AuthGetPromoByType");
+            try
+            {
+                var promos = await _dbContext.Promos.Where(x => x.promoType == promoType).ToListAsync();
+                return ErrorConst.Success("Lấy danh sách khuyến mãi theo loại thành công", promos);
             }
             catch (Exception ex)
             {

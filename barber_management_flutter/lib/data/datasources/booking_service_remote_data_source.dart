@@ -6,10 +6,13 @@ import '../models/booking_create_order_request_model.dart';
 abstract class BookingServiceRemoteDataSource {
   Future<List<Map<String, dynamic>>> getBookingServices();
   Future<List<Map<String, dynamic>>> getBookingServiceDetail(int serviceID);
+  Future<Map<String, dynamic>> getServiceById(int serviceID);
   Future<List<Map<String, dynamic>>> getAllBranches();
   Future<List<Map<String, dynamic>>> getEmployeesByBranch(int branchID);
-  Future<List<Map<String, dynamic>>> getEmployeesByDate(DateTime date, int branchID);
+  Future<List<Map<String, dynamic>>> getEmployeesByDate(DateTime date, int branchID, String typeOfEmp);
   Future<void> createBookingOrder(BookingCreateOrderRequestModel request);
+  Future<Map<String, dynamic>> getInvoiceByOrderId(int orderID); // New method
+  Future<Map<String, dynamic>> getEmployeeById(int empID); // New method
 }
 
 class BookingServiceRemoteDataSourceImpl implements BookingServiceRemoteDataSource {
@@ -66,7 +69,8 @@ class BookingServiceRemoteDataSourceImpl implements BookingServiceRemoteDataSour
             'servName': item['servName']?.toString() ?? 'Dịch vụ không tên',
             'servImage': item['servImage']?.toString() ?? '',
             'servDescription': item['servDescription']?.toString() ?? 'Không có mô tả',
-            'servID': item['serviceDetailID']?.toString() ?? item['servID']?.toString() ?? '',
+            'servID': item['servID']?.toString() ?? '',
+            'serviceDetailID': item['serviceDetailID']?.toString() ?? '',
             'servPrice': price,
             'servStatus': item['servStatus']?.toString() ?? 'Unknown',
             'bookingAppointments': item['bookingAppointments'] != null
@@ -76,6 +80,35 @@ class BookingServiceRemoteDataSourceImpl implements BookingServiceRemoteDataSour
         }).toList();
       } else {
         throw Exception(jsonResponse['errorMessager'] ?? 'Lấy chi tiết dịch vụ thất bại');
+      }
+    } else {
+      throw Exception('Lỗi server: ${response.statusCode}');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> getServiceById(int serviceID) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/BookingService/get/$serviceID'),
+      headers: {'accept': '*/*'},
+    );
+
+    print('BookingService get by ID API response: ${response.body}');
+
+    if (response.statusCode == 200) {
+      final jsonResponse = jsonDecode(response.body);
+      if (jsonResponse['errorCode'] == 200) {
+        final data = jsonResponse['data'] as Map<String, dynamic>;
+        return {
+          'servID': data['servID']?.toString() ?? '',
+          'servName': data['servName']?.toString() ?? 'Dịch vụ không tên',
+          'servDescription': data['servDescription']?.toString() ?? 'Không có mô tả',
+          'servPrice': double.tryParse(data['servPrice']?.toString() ?? '0') ?? 0.0,
+          'servImage': data['servImage']?.toString() ?? '',
+          'servStatus': data['servStatus']?.toString() ?? 'Unknown',
+        };
+      } else {
+        throw Exception(jsonResponse['errorMessager'] ?? 'Lấy dịch vụ thất bại');
       }
     } else {
       throw Exception('Lỗi server: ${response.statusCode}');
@@ -131,10 +164,10 @@ class BookingServiceRemoteDataSourceImpl implements BookingServiceRemoteDataSour
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getEmployeesByDate(DateTime date, int branchID) async {
+  Future<List<Map<String, dynamic>>> getEmployeesByDate(DateTime date, int branchID, String typeOfEmp) async {
     final formattedDate = Uri.encodeComponent(date.toIso8601String());
     final response = await http.get(
-      Uri.parse('$baseUrl/AuthSchedule/getEmpByDate?date=$formattedDate&branchesID=$branchID'),
+      Uri.parse('$baseUrl/AuthSchedule/getEmpByDate?date=$formattedDate&branchesID=$branchID&typeOfEmp=$typeOfEmp'),
       headers: {'accept': '*/*'},
     );
 
@@ -151,6 +184,10 @@ class BookingServiceRemoteDataSourceImpl implements BookingServiceRemoteDataSour
             'position': item['position']?.toString() ?? '',
             'specialty': item['specialty']?.toString() ?? '',
             'branch': item['branch']?.toString() ?? '',
+            'scheduleName': item['scheduleName']?.toString() ?? '',
+            'startTime': item['startTime']?.toString() ?? '',
+            'endTime': item['endTime']?.toString() ?? '',
+            'image' : item['image']?.toString() ??''
           };
         }).toList().cast<Map<String, dynamic>>();
       } else {
@@ -180,6 +217,83 @@ class BookingServiceRemoteDataSourceImpl implements BookingServiceRemoteDataSour
         return;
       } else {
         throw Exception(jsonResponse['errorMessager'] ?? 'Tạo đơn đặt thất bại');
+      }
+    } else {
+      throw Exception('Lỗi server: ${response.statusCode}');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> getInvoiceByOrderId(int orderID) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/BookingInvoice/GetInvoiceByOrderID/$orderID'),
+      headers: {'accept': '*/*'},
+    );
+
+    print('getInvoiceByOrderId API response: ${response.body}');
+
+    if (response.statusCode == 200) {
+      final jsonResponse = jsonDecode(response.body);
+      if (jsonResponse['errorCode'] == 200) {
+        final data = jsonResponse['data'] as Map<String, dynamic>;
+        return {
+          'invoiceID': data['invoiceID']?.toString() ?? '',
+          'invoiceDate': data['invoiceDate']?.toString() ?? '',
+          'status': data['status']?.toString() ?? 'Unknown',
+          'totalAmount': double.tryParse(data['totalAmount']?.toString() ?? '0') ?? 0.0,
+          'orderID': data['orderID']?.toString() ?? '',
+          'paymentTerms': data['paymentTerms']?.toString() ?? '',
+          'paymentMethod': data['paymentMethod']?.toString() ?? '',
+          'order': data['order'] != null
+              ? {
+                  'orderID': data['order']['orderID']?.toString() ?? '',
+                  'custID': data['order']['custID']?.toString() ?? '',
+                  'orderStatus': data['order']['orderStatus']?.toString() ?? 'Unknown',
+                  'appointments': (data['order']['appointments'] as List<dynamic>?)?.map((appt) => {
+                        'appointmentID': appt['appointmentID']?.toString() ?? '',
+                        'empID': appt['empID']?.toString() ?? '',
+                        'appointmentStatus': appt['appointmentStatus']?.toString() ?? 'Unknown',
+                        'service': appt['service']?.toString() ?? '',
+                      }).toList() ?? [],
+                }
+              : null,
+        };
+      } else {
+        throw Exception(jsonResponse['errorMessager'] ?? 'Lấy hóa đơn thất bại');
+      }
+    } else {
+      throw Exception('Lỗi server: ${response.statusCode}');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> getEmployeeById(int empID) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/AuthEmp/get/$empID'),
+      headers: {'accept': '*/*'},
+    );
+
+    print('getEmployeeById API response: ${response.body}');
+
+    if (response.statusCode == 200) {
+      final jsonResponse = jsonDecode(response.body);
+      if (jsonResponse['errorCode'] == 200) {
+        final data = jsonResponse['data'] as Map<String, dynamic>;
+        return {
+          'empID': data['empID']?.toString() ?? '',
+          'empName': data['authUser']?['fullName']?.toString() ?? 'Unknown',
+          'positionID': data['positionID']?.toString() ?? '',
+          'specialtyID': data['specialtyID']?.toString() ?? '',
+          'empCode': data['empCode']?.toString() ?? '',
+          'salary': double.tryParse(data['salary']?.toString() ?? '0') ?? 0.0,
+          'bonusSalary': double.tryParse(data['bonusSalary']?.toString() ?? '0') ?? 0.0,
+          'rate': double.tryParse(data['rate']?.toString() ?? '0') ?? 0.0,
+          'status': data['status']?.toString() ?? 'Unknown',
+          'branchID': data['branchID']?.toString() ?? '',
+          'startDate': data['startDate']?.toString() ?? '',
+        };
+      } else {
+        throw Exception(jsonResponse['errorMessager'] ?? 'Lấy thông tin nhân viên thất bại');
       }
     } else {
       throw Exception('Lỗi server: ${response.statusCode}');

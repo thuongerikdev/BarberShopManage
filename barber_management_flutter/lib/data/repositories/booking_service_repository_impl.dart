@@ -19,8 +19,8 @@ class BookingServiceRepositoryImpl implements BookingServiceRepository {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getEmployeesByDate(DateTime date, int branchID) async {
-    return await dataSource.getEmployeesByDate(date, branchID);
+  Future<List<Map<String, dynamic>>> getEmployeesByDate(DateTime date, int branchID, String typeOfEmp) async {
+    return await dataSource.getEmployeesByDate(date, branchID, typeOfEmp);
   }
 
   @override
@@ -34,10 +34,25 @@ class BookingServiceRepositoryImpl implements BookingServiceRepository {
   }
 
   @override
+  Future<Map<String, dynamic>> getServiceById(int serviceID) async {
+    return await dataSource.getServiceById(serviceID);
+  }
+
+  @override
   Future<void> createBookingOrder(BookingCreateOrder order) async {
     final requestModel = _mapToRequestModel(order);
     return await dataSource.createBookingOrder(requestModel);
   }
+
+  @override
+  Future<Map<String, dynamic>> getInvoiceByOrderId(int orderID) async {
+    return await dataSource.getInvoiceByOrderId(orderID);
+  }
+
+  @override
+  // Future<Map<String, dynamic>> getEmployeeById(int empID) async {
+  //   return await dataSource.getEmployeeById(empID);
+  // }
 
   BookingCreateOrderRequestModel _mapToRequestModel(BookingCreateOrder order) {
     return BookingCreateOrderRequestModel(

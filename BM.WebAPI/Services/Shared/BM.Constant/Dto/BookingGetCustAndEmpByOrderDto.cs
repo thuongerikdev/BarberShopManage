@@ -26,6 +26,8 @@ namespace BM.Constant.Dto
     {
         public CustomerDto CustomerData { get; set; } // Renamed from Customer
         public PromotionDto PromotionData { get; set; } // Renamed from Promotion
+        public int promoCount { get; set; } 
+        public int cusPromoID { get; set; } // Renamed from CusPromoID
     }
 
     public class CustomerDto
@@ -37,7 +39,6 @@ namespace BM.Constant.Dto
         public string CustomerType { get; set; }
         public string CustomerStatus { get; set; }
         public double TotalSpent { get; set; }
-        public double PercentDiscount { get; set; }
     }
 
     public class PromotionDto

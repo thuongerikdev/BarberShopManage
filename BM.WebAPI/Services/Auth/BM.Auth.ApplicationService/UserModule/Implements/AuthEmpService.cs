@@ -20,7 +20,7 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
     {
         protected readonly IAuthSpecService _authSpecService;
         protected readonly IAuthPositionService _authPositionService;
-        
+
         public AuthEmpService(ILogger<AuthEmpService> logger, AuthDbContext dbContext, IAuthSpecService authSpecService, IAuthPositionService authPositionService) : base(logger, dbContext)
         {
             _authSpecService = authSpecService;
@@ -148,7 +148,7 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                 {
                     return ErrorConst.Error(500, "Không tìm thấy nhân viên");
                 }
-             
+
                 emp.positionID = authUpdateEmpDto.positionID;
                 emp.specialtyID = authUpdateEmpDto.specialtyID;
 
@@ -218,7 +218,7 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
             _logger.LogInformation("AuthGetAllEmp");
             try
             {
-                var emps =await _dbContext.Users.Where(x => x.isEmp == true).ToListAsync();
+                var emps = await _dbContext.Users.Where(x => x.isEmp == true).ToListAsync();
 
                 return ErrorConst.Success("Lấy danh sách nhân viên thành công", emps);
             }
@@ -228,6 +228,59 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                 return ErrorConst.Error(500, ex.Message);
             }
         }
+        public async Task<ResponeDto> AuthGetEmpByUserID(int userID)
+        {
+            _logger.LogInformation("AuthGetEmpByUserID");
+            try
+            {
+                var emp = await _dbContext.Emps.Where(x=> x.userID == userID)
+                    .Include(x => x.AuthPosition)
+                    .Include(x => x.AuthSpecialty)
+                    .Include(x => x.AuthBranches)
+                    .Include(x => x.AuthUser)
+                    .Include(x => x.AuthScheEmps)
+                    .Select(userID => new AuthGetEmpDto
+                    {
+                        empID = userID.empID,
+                        empCode = userID.empCode,
+                        positionID = userID.positionID,
+                        positionName = userID.AuthPosition.positionName,
+                        specialtyID = userID.specialtyID,
+                        salary = userID.salary,
+                        startDate = userID.startDate,
+                        userID = userID.userID,
+                        status = userID.status,
+                        branchID = userID.branchID,
+                        bonusSalary = userID.bonusSalary,
+                        branchName = userID.AuthBranches.branchName,
+                        specialtyName = userID.AuthSpecialty.specialtyName,
+                        image = userID.AuthUser.avatar,
+                        email = userID.AuthUser.email,
+                        phone = userID.AuthUser.phoneNumber,
+                        dateOfBirth = userID.AuthUser.dateOfBirth,
+                        gender = userID.AuthUser.gender,
+                        fullName = userID.AuthUser.fullName,
+                        branchesImage = userID.AuthBranches.branchImage
 
-    } 
+
+
+                    })
+
+
+                    .FirstOrDefaultAsync();
+                if (emp == null)
+                {
+                    return ErrorConst.Error(500, "Không tìm thấy nhân viên");
+                }
+                return ErrorConst.Success("Lấy thông tin nhân viên thành công", emp);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+
+        }
+        
+    }
 }

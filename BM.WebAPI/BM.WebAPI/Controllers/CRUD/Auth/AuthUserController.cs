@@ -88,7 +88,7 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             }
         }
         [HttpPost("registerEmp")]
-        public async Task<IActionResult> RegisterEmp([FromBody] AuthRegisteEmprDto authRegisterDto)
+        public async Task<IActionResult> RegisterEmp([FromBody] List<AuthRegisteEmprDto> authRegisterDto)
         {
             if (authRegisterDto == null)
             {
@@ -211,6 +211,26 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             try
             {
                 var result = await _authUserService.AuthUpdateUserAvatar(authUpdateAvatarDto.userID, authUpdateAvatarDto.file);
+                if (result.ErrorCode == 0)
+                {
+                    return Ok(result);
+                }
+                else
+                {
+                    return BadRequest(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ErrorConst.Error(500, ex.Message));
+            }
+        }
+        [HttpPut("updateFullName")]
+        public async Task<IActionResult> updateFullName( int userID , string FullName)
+        {
+            try
+            {
+                var result = await _authUserService.AuthChangeUserFullName(userID , FullName);
                 if (result.ErrorCode == 0)
                 {
                     return Ok(result);

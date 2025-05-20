@@ -1,5 +1,6 @@
 ﻿using BM.Auth.Domain;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,6 +25,7 @@ namespace BM.Auth.Infrastructure
         public DbSet<AuthBranches> Branches { get; set; }
         public DbSet <AuthCusPromo> CusPromos { get; set; }
         public DbSet<AuthPromotion> Promos { get; set; }
+        public DbSet<AuthCustomerCheckIn> customerCheckIns { get; set; }
         public AuthDbContext(DbContextOptions<AuthDbContext> options) : base(options)
         {
         }
@@ -53,6 +55,11 @@ namespace BM.Auth.Infrastructure
                 .HasMany(u => u.AuthCusPromos)
                 .WithOne(u => u.AuthCustomer)
                 .HasForeignKey (x => x.promoID);
+
+            modelBuilder.Entity<AuthCustomer>()
+                .HasMany(u => u.AuthCustomerCheckIns)
+                .WithOne(u => u.AuthCustomer)
+                .HasForeignKey(x => x.customerID);
 
             modelBuilder.Entity<AuthEmp>()
                 .HasOne(e => e.AuthPosition)

@@ -15,5 +15,6 @@ namespace BM.Booking.ApplicationService.PaymentModule.Abtracts
         public Task<ResponeDto> BookingDeleteInvoice(int invoiceID);
         public Task<ResponeDto> BookingGetInvoice(int invoiceID);
         public Task<ResponeDto> BookingGetAllInvoice();
+        Task<ResponeDto> BookingGetInvoiceByOrderID(int orderID);
     }
 }

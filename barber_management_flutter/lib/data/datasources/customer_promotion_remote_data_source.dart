@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/foundation.dart';
 import '../models/customer_promotion_model.dart';
 
 abstract class CustomerPromotionRemoteDataSource {
@@ -18,24 +19,29 @@ class CustomerPromotionRemoteDataSourceImpl implements CustomerPromotionRemoteDa
       headers: {'accept': '*/*'},
     );
 
+    if (kDebugMode) {
+      print('API Response for customer $customerId: ${response.body}');
+    }
+
     if (response.statusCode == 200) {
       final jsonData = jsonDecode(response.body);
       if (jsonData['errorCode'] == 200) {
-        return List<Map<String, dynamic>>.from(jsonData['data'])
-            .map((json) => CustomerPromotionModel.fromJson(json))
-            .toList();
+        final dataList = jsonData['data'] as List<dynamic>? ?? [];
+        return dataList.map((json) => CustomerPromotionModel.fromJson(json as Map<String, dynamic>)).toList();
+      } else if (jsonData['errorCode'] == 404 || jsonData['errorMessager']?.toString().contains('Không tìm thấy khuyến mãi') == true) {
+        return []; // Return empty list if no promotions are found
       } else {
         throw Exception(jsonData['errorMessager'] ?? 'Lấy khuyến mãi khách hàng thất bại');
       }
     } else {
-      throw Exception('Lỗi server: ${response.statusCode}');
+      throw Exception('Lỗi server: ${response.statusCode} - ${response.body}');
     }
   }
 
   @override
   Future<void> createCustomerPromotion(int customerId, int promoId, String status) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/AuthCusPromo/createcuspromo'),
+      Uri.parse('$baseUrl/AuthCusPromo/customergetpromo'),
       headers: {
         'accept': '*/*',
         'Content-Type': 'application/json',
@@ -47,13 +53,17 @@ class CustomerPromotionRemoteDataSourceImpl implements CustomerPromotionRemoteDa
       }),
     );
 
+    if (kDebugMode) {
+      print('API Response for creating promotion: ${response.body}');
+    }
+
     if (response.statusCode == 200) {
       final jsonData = jsonDecode(response.body);
       if (jsonData['errorCode'] != 200) {
         throw Exception(jsonData['errorMessager'] ?? 'Tạo khuyến mãi khách hàng thất bại');
       }
     } else {
-      throw Exception('Lỗi server: ${response.statusCode}');
+      throw Exception('Lỗi server: ${response.statusCode} - ${response.body}');
     }
   }
 }

@@ -5,6 +5,7 @@ import 'package:barbermanagemobile/domain/usecases/get_customer_promotions_use_c
 import 'package:barbermanagemobile/domain/usecases/create_customer_promotion_use_case.dart';
 import 'package:barbermanagemobile/domain/entities/promotion.dart';
 import 'package:barbermanagemobile/domain/entities/customer_promotion.dart';
+import 'package:barbermanagemobile/presentation/screens/ExchangePromotionScreen.dart';
 
 class PromotionScreen extends StatefulWidget {
   const PromotionScreen({super.key});
@@ -47,7 +48,7 @@ class _PromotionScreenState extends State<PromotionScreen> {
     try {
       await _createCustomerPromotionUseCase.call(customerId, promoId, 'Active');
       _showSnackBar(context, 'Đã lấy mã: $promoName');
-      setState(() {}); // Refresh to update customer promotions
+      setState(() {});
     } catch (e) {
       _showSnackBar(context, 'Lỗi lấy mã: $e', isError: true);
     }
@@ -55,7 +56,7 @@ class _PromotionScreenState extends State<PromotionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const customerId = 1003; // Hardcoded for now, replace with dynamic ID later
+    const customerId = 1003; // Replace with dynamic ID later
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -70,6 +71,18 @@ class _PromotionScreenState extends State<PromotionScreen> {
           icon: Icon(Icons.arrow_back, color: textColor),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.swap_horiz, color: textColor),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ExchangePromotionScreen()),
+              );
+            },
+            tooltip: 'Trao đổi mã giảm giá',
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _refreshPromotions,
@@ -85,9 +98,7 @@ class _PromotionScreenState extends State<PromotionScreen> {
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(accentColor)));
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Lỗi: ${snapshot.error}', style: TextStyle(color: Colors.redAccent, fontSize: 14)));
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  } else if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
                     return Center(child: Text('Bạn chưa có mã giảm giá nào', style: TextStyle(color: textColor, fontSize: 14)));
                   }
 
@@ -136,7 +147,9 @@ class _PromotionScreenState extends State<PromotionScreen> {
                             context,
                             promotion,
                             isCustomerOwned: isCustomerOwned,
-                            onClaim: () => _claimPromotion(customerId, promotion.promoID, promotion.promoName),
+                            onClaim: promotion.promoType == 'FreePromotion' && !isCustomerOwned
+                                ? () => _claimPromotion(customerId, promotion.promoID, promotion.promoName)
+                                : null,
                           );
                         },
                       );
@@ -238,7 +251,7 @@ class _PromotionScreenState extends State<PromotionScreen> {
                               fontFamily: 'Poppins',
                             ),
                           ),
-                          if (!isCustomerOwned)
+                          if (onClaim != null)
                             ElevatedButton(
                               onPressed: onClaim,
                               style: ElevatedButton.styleFrom(

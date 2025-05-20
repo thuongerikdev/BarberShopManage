@@ -142,7 +142,7 @@ namespace BM.WebAPI.Controllers.Bussiness
             var updateDto = new AuthUpdateVipCustomerDto
             {
                 customerID = orderData.custID,
-                totalAmount = totalAmount
+                totalAmount = totalAmount/100
             };
 
             if (response.VnPayResponseCode == "00")

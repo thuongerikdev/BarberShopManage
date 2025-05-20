@@ -130,12 +130,12 @@ class _VipScreenState extends State<VipScreen> {
                             : null;
 
                         // Calculate progress for totalSpent
-                        final totalSpentProgress = customer.totalSpent / (nextVip?.vipCost.toDouble() ?? currentVip.vipCost.toDouble());
+                        final totalSpentProgress = customer.totalSpent! / (nextVip?.vipCost.toDouble() ?? currentVip.vipCost.toDouble());
                         final totalSpentPercentage = (totalSpentProgress.clamp(0.0, 1.0) * 100).toStringAsFixed(0);
 
                         // Calculate progress for loyaltyPoints (assuming a max of 10,000,000 for simplicity)
                         const maxLoyaltyPoints = 10000000.0; // Adjust based on your logic
-                        final loyaltyProgress = customer.loyaltyPoints / maxLoyaltyPoints;
+                        final loyaltyProgress = customer.loyaltyPoints! / maxLoyaltyPoints;
                         final loyaltyPercentage = (loyaltyProgress.clamp(0.0, 1.0) * 100).toStringAsFixed(0);
 
                         return Padding(
@@ -155,7 +155,7 @@ class _VipScreenState extends State<VipScreen> {
                               SizedBox(height: 16),
                               // Total Spent Progress
                               Text(
-                                'Tổng Chi Tiêu: ${customer.totalSpent.toStringAsFixed(0)} VNĐ',
+                                'Tổng Chi Tiêu: ${customer.totalSpent?.toStringAsFixed(0)} VNĐ',
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: textColor,
@@ -173,7 +173,7 @@ class _VipScreenState extends State<VipScreen> {
                               SizedBox(height: 4),
                               Text(
                                 nextVip != null
-                                    ? 'Còn ${nextVip.vipCost - customer.totalSpent.toInt()} VNĐ để đạt ${nextVip.vipType} ($totalSpentPercentage%)'
+                                    ? 'Còn ${nextVip.vipCost - customer.totalSpent!.toInt()} VNĐ để đạt ${nextVip.vipType} ($totalSpentPercentage%)'
                                     : 'Bạn đã đạt cấp ${currentVip.vipType}!',
                                 style: TextStyle(
                                   fontSize: 12,
@@ -184,7 +184,7 @@ class _VipScreenState extends State<VipScreen> {
                               SizedBox(height: 16),
                               // Loyalty Points Progress
                               Text(
-                                'Điểm Tích Lũy: ${customer.loyaltyPoints.toStringAsFixed(0)}',
+                                'Điểm Tích Lũy: ${customer.loyaltyPoints?.toStringAsFixed(0)}',
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: textColor,

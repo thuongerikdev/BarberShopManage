@@ -131,7 +131,7 @@ namespace BM.Booking.ApplicationService.PaymentModule.Implements
                 {
                     return ErrorConst.Error(500, "Không tìm thấy order");
                 }
-                orders.orderStatus = "Confirm";
+                orders.orderStatus = "Completed";
                 await _dbContext.SaveChangesAsync();
                 return ErrorConst.Success("Lấy danh sách order thành công", orders);
             }

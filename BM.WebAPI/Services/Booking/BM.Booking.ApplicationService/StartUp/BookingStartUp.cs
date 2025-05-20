@@ -52,6 +52,7 @@ namespace BM.Booking.ApplicationService.StartUp
             //builder.Services.AddScoped<IBookingPromoService, BookingPromoService>();    
             builder.Services.AddScoped<IBookingServService, BookingServService>();
             builder.Services.AddScoped<IBookingServiceDetailService, BookingServiceDetailService>();
+            builder.Services.AddScoped<IBookingServiceDetailDescriptionService, BookingServiceDetailDescriptionService>();
             builder.Services.AddScoped<IBookingReviewService, BookingReviewService>();
             //builder.Services.AddScoped<IBookingServProService, BookingServProService>();
 
@@ -61,11 +62,14 @@ namespace BM.Booking.ApplicationService.StartUp
             builder.Services.AddScoped<ISendOrderData, BookingBussinessService>();
 
             builder.Services.AddScoped<IBookingProductService, BookingProductService>();
-            builder.Services.AddScoped<IBookingProductDescriptionService, BookingProductDescriptionService>();
+            //builder.Services.AddScoped<IBookingProductDescriptionService, BookingProductDescriptionService>();
             builder.Services.AddScoped<IBookingCategoryService, BookingCategoryService>();
             builder.Services.AddScoped<IBookingProductDetailService, BookingProductDetailService>();
             builder.Services.AddScoped<IBookingOrderProductService, BookingOrderProductService>();
             builder.Services.AddScoped<IBookingSupplierService, BookingSupplierService>();
+            builder.Services.AddScoped<IBookingProductImageService, BookingProductImageService>();
+            builder.Services.AddScoped<IBookingSupplierProductDetailService, BookingSupplierProductDetailService>();
+           
 
 
 

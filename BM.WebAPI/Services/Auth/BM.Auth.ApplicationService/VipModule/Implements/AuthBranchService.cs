@@ -169,6 +169,7 @@ namespace BM.Auth.ApplicationService.VipModule.Implements
                                 user.userID,
                                 user.fullName, // Adjust to match your column name (e.g., FullName, Name)
                                 user.email // Optional: include other fields if needed
+
                             }
                         }
                     )

@@ -163,5 +163,26 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
                 return BadRequest(ErrorConst.Error(500, ex.Message));
             }
         }
+        [HttpPost("customergetpromo")]
+        public async Task<IActionResult> CustomerGetPromo([FromBody] AuthCreateCusPromo authCreateCusPromo)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ErrorConst.Error(500, "Đầu vào không hợp lệ"));
+            }
+            try
+            {
+                var result = await _authCusPromoService.AuthCustomerGetPromo(authCreateCusPromo);
+                if (result == null)
+                {
+                    return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));
+                }
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ErrorConst.Error(500, ex.Message));
+            }
+        }
     }
 }

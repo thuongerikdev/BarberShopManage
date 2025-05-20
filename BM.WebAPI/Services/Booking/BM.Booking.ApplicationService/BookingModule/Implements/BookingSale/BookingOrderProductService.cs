@@ -19,20 +19,21 @@ namespace BM.Booking.ApplicationService.BookingModule.Implements.BookingSale
         public BookingOrderProductService(ILogger<BookingOrderProductService> logger, BookingDbContext dbContext) : base(logger, dbContext)
         {
         }
-        public async Task<ResponeDto> BookingCreateOrderProduct(BookingCreateOrderProductDto bookingCreateOrderProductDto)
+        public async Task<ResponeDto> BookingCreateOrderProduct(List<BookingCreateOrderProductDto> bookingCreateOrderProductDto)
         {
             _logger.LogInformation("BookingCreateOrderProduct");
             try
             {
-                var bookingOrderProduct = new BookingOrderProduct
+                var bookingOrderProduct =  bookingCreateOrderProductDto.Select (x => new BookingOrderProduct
                 {
-                    orderID = bookingCreateOrderProductDto.orderID,
-                    productDetailID = bookingCreateOrderProductDto.productDetailID,
-                    productPrice = bookingCreateOrderProductDto.productPrice,
-                    quantity = bookingCreateOrderProductDto.quantity,
+                    orderID = x.orderID,
+                    productDetailID = x.productDetailID,
+                    productPrice = x.productPrice,
+                    quantity = x.quantity,
                     
-                };
-                _dbContext.BookingOrderProducts.Add(bookingOrderProduct);
+                });
+                
+                _dbContext.BookingOrderProducts.AddRange(bookingOrderProduct);
                 await _dbContext.SaveChangesAsync();
                 return ErrorConst.Success("tao order product thanh cong", bookingOrderProduct);
             }

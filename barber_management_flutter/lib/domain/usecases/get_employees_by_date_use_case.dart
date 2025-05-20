@@ -1,5 +1,3 @@
-
-
 import 'package:barbermanagemobile/domain/repositories/booking_service_repository.dart';
 
 class GetEmployeesByDateUseCase {
@@ -7,7 +5,7 @@ class GetEmployeesByDateUseCase {
 
   GetEmployeesByDateUseCase(this.repository);
 
-  Future<List<Map<String, dynamic>>> call(DateTime date, int branchID) async {
-    return await repository.getEmployeesByDate(date, branchID);
+  Future<List<Map<String, dynamic>>> call(DateTime date, int branchID, String typeOfEmp) async {
+    return await repository.getEmployeesByDate(date, branchID, typeOfEmp);
   }
 }

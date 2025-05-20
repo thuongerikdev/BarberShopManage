@@ -78,6 +78,9 @@ namespace BM.WebAPI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("cusPromoID"));
 
+                    b.Property<DateTime>("createAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("cusPromoStatus")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -85,8 +88,14 @@ namespace BM.WebAPI.Migrations
                     b.Property<int>("customerID")
                         .HasColumnType("int");
 
+                    b.Property<int>("promoCount")
+                        .HasColumnType("int");
+
                     b.Property<int>("promoID")
                         .HasColumnType("int");
+
+                    b.Property<DateTime>("updateAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("cusPromoID");
 
@@ -114,9 +123,6 @@ namespace BM.WebAPI.Migrations
                     b.Property<double>("loyaltyPoints")
                         .HasColumnType("float");
 
-                    b.Property<double>("percentDiscount")
-                        .HasColumnType("float");
-
                     b.Property<double>("totalSpent")
                         .HasColumnType("float");
 
@@ -134,6 +140,41 @@ namespace BM.WebAPI.Migrations
                     b.HasIndex("vipID");
 
                     b.ToTable("AuthCustomer", "auth");
+                });
+
+            modelBuilder.Entity("BM.Auth.Domain.AuthCustomerCheckIn", b =>
+                {
+                    b.Property<int>("customerCheckInID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("customerCheckInID"));
+
+                    b.Property<DateTime>("checkInDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("checkInStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("checkInType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("createAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("customerID")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("updateAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("customerCheckInID");
+
+                    b.HasIndex("customerID");
+
+                    b.ToTable("customerCheckIns");
                 });
 
             modelBuilder.Entity("BM.Auth.Domain.AuthEmp", b =>
@@ -267,6 +308,9 @@ namespace BM.WebAPI.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("promoID"));
+
+                    b.Property<int>("pointToGet")
+                        .HasColumnType("int");
 
                     b.Property<string>("promoDescription")
                         .IsRequired()
@@ -616,6 +660,17 @@ namespace BM.WebAPI.Migrations
                     b.Navigation("AuthVip");
                 });
 
+            modelBuilder.Entity("BM.Auth.Domain.AuthCustomerCheckIn", b =>
+                {
+                    b.HasOne("BM.Auth.Domain.AuthCustomer", "AuthCustomer")
+                        .WithMany("AuthCustomerCheckIns")
+                        .HasForeignKey("customerID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AuthCustomer");
+                });
+
             modelBuilder.Entity("BM.Auth.Domain.AuthEmp", b =>
                 {
                     b.HasOne("BM.Auth.Domain.AuthBranches", "AuthBranches")
@@ -708,6 +763,8 @@ namespace BM.WebAPI.Migrations
             modelBuilder.Entity("BM.Auth.Domain.AuthCustomer", b =>
                 {
                     b.Navigation("AuthCusPromos");
+
+                    b.Navigation("AuthCustomerCheckIns");
                 });
 
             modelBuilder.Entity("BM.Auth.Domain.AuthEmp", b =>

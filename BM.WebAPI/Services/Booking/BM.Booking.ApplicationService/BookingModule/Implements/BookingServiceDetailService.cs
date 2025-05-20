@@ -142,5 +142,43 @@ namespace BM.Booking.ApplicationService.BookingModule.Implements
                 return ErrorConst.Error(500, ex.Message);
             }
         }
+        public async Task<ResponeDto> BookingGetServiceDetailByServiceName(string serviceName)
+        {
+            _logger.LogInformation("BookingGetServiceDetailByServiceName");
+            try
+            {
+                var bookingServiceDetails = await _dbContext.BookingServiceDetails.Where(x => x.servName == serviceName).ToListAsync();
+                if (bookingServiceDetails == null)
+                {
+                    return ErrorConst.Error(500, "khong tim thay service detail");
+                }
+                return ErrorConst.Success("tim thay service detail", bookingServiceDetails);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+        public async Task<ResponeDto> BookingUpdatePriceOfServiceDetail(int serviceDetailID, double price)
+        {
+          _logger.LogInformation("BookingUpdatePriceOfServiceDetail");
+            try
+            {
+                var bookingServiceDetail = await _dbContext.BookingServiceDetails.FindAsync(serviceDetailID);
+                if (bookingServiceDetail == null)
+                {
+                    return ErrorConst.Error(500, "khong tim thay service detail");
+                }
+                bookingServiceDetail.servPrice = price;
+                await _dbContext.SaveChangesAsync();
+                return ErrorConst.Success("cap nhat service detail thanh cong", bookingServiceDetail);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
     }
 }

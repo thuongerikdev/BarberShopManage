@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/user_model.dart';
+import 'dart:io';
 
 abstract class AuthRemoteDataSource {
   Future<UserModel> login(String email, String password);
@@ -16,6 +17,7 @@ abstract class AuthRemoteDataSource {
     required String dateOfBirth,
     required String gender,
   });
+  Future<void> updateAvatar(int userID, File image);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -41,10 +43,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       if (jsonData['errorCode'] == 200) {
         return UserModel.fromJson(jsonData);
       } else {
-        throw Exception(jsonData['errorMessager'] ?? 'Đăng nhập thất bại');
+        throw jsonData['errorMessager'] ?? 'Đăng nhập thất bại';
       }
     } else {
-      throw Exception('Lỗi server: ${response.statusCode}');
+      final jsonData = jsonDecode(response.body);
+      throw jsonData['errorMessager'] ?? 'Lỗi server: ${response.statusCode}';
     }
   }
 
@@ -63,10 +66,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       if (jsonData['errorCode'] == 200) {
         return UserModel.fromJson(jsonData);
       } else {
-        throw Exception(jsonData['errorMessager'] ?? 'Lấy thông tin người dùng thất bại');
+        throw jsonData['errorMessager'] ?? 'Lấy thông tin người dùng thất bại';
       }
     } else {
-      throw Exception('Lỗi server: ${response.statusCode}');
+      final jsonData = jsonDecode(response.body);
+      throw jsonData['errorMessager'] ?? 'Lỗi server: ${response.statusCode}';
     }
   }
 
@@ -116,10 +120,34 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           gender: gender,
         );
       } else {
-        throw Exception(jsonData['errorMessager'] ?? 'Đăng ký thất bại');
+        throw jsonData['errorMessager'] ?? 'Đăng ký thất bại';
       }
     } else {
-      throw Exception('Lỗi server: ${response.statusCode}');
+      final jsonData = jsonDecode(response.body);
+      throw jsonData['errorMessager'] ?? 'Lỗi server: ${response.statusCode}';
+    }
+  }
+
+  @override
+  Future<void> updateAvatar(int userID, File image) async {
+    final url = Uri.parse('$baseUrl/AuthUser/updateAvatar');
+    var request = http.MultipartRequest('PUT', url);
+
+    // Add form data
+    request.fields['userID'] = userID.toString();
+    request.files.add(await http.MultipartFile.fromPath('file', image.path));
+
+    // Set headers
+    request.headers['accept'] = '*/*';
+
+    final response = await request.send();
+    final responseBody = await response.stream.bytesToString();
+    final jsonData = jsonDecode(responseBody);
+
+    if (jsonData['errorCode'] == 200) {
+      return;
+    } else {
+      throw jsonData['errorMessager'] ?? 'Cập nhật ảnh đại diện thất bại';
     }
   }
 }

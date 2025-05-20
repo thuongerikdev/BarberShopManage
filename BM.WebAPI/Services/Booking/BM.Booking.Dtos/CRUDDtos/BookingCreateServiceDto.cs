@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -50,5 +51,19 @@ namespace BM.Booking.Dtos.CRUDdtos
     {
         public int serviceDetailID { get; set; }
    
+    }
+    public class BookingCreateServiceDetailDescriptionDto
+    {
+       
+        public int serviceDetailID { get; set; }
+        public IFormFile servImage { get; set; }
+        public string servName { get; set; }
+        public string servDescription { get; set; }
+        public string servStatus { get; set; }
+        public string servType { get; set; }
+    }
+    public class BookingUpdateServiceDetailDescriptionDto : BookingCreateServiceDetailDescriptionDto
+    {
+        public int serviceDetailDescriptionID { get; set; }
     }
 }

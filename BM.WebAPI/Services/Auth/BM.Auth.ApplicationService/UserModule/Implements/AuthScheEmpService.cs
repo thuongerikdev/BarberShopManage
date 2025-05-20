@@ -259,5 +259,36 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
 
             return weekDays;
         }
+        public async Task<ResponeDto> AuthGetEmployeeSchedule (int empID)
+        {
+            _logger.LogInformation("AuthGetEmployeeSchedule");
+            try
+            {
+                var emp = await _authEmpService.AuthGetEmp(empID);
+                if (emp == null)
+                {
+                    return ErrorConst.Error(404, "Không tìm thấy nhân viên");
+                }
+                var scheEmp = await _dbContext.ScheEmps
+                    .Where(x => x.empID == empID)
+                    .Select( x =>  new
+                    {
+                        x.scheduleID,
+                        x.empID,
+                        x.status,
+                        x.note,
+                        x.startDate,
+                        x.endDate,
+
+                    })
+                    .ToListAsync();
+                return ErrorConst.Success("Lấy lịch hẹn nhân viên thành công", scheEmp);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
     }
 }

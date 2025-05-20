@@ -136,6 +136,27 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
                 return BadRequest(ErrorConst.Error(500, ex.Message));
             }
         }
+        [HttpGet("getvipbytype/{vipType}")]
+        public async Task<IActionResult> GetAllVipByType(string vipType)
+        {
+            if (string.IsNullOrEmpty(vipType))
+            {
+                return BadRequest(ErrorConst.Error(400, "VipType không hợp lệ."));
+            }
+            try
+            {
+                var result = await _authVipService.AuthGetVipByType(vipType);
+                if (result == null)
+                {
+                    return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));
+                }
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ErrorConst.Error(500, ex.Message));
+            }
+        }
 
     }
 }

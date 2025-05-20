@@ -5,11 +5,10 @@ class CustomerModel extends Customer {
     required super.customerID,
     required super.userID,
     required super.vipID,
-    required super.loyaltyPoints,
+    super.loyaltyPoints = 0.0, // Nullable with default
     super.customerType,
     super.customerStatus,
-    required super.totalSpent,
-    required super.percentDiscount,
+    super.totalSpent = 0.0, // Nullable with default
   });
 
   factory CustomerModel.fromJson(Map<String, dynamic> json) {
@@ -17,11 +16,10 @@ class CustomerModel extends Customer {
       customerID: json['customerID'] as int,
       userID: json['userID'] as int,
       vipID: json['vipID'] as int,
-      loyaltyPoints: (json['loyaltyPoints'] as num).toDouble(),
+      loyaltyPoints: (json['loyaltyPoints'] as num?)?.toDouble() ?? 0.0, // Handle null
       customerType: json['customerType'] as String?,
       customerStatus: json['customerStatus'] as String?,
-      totalSpent: (json['totalSpent'] as num).toDouble(),
-      percentDiscount: (json['percentDiscount'] as num).toDouble(),
+      totalSpent: (json['totalSpent'] as num?)?.toDouble() ?? 0.0, // Handle null
     );
   }
 
@@ -35,7 +33,6 @@ class CustomerModel extends Customer {
       'customerType': customerType,
       'customerStatus': customerStatus,
       'totalSpent': totalSpent,
-      'percentDiscount': percentDiscount,
     };
   }
 }

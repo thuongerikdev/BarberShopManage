@@ -1,5 +1,5 @@
-import 'package:barbermanagemobile/data/models/promotion_model.dart';
+import 'package:barbermanagemobile/domain/entities/promotion.dart';
 
 abstract class PromotionRepository {
-  Future<List<PromotionModel>> getPromotions();
+  Future<List<Promotion>> getPromotions();
 }

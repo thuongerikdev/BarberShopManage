@@ -55,6 +55,8 @@ namespace BM.Auth.Dtos.User
     public class AuthCreateCusPromo {
         public int customerID { get; set; }
         public int promoID { get; set; }
+        public int promoCount { get; set; }
+
         public string cusPromoStatus { get; set; }
     }
     public class AuthUpdateCusPromo
@@ -62,8 +64,27 @@ namespace BM.Auth.Dtos.User
         public int cusPromoID { get; set; }
         public int customerID { get; set; }
         public int promoID { get; set; }
+        public int promoCount { get; set; }
         public string cusPromoStatus { get; set; }
     }
+    public class AuthCreateCustomerCheckIn
+    {
+      
+        public int customerID { get; set; }
+        //public DateTime checkInDate { get; set; }
+        public string checkInStatus { get; set; }
+        public string checkInType { get; set; }
+    }
+    public class AuthUpdateCustomerCheckIn
+    {
+        public int customerCheckInID { get; set; }
+        public int customerID { get; set; }
+        public DateTime checkInDate { get; set; }
+        public string checkInStatus { get; set; }
+        public string checkInType { get; set; }
+    }
+
+    
 
 
 

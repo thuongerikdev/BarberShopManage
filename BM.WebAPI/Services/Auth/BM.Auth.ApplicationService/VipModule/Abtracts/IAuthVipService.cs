@@ -17,6 +17,7 @@ namespace BM.Auth.ApplicationService.VipModule.Abtracts
         Task<ResponeDto> AuthGetVip(int vipID);
         Task<ResponeDto> AuthGetAllVip();
         public Task<ResponeDto> AuthGetVipByUserID(int userID);
+        Task<ResponeDto> AuthGetVipByType(string vipType);
         //Task<ResponeDto> AuthGetVipByType(int vipType);
 
 
@@ -39,6 +40,8 @@ namespace BM.Auth.ApplicationService.VipModule.Abtracts
         Task<ResponeDto> AuthGetAllCusPromo();
         //Task<ResponeDto> GetCustomerAndPromotionAsync(int customerID, int promoID);
         Task<ResponeDto> GetCusPromoByCustomerID(int customerID);
+        Task<ResponeDto> AuthDecreasePromotion(int cuspromoID);
+        Task<ResponeDto> AuthCustomerGetPromo(AuthCreateCusPromo authCreateCusPromo);
     }
     public interface IAuthPromoService
     {
@@ -47,5 +50,16 @@ namespace BM.Auth.ApplicationService.VipModule.Abtracts
         Task<ResponeDto> AuthDeletePromo(int promoID);
         Task<ResponeDto> AuthGetPromo(int promoID);
         Task<ResponeDto> AuthGetAllPromo();
+        Task<ResponeDto> AuthGetPromoByType(string promoType);
+    }
+    public interface IAuthCustomerCheckInService
+    {
+        Task<ResponeDto> AuthCreateCustomerCheckIn(AuthCreateCustomerCheckIn authCreateCustomerCheckIn);
+        Task<ResponeDto> AuthUpdateCustomerCheckIn(AuthUpdateCustomerCheckIn authUpdateCustomerCheckIn);
+        Task<ResponeDto> AuthDeleteCustomerCheckIn(int checkInID);
+        Task<ResponeDto> AuthGetCustomerCheckIn(int checkInID);
+        Task<ResponeDto> AuthGetAllCustomerCheckIn();
+        Task<ResponeDto> AuthGetCustomerCheckInByCustomerID(int customerID);
+
     }
 }

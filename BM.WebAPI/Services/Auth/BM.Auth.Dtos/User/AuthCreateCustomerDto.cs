@@ -18,7 +18,7 @@ namespace BM.Auth.Dtos
     {
         public int customerID { get; set; }
         public int userID { get; set; }
-        public int loyaltyPoints { get; set; }
+        public double loyaltyPoints { get; set; }
         public string? customerType { get; set; }
         public string? customerStatus { get; set; }
     }

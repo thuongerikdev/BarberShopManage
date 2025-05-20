@@ -109,6 +109,23 @@ namespace BM.WebAPI.Controllers.CRUD.Booking
                 return BadRequest(ErrorConst.Error(500, ex.Message));
             }
         }
+        [HttpGet("GetInvoiceByOrderID/{orderID}")]
+        public async Task<IActionResult> GetInvoiceByOrderID(int orderID)
+        {
+            try
+            {
+                var result = await _bookingInvoiceService.BookingGetInvoiceByOrderID(orderID);
+                if (result == null)
+                {
+                    return BadRequest(ErrorConst.Error(500, "Thông tin xác thực được cung cấp không chính xác"));
+                }
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ErrorConst.Error(500, ex.Message));
+            }
 
+        }
     }
 }

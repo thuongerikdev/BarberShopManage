@@ -80,7 +80,7 @@ namespace BM.Auth.ApplicationService.StartUp
             builder.Services.AddScoped<IAuthPromoService, AuthPromoService>();
             builder.Services.AddScoped<IAuthCusPromoService,  AuthCusPromoService>();
             builder.Services.AddScoped<IGetPromotionShared, AuthCusPromoService>();
-
+            builder.Services.AddScoped<IAuthCustomerCheckInService, AuthCustomerCheckInService>();
 
 
 

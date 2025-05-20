@@ -1,5 +1,6 @@
 ﻿using BM.Auth.ApplicationService.Common;
 using BM.Auth.ApplicationService.UserModule.Abtracts;
+using BM.Auth.ApplicationService.VipModule.Abtracts;
 using BM.Auth.Domain;
 using BM.Auth.Dtos;
 using BM.Auth.Dtos.User;
@@ -8,6 +9,7 @@ using BM.Constant;
 using BM.Shared.ApplicationService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,8 +20,10 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
 {
     public class AuthCustomerService : AuthServiceBase, IAuthCustomerService, IGetCustomerByOrUserID
     {
-        public AuthCustomerService(ILogger<AuthCustomerService> logger, AuthDbContext dbContext) : base(logger, dbContext)
+        protected readonly IAuthCusPromoService _cusPromoService;
+        public AuthCustomerService(ILogger<AuthCustomerService> logger, AuthDbContext dbContext , IAuthCusPromoService cusPromoService) : base(logger, dbContext)
         {
+            _cusPromoService = cusPromoService;
         }
         public async Task<ResponeDto> AuthCreateCustomer(AuthCreateCustomerDto authCreateCustomerDto)
         {
@@ -32,7 +36,6 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                     customerType = authCreateCustomerDto.customerType,
                     userID = authCreateCustomerDto.userID,
                     vipID = authCreateCustomerDto.vipID,
-                    percentDiscount = 0,
                     totalSpent = 0,
                     loyaltyPoints = 0,
 
@@ -157,7 +160,7 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                 return ErrorConst.Error(500, ex.Message);
             }
         }
-        public async Task <ResponeDto> AuthUpdateVipCustomer(AuthUpdateVipCustomerDto authUpdateVipCustomerDto)
+        public async Task<ResponeDto> AuthUpdateVipCustomer(AuthUpdateVipCustomerDto authUpdateVipCustomerDto)
         {
             try
             {
@@ -166,20 +169,53 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                 {
                     return ErrorConst.Error(500, "Không tìm thấy khách hàng");
                 }
-                var vipCustomer = await _dbContext.Vips.FindAsync(customer.vipID);
-                if (vipCustomer == null)
+
+                var currentVip = await _dbContext.Vips.FindAsync(customer.vipID);
+                if (currentVip == null)
                 {
-                    return ErrorConst.Error(500, "Không tìm thấy khách hàng vip");
+                    return ErrorConst.Error(500, "Không tìm thấy thông tin VIP hiện tại");
                 }
+
+                // Update customer spending and loyalty points
                 customer.totalSpent += authUpdateVipCustomerDto.totalAmount;
-                customer.loyaltyPoints += authUpdateVipCustomerDto.totalAmount *10/100 ;
-                var totalLoyaltyPoints = customer.loyaltyPoints;
-                if (totalLoyaltyPoints > vipCustomer.vipCost)
+                customer.loyaltyPoints += (authUpdateVipCustomerDto.totalAmount * 10) / 1000;
+
+                // Define VIP type progression
+                string[] vipTypes = { "Vip 1", "Vip 2", "Vip 3", "Vip 4", "Vip 5" };
+                int currentVipIndex = Array.IndexOf(vipTypes, currentVip.vipType);
+
+                // Check if customer can upgrade to next VIP level
+                if (currentVipIndex < vipTypes.Length - 1) // Ensure we're not at the highest VIP level
                 {
-                    customer.vipID += 1;
+                    string nextVipType = vipTypes[currentVipIndex + 1];
+                    var nextVip = await _dbContext.Vips
+                        .FirstOrDefaultAsync(v => v.vipType == nextVipType);
+
+                    if (nextVip != null && customer.loyaltyPoints >= nextVip.vipCost)
+                    {
+                        customer.vipID = nextVip.vipID;
+
+                        // Find promotion for new VIP level
+                        var promo = await _dbContext.Promos
+                            .Where(x => x.promoDescription == nextVip.vipType && x.promoType == "VipPromotion")
+                            .FirstOrDefaultAsync();
+
+                        if (promo != null)
+                        {
+                            var cusPromo = new AuthCreateCusPromo
+                            {
+                                customerID = customer.customerID,
+                                promoID = promo.promoID,
+                                cusPromoStatus = "OK",
+                                promoCount = 2
+                            };
+                            await _cusPromoService.AuthCustomerGetPromo(cusPromo);
+                        }
+                    }
                 }
+
                 await _dbContext.SaveChangesAsync();
-                return ErrorConst.Success("Cập nhật khách hàng vip thành công", customer);
+                return ErrorConst.Success("Cập nhật khách hàng VIP thành công", customer);
             }
             catch (Exception ex)
             {
@@ -187,5 +223,6 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                 return ErrorConst.Error(500, ex.Message);
             }
         }
+
     }
 }
