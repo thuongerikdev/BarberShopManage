@@ -1,8 +1,8 @@
-
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import 'package:barbermanagemobile/domain/usecases/get_emp_by_user_id_use_case.dart';
+import 'package:barbermanagemobile/presentation/screens/BookingScreen.dart'; // Import BookingScreen
 
 class EmployeeDetailScreen extends StatefulWidget {
   final int userID;
@@ -79,6 +79,19 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen> {
     }
   }
 
+  void _navigateToBookingScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BookingScreen(
+          onBack: () {
+            Navigator.pop(context); // Pop BookingScreen to return to EmployeeDetailScreen
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -132,179 +145,211 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen> {
                         style: TextStyle(color: Colors.redAccent, fontSize: 16, fontFamily: 'Poppins'),
                       ),
                     )
-                  : SingleChildScrollView(
-                      padding: EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          // Profile Header
-                          CircleAvatar(
-                            radius: 60,
-                            backgroundImage: NetworkImage(_employee!['image']),
-                            backgroundColor: primaryColor,
-                            onBackgroundImageError: (_, __) => Icon(Icons.broken_image, color: Colors.redAccent),
-                          ),
-                          SizedBox(height: 16),
-                          Text(
-                            _employee!['fullName'],
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: textColor,
-                              fontFamily: 'Poppins',
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            _employee!['positionName'],
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: accentColor,
-                              fontFamily: 'Poppins',
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            _employee!['specialtyName'],
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: textColor.withOpacity(0.8),
-                              fontFamily: 'Poppins',
-                            ),
-                          ),
-                          SizedBox(height: 16),
-
-                          // Personal Information Card
-                          Card(
-                            elevation: 5,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            color: primaryColor.withOpacity(0.8),
-                            child: Padding(
-                              padding: EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Thông tin cá nhân',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: textColor,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
-                                  SizedBox(height: 8),
-                                  _buildInfoRow('Email', _employee!['email']),
-                                  _buildInfoRow('Số điện thoại', _employee!['phone']),
-                                  _buildInfoRow('Giới tính', _employee!['gender']),
-                                  _buildInfoRow(
-                                    'Ngày sinh',
-                                    _employee!['dateOfBirth'].isNotEmpty
-                                        ? DateFormat('dd/MM/yyyy').format(DateTime.parse(_employee!['dateOfBirth']))
-                                        : 'Không có thông tin',
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 16),
-
-                          // Work Information Card
-                          Card(
-                            elevation: 5,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            color: primaryColor.withOpacity(0.8),
-                            child: Padding(
-                              padding: EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Thông tin công việc',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: textColor,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
-                                  SizedBox(height: 8),
-                                  _buildInfoRow('Mã nhân viên', _employee!['empID']),
-                                  _buildInfoRow('Mã định danh', _employee!['empCode']),
-                                  _buildInfoRow('Mã vị trí', _employee!['positionID']),
-                                  _buildInfoRow('Vị trí', _employee!['positionName']),
-                                  _buildInfoRow('Mã chuyên môn', _employee!['specialtyID']),
-                                  _buildInfoRow('Chuyên môn', _employee!['specialtyName']),
-                                  _buildInfoRow(
-                                    'Lương cơ bản',
-                                    NumberFormat.currency(locale: 'vi_VN', symbol: 'VNĐ').format(int.parse(_employee!['salary'])),
-                                  ),
-                                  _buildInfoRow(
-                                    'Thưởng',
-                                    NumberFormat.currency(locale: 'vi_VN', symbol: 'VNĐ').format(int.parse(_employee!['bonusSalary'])),
-                                  ),
-                                  _buildInfoRow(
-                                    'Ngày bắt đầu',
-                                    _employee!['startDate'].isNotEmpty
-                                        ? DateFormat('dd/MM/yyyy').format(DateTime.parse(_employee!['startDate']))
-                                        : 'Không có thông tin',
-                                  ),
-                                  _buildInfoRow('Trạng thái', _employee!['status']),
-                                  _buildInfoRow('Mã chi nhánh', _employee!['branchID']),
-                                  _buildInfoRow('Chi nhánh', _employee!['branchName']),
-                                ],
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 16),
-
-                          // Branch Image Card
-                          Card(
-                            elevation: 5,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            color: primaryColor.withOpacity(0.8),
+                  : Column(
+                      children: [
+                        Expanded(
+                          child: SingleChildScrollView(
+                            padding: EdgeInsets.all(16),
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Padding(
-                                  padding: EdgeInsets.all(16),
-                                  child: Text(
-                                    'Hình ảnh chi nhánh',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: textColor,
-                                      fontFamily: 'Poppins',
+                                // Profile Header
+                                CircleAvatar(
+                                  radius: 60,
+                                  backgroundImage: NetworkImage(_employee!['image']),
+                                  backgroundColor: primaryColor,
+                                  onBackgroundImageError: (_, __) => Icon(Icons.broken_image, color: Colors.redAccent),
+                                ),
+                                SizedBox(height: 16),
+                                Text(
+                                  _employee!['fullName'],
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: textColor,
+                                    fontFamily: 'Poppins',
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  _employee!['positionName'],
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: accentColor,
+                                    fontFamily: 'Poppins',
+                                  ),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  _employee!['specialtyName'],
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: textColor.withOpacity(0.8),
+                                    fontFamily: 'Poppins',
+                                  ),
+                                ),
+                                SizedBox(height: 16),
+
+                                // Personal Information Card
+                                Card(
+                                  elevation: 5,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  color: primaryColor.withOpacity(0.8),
+                                  child: Padding(
+                                    padding: EdgeInsets.all(16),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Thông tin cá nhân',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: textColor,
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
+                                        SizedBox(height: 8),
+                                        _buildInfoRow('Email', _employee!['email']),
+                                        _buildInfoRow('Số điện thoại', _employee!['phone']),
+                                        _buildInfoRow('Giới tính', _employee!['gender']),
+                                        _buildInfoRow(
+                                          'Ngày sinh',
+                                          _employee!['dateOfBirth'].isNotEmpty
+                                              ? DateFormat('dd/MM/yyyy').format(DateTime.parse(_employee!['dateOfBirth']))
+                                              : 'Không có thông tin',
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
-                                ClipRRect(
-                                  borderRadius: BorderRadius.only(
-                                    bottomLeft: Radius.circular(12),
-                                    bottomRight: Radius.circular(12),
-                                  ),
-                                  child: Image.network(
-                                    _employee!['branchesImage'],
-                                    height: 150,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) => Container(
-                                      height: 150,
-                                      color: primaryColor,
-                                      child: Icon(
-                                        Icons.broken_image,
-                                        color: Colors.redAccent,
-                                        size: 50,
-                                      ),
+                                SizedBox(height: 16),
+
+                                // Work Information Card
+                                Card(
+                                  elevation: 5,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  color: primaryColor.withOpacity(0.8),
+                                  child: Padding(
+                                    padding: EdgeInsets.all(16),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Thông tin công việc',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: textColor,
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
+                                        SizedBox(height: 8),
+                                        _buildInfoRow('Mã nhân viên', _employee!['empID']),
+                                        _buildInfoRow('Mã định danh', _employee!['empCode']),
+                                        _buildInfoRow('Mã vị trí', _employee!['positionID']),
+                                        _buildInfoRow('Vị trí', _employee!['positionName']),
+                                        _buildInfoRow('Mã chuyên môn', _employee!['specialtyID']),
+                                        _buildInfoRow('Chuyên môn', _employee!['specialtyName']),
+                                        _buildInfoRow(
+                                          'Lương cơ bản',
+                                          NumberFormat.currency(locale: 'vi_VN', symbol: 'VNĐ').format(int.parse(_employee!['salary'])),
+                                        ),
+                                        _buildInfoRow(
+                                          'Thưởng',
+                                          NumberFormat.currency(locale: 'vi_VN', symbol: 'VNĐ').format(int.parse(_employee!['bonusSalary'])),
+                                        ),
+                                        _buildInfoRow(
+                                          'Ngày bắt đầu',
+                                          _employee!['startDate'].isNotEmpty
+                                              ? DateFormat('dd/MM/yyyy').format(DateTime.parse(_employee!['startDate']))
+                                              : 'Không có thông tin',
+                                        ),
+                                        _buildInfoRow('Trạng thái', _employee!['status']),
+                                        _buildInfoRow('Mã chi nhánh', _employee!['branchID']),
+                                        _buildInfoRow('Chi nhánh', _employee!['branchName']),
+                                      ],
                                     ),
+                                  ),
+                                ),
+                                SizedBox(height: 16),
+
+                                // Branch Image Card
+                                Card(
+                                  elevation: 5,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  color: primaryColor.withOpacity(0.8),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Padding(
+                                        padding: EdgeInsets.all(16),
+                                        child: Text(
+                                          'Hình ảnh chi nhánh',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: textColor,
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
+                                      ),
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.only(
+                                          bottomLeft: Radius.circular(12),
+                                          bottomRight: Radius.circular(12),
+                                        ),
+                                        child: Image.network(
+                                          _employee!['branchesImage'],
+                                          height: 150,
+                                          width: double.infinity,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) => Container(
+                                            height: 150,
+                                            color: primaryColor,
+                                            child: Icon(
+                                              Icons.broken_image,
+                                              color: Colors.redAccent,
+                                              size: 50,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                        // "Đặt lịch ngay" Button at the Bottom
+                        Padding(
+                          padding: EdgeInsets.all(16),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _navigateToBookingScreen,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: accentColor,
+                                padding: EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: Text(
+                                'ĐẶT LỊCH NGAY',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: textColor,
+                                  fontFamily: 'Poppins',
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
     );
   }

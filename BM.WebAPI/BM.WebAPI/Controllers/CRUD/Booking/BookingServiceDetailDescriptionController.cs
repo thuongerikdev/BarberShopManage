@@ -102,14 +102,15 @@ namespace BM.WebAPI.Controllers.CRUD.Booking
             }
         }
         [HttpGet("GetById/{serviceDetailDescriptionID}")]
-        public  async Task <ActionResult> Get(int idserviceDetailDescriptionID) {
+        public async Task<ActionResult> Get(int serviceDetailDescriptionID)
+        {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ErrorConst.Error(500, "Đầu vào không hợp lệ"));
             }
             try
             {
-                var result = await _bookingServiceDetailDescriptionService.BookingGetServiceDetailDescriptionByID(idserviceDetailDescriptionID);
+                var result = await _bookingServiceDetailDescriptionService.BookingGetServiceDetailDescriptionByID(serviceDetailDescriptionID);
                 if (result == null)
                 {
                     return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));
@@ -121,6 +122,27 @@ namespace BM.WebAPI.Controllers.CRUD.Booking
                 return BadRequest(ErrorConst.Error(500, ex.Message));
             }
 
+        }
+        [HttpGet("GetByServiceDetailID/{serviceDetailID}")]
+        public async Task<IActionResult> GetByServiceDetailID(int serviceDetailID)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ErrorConst.Error(500, "Đầu vào không hợp lệ"));
+            }
+            try
+            {
+                var result = await _bookingServiceDetailDescriptionService.BookingGetServiceDetailDescriptionByServiceDetailID(serviceDetailID);
+                if (result == null)
+                {
+                    return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));
+                }
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ErrorConst.Error(500, ex.Message));
+            }
         }
     }
 }

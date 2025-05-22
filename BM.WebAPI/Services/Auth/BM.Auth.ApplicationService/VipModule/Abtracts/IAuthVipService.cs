@@ -42,6 +42,9 @@ namespace BM.Auth.ApplicationService.VipModule.Abtracts
         Task<ResponeDto> GetCusPromoByCustomerID(int customerID);
         Task<ResponeDto> AuthDecreasePromotion(int cuspromoID);
         Task<ResponeDto> AuthCustomerGetPromo(AuthCreateCusPromo authCreateCusPromo);
+        Task<ResponeDto> AuthUpdateCusPromoCount(int cusPromoID);
+        Task<ResponeDto> AuthCustomerGetVipPromo(AuthCreateCusPromo authCreateCusPromo);
+        Task<ResponeDto> GetVipPromotion(string VipName);
     }
     public interface IAuthPromoService
     {
@@ -51,6 +54,7 @@ namespace BM.Auth.ApplicationService.VipModule.Abtracts
         Task<ResponeDto> AuthGetPromo(int promoID);
         Task<ResponeDto> AuthGetAllPromo();
         Task<ResponeDto> AuthGetPromoByType(string promoType);
+        Task<ResponeDto> AuthGetAllPromoByCustomer(int customerID);
     }
     public interface IAuthCustomerCheckInService
     {

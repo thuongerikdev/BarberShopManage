@@ -12,7 +12,8 @@ class PromotionModel extends Promotion {
     required String promoStatus,
     required String promoType,
     required String promoImage,
-    List<dynamic>? authCusPromos,
+    required bool isAssociatedWithCustomer,
+    List<Map<String, dynamic>>? customerPromos,
   }) : super(
           promoID: promoID,
           promoName: promoName,
@@ -24,22 +25,24 @@ class PromotionModel extends Promotion {
           promoStatus: promoStatus,
           promoType: promoType,
           promoImage: promoImage,
-          authCusPromos: authCusPromos,
+          isAssociatedWithCustomer: isAssociatedWithCustomer,
+          customerPromos: customerPromos,
         );
 
   factory PromotionModel.fromJson(Map<String, dynamic> json) {
     return PromotionModel(
-      promoID: json['promoID'] as int,
-      promoName: json['promoName'] as String,
-      promoDescription: json['promoDescription'] as String,
-      promoDiscount: (json['promoDiscount'] as num).toDouble(),
-      pointToGet: json['pointToGet'] as int,
-      promoStart: DateTime.parse(json['promoStart'] as String),
-      promoEnd: DateTime.parse(json['promoEnd'] as String),
-      promoStatus: json['promoStatus'] as String,
-      promoType: json['promoType'] as String,
-      promoImage: json['promoImage'] as String,
-      authCusPromos: json['authCusPromos'] as List<dynamic>?,
+      promoID: json['promoID'] as int? ?? 0,
+      promoName: json['promoName'] as String? ?? 'Unknown Promotion',
+      promoDescription: json['promoDescription'] as String? ?? '',
+      promoDiscount: (json['promoDiscount'] as num?)?.toDouble() ?? 0.0,
+      pointToGet: json['pointToGet'] as int? ?? 0,
+      promoStart: DateTime.tryParse(json['promoStart']?.toString() ?? '') ?? DateTime.now(),
+      promoEnd: DateTime.tryParse(json['promoEnd']?.toString() ?? '') ?? DateTime.now(),
+      promoStatus: json['promoStatus'] as String? ?? 'Unknown',
+      promoType: json['promoType'] as String? ?? 'Unknown',
+      promoImage: json['promoImage'] as String? ?? '',
+      isAssociatedWithCustomer: json['isAssociatedWithCustomer'] as bool? ?? false,
+      customerPromos: (json['customerPromos'] as List<dynamic>?)?.cast<Map<String, dynamic>>(),
     );
   }
 
@@ -56,7 +59,8 @@ class PromotionModel extends Promotion {
       'promoStatus': promoStatus,
       'promoType': promoType,
       'promoImage': promoImage,
-      'authCusPromos': authCusPromos,
+      'isAssociatedWithCustomer': isAssociatedWithCustomer,
+      'customerPromos': customerPromos,
     };
   }
 }

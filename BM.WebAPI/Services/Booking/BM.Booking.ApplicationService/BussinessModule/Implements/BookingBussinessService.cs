@@ -125,7 +125,7 @@ namespace BM.Booking.ApplicationService.BussinessModule.Implements
                     // Tạo order
                     var orderFinal = new BookingCreateOrderDto
                     {
-                        orderDate = DateTime.Now,
+                        orderDate = order.orderDate,
                         orderStatus = "UnConfirm",
                         orderTotal = totalMoney,
                         createAt = DateTime.Now,

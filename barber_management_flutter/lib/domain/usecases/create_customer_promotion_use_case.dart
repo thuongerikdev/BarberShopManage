@@ -1,7 +1,7 @@
-import 'package:barbermanagemobile/domain/repositories/customer_promotion_repository.dart';
+import 'package:barbermanagemobile/domain/repositories/promotion_repository.dart';
 
 class CreateCustomerPromotionUseCase {
-  final CustomerPromotionRepository repository;
+  final PromotionRepository repository;
 
   CreateCustomerPromotionUseCase(this.repository);
 

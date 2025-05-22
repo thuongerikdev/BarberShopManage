@@ -34,5 +34,6 @@ namespace BM.Booking.ApplicationService.BookingModule.Abtracts
         public Task<ResponeDto> BookingDeleteServiceDetailDescription(int serviceDetailDescriptionID);
         public Task<ResponeDto> BookingGetServiceDetailDescriptionByID(int serviceDetailDescriptionID);
         public Task<ResponeDto> BookingGetAllServiceDetailDescription();
+        Task<ResponeDto> BookingGetServiceDetailDescriptionByServiceDetailID(int serviceDetailID);
     }
 }

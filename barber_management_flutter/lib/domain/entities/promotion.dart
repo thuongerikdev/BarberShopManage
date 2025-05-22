@@ -9,7 +9,8 @@ class Promotion {
   final String promoStatus;
   final String promoType;
   final String promoImage;
-  final List<dynamic>? authCusPromos;
+  final bool isAssociatedWithCustomer; // New field
+  final List<Map<String, dynamic>>? customerPromos; // New field, replaces authCusPromos
 
   Promotion({
     required this.promoID,
@@ -22,22 +23,24 @@ class Promotion {
     required this.promoStatus,
     required this.promoType,
     required this.promoImage,
-    this.authCusPromos,
+    required this.isAssociatedWithCustomer,
+    this.customerPromos,
   });
 
   factory Promotion.fromJson(Map<String, dynamic> json) {
     return Promotion(
-      promoID: json['promoID'] as int,
-      promoName: json['promoName'] as String,
-      promoDescription: json['promoDescription'] as String,
-      promoDiscount: (json['promoDiscount'] as num).toDouble(),
-      pointToGet: json['pointToGet'] as int,
-      promoStart: DateTime.parse(json['promoStart'] as String),
-      promoEnd: DateTime.parse(json['promoEnd'] as String),
-      promoStatus: json['promoStatus'] as String,
-      promoType: json['promoType'] as String,
-      promoImage: json['promoImage'] as String,
-      authCusPromos: json['authCusPromos'] as List<dynamic>?,
+      promoID: json['promoID'] as int? ?? 0,
+      promoName: json['promoName'] as String? ?? 'Unknown Promotion',
+      promoDescription: json['promoDescription'] as String? ?? '',
+      promoDiscount: (json['promoDiscount'] as num?)?.toDouble() ?? 0.0,
+      pointToGet: json['pointToGet'] as int? ?? 0,
+      promoStart: DateTime.tryParse(json['promoStart']?.toString() ?? '') ?? DateTime.now(),
+      promoEnd: DateTime.tryParse(json['promoEnd']?.toString() ?? '') ?? DateTime.now(),
+      promoStatus: json['promoStatus'] as String? ?? 'Unknown',
+      promoType: json['promoType'] as String? ?? 'Unknown',
+      promoImage: json['promoImage'] as String? ?? '',
+      isAssociatedWithCustomer: json['isAssociatedWithCustomer'] as bool? ?? false,
+      customerPromos: (json['customerPromos'] as List<dynamic>?)?.cast<Map<String, dynamic>>(),
     );
   }
 
@@ -53,7 +56,8 @@ class Promotion {
       'promoStatus': promoStatus,
       'promoType': promoType,
       'promoImage': promoImage,
-      'authCusPromos': authCusPromos,
+      'isAssociatedWithCustomer': isAssociatedWithCustomer,
+      'customerPromos': customerPromos,
     };
   }
 }

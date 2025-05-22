@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:get_it/get_it.dart';
-import 'package:barbermanagemobile/domain/usecases/get_promotions_use_case.dart';
-import 'package:barbermanagemobile/domain/usecases/get_customer_promotions_use_case.dart';
+import 'package:barbermanagemobile/presentation/providers/auth_provider.dart';
+import 'package:barbermanagemobile/domain/usecases/get_all_promo_by_customer_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/create_customer_promotion_use_case.dart';
+import 'package:barbermanagemobile/domain/usecases/get_customer_by_user_id_use_case.dart';
 import 'package:barbermanagemobile/domain/entities/promotion.dart';
-import 'package:barbermanagemobile/domain/entities/customer_promotion.dart';
 
 class ExchangePromotionScreen extends StatefulWidget {
   const ExchangePromotionScreen({super.key});
@@ -14,15 +15,52 @@ class ExchangePromotionScreen extends StatefulWidget {
 }
 
 class _ExchangePromotionScreenState extends State<ExchangePromotionScreen> {
-  final GetPromotionsUseCase _getPromotionsUseCase = GetIt.instance<GetPromotionsUseCase>();
-  final GetCustomerPromotionsUseCase _getCustomerPromotionsUseCase = GetIt.instance<GetCustomerPromotionsUseCase>();
+  final GetAllPromoByCustomerUseCase _getAllPromoByCustomerUseCase = GetIt.instance<GetAllPromoByCustomerUseCase>();
   final CreateCustomerPromotionUseCase _createCustomerPromotionUseCase = GetIt.instance<CreateCustomerPromotionUseCase>();
+  final GetCustomerByUserIDUseCase _getCustomerByUserIDUseCase = GetIt.instance<GetCustomerByUserIDUseCase>();
 
   static const primaryColor = Color(0xFF4E342E);
   static const backgroundColor = Color(0xFF212121);
   static const textColor = Color(0xFFEFEBE9);
   static const accentColor = Color(0xFF8D6E63);
   static const shadowColor = Color(0xFF3E2723);
+
+  int? _customerId;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCustomerId();
+  }
+
+  Future<void> _loadCustomerId() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final user = authProvider.user;
+
+    if (user == null || int.tryParse(user.userId) == null) {
+      setState(() {
+        _errorMessage = 'Không tìm thấy thông tin người dùng';
+      });
+      return;
+    }
+
+    final userId = int.parse(user.userId);
+    final result = await _getCustomerByUserIDUseCase.call(userId);
+    result.fold(
+      (failure) {
+        setState(() {
+          _errorMessage = 'Lỗi lấy thông tin khách hàng: $failure';
+        });
+      },
+      (customer) {
+        setState(() {
+          _customerId = customer.customerID;
+          _errorMessage = null;
+        });
+      },
+    );
+  }
 
   Future<void> _refreshPromotions() async {
     await Future.delayed(Duration(seconds: 1));
@@ -55,8 +93,6 @@ class _ExchangePromotionScreenState extends State<ExchangePromotionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const customerId = 1003; // Replace with dynamic ID later
-
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
@@ -71,65 +107,100 @@ class _ExchangePromotionScreenState extends State<ExchangePromotionScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: RefreshIndicator(
-        onRefresh: _refreshPromotions,
-        color: accentColor,
-        child: SingleChildScrollView(
-          physics: BouncingScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSectionTitle(context, 'Mã giảm giá trao đổi'),
-              FutureBuilder<List<Promotion>>(
-                future: _getPromotionsUseCase.call(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(accentColor)));
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Lỗi: ${snapshot.error}', style: TextStyle(color: Colors.redAccent, fontSize: 14)));
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Center(child: Text('Không có mã giảm giá nào', style: TextStyle(color: textColor, fontSize: 14)));
-                  }
+      body: _customerId == null && _errorMessage != null
+          ? Center(child: Text(_errorMessage!, style: TextStyle(color: Colors.redAccent, fontSize: 14)))
+          : _customerId == null
+              ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(accentColor)))
+              : RefreshIndicator(
+                  onRefresh: _refreshPromotions,
+                  color: accentColor,
+                  child: SingleChildScrollView(
+                    physics: BouncingScrollPhysics(),
+                    child: FutureBuilder<List<Promotion>>(
+                      future: _getAllPromoByCustomerUseCase.call(_customerId!),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(accentColor)));
+                        } else if (snapshot.hasError) {
+                          return Center(child: Text('Lỗi: ${snapshot.error}', style: TextStyle(color: Colors.redAccent, fontSize: 14)));
+                        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                          return Center(child: Text('Không có mã giảm giá nào', style: TextStyle(color: textColor, fontSize: 14)));
+                        }
 
-                  final transferPromotions = snapshot.data!.where((p) => p.promoType == 'TransferPromotion').toList();
-                  if (transferPromotions.isEmpty) {
-                    return Center(child: Text('Không có mã giảm giá trao đổi', style: TextStyle(color: textColor, fontSize: 14)));
-                  }
+                        final allPromotions = snapshot.data!;
+                        final customerTransferPromotions = allPromotions
+                            .where((promo) => promo.isAssociatedWithCustomer && promo.promoType == 'TransferPromotion')
+                            .toList();
+                        final transferPromotions = allPromotions.where((promo) => promo.promoType == 'TransferPromotion').toList();
 
-                  return FutureBuilder<List<CustomerPromotion>>(
-                    future: _getCustomerPromotionsUseCase.call(customerId),
-                    builder: (context, customerSnapshot) {
-                      final customerPromoIds = customerSnapshot.hasData
-                          ? customerSnapshot.data!.map((p) => p.promoID).toSet()
-                          : <int>{};
-
-                      return ListView.builder(
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        padding: EdgeInsets.all(16),
-                        itemCount: transferPromotions.length,
-                        itemBuilder: (context, index) {
-                          final promotion = transferPromotions[index];
-                          final isCustomerOwned = customerPromoIds.contains(promotion.promoID);
-                          return _buildPromotionCard(
-                            context,
-                            promotion,
-                            isCustomerOwned: isCustomerOwned,
-                            onClaim: !isCustomerOwned
-                                ? () => _claimPromotion(customerId, promotion.promoID, promotion.promoName)
-                                : null,
-                          );
-                        },
-                      );
-                    },
-                  );
-                },
-              ),
-              SizedBox(height: 20),
-            ],
-          ),
-        ),
-      ),
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSectionTitle(context, 'Mã giảm giá trao đổi'),
+                            customerTransferPromotions.isEmpty
+                                ? Padding(
+                                    padding: EdgeInsets.all(16),
+                                    child: Center(
+                                      child: Text(
+                                        'Bạn chưa có mã giảm giá trao đổi',
+                                        style: TextStyle(color: textColor, fontSize: 14),
+                                      ),
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    shrinkWrap: true,
+                                    physics: NeverScrollableScrollPhysics(),
+                                    padding: EdgeInsets.all(16),
+                                    itemCount: customerTransferPromotions.length,
+                                    itemBuilder: (context, index) {
+                                      final promotion = customerTransferPromotions[index];
+                                      final promoCount = promotion.customerPromos?.isNotEmpty == true
+                                          ? (promotion.customerPromos![0]['promoCount'] as int? ?? 0)
+                                          : 0;
+                                      return _buildPromotionCard(
+                                        context,
+                                        promotion,
+                                        isCustomerOwned: true,
+                                        promoCount: promoCount,
+                                        onClaim: () => _claimPromotion(_customerId!, promotion.promoID, promotion.promoName),
+                                      );
+                                    },
+                                  ),
+                            _buildSectionTitle(context, 'Tất cả mã giảm giá trao đổi'),
+                            transferPromotions.isEmpty
+                                ? Center(
+                                    child: Text(
+                                      'Không có mã giảm giá trao đổi',
+                                      style: TextStyle(color: textColor, fontSize: 14),
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    shrinkWrap: true,
+                                    physics: NeverScrollableScrollPhysics(),
+                                    padding: EdgeInsets.all(16),
+                                    itemCount: transferPromotions.length,
+                                    itemBuilder: (context, index) {
+                                      final promotion = transferPromotions[index];
+                                      final isCustomerOwned = promotion.isAssociatedWithCustomer;
+                                      final promoCount = isCustomerOwned && promotion.customerPromos?.isNotEmpty == true
+                                          ? (promotion.customerPromos![0]['promoCount'] as int? ?? 0)
+                                          : 0;
+                                      return _buildPromotionCard(
+                                        context,
+                                        promotion,
+                                        isCustomerOwned: isCustomerOwned,
+                                        promoCount: promoCount,
+                                        onClaim: () => _claimPromotion(_customerId!, promotion.promoID, promotion.promoName),
+                                      );
+                                    },
+                                  ),
+                            SizedBox(height: 20),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ),
     );
   }
 
@@ -146,7 +217,9 @@ class _ExchangePromotionScreenState extends State<ExchangePromotionScreen> {
   Widget _buildPromotionCard(
     BuildContext context,
     Promotion promotion,
-    {required bool isCustomerOwned, VoidCallback? onClaim}) {
+    {required bool isCustomerOwned, int? promoCount, VoidCallback? onClaim}) {
+    final promoImage = promotion.promoImage.isNotEmpty ? promotion.promoImage : null;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Card(
@@ -166,17 +239,29 @@ class _ExchangePromotionScreenState extends State<ExchangePromotionScreen> {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.horizontal(left: Radius.circular(15)),
-                child: Image.network(
-                  promotion.promoImage,
-                  width: 120,
-                  height: 100,
-                  fit: BoxFit.cover,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(accentColor)));
-                  },
-                  errorBuilder: (context, error, stackTrace) => Icon(Icons.broken_image, color: Colors.redAccent, size: 30),
-                ),
+                child: promoImage != null
+                    ? Image.network(
+                        promoImage,
+                        width: 120,
+                        height: 100,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(accentColor)));
+                        },
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          width: 120,
+                          height: 100,
+                          color: Colors.grey.shade300,
+                          child: Icon(Icons.broken_image, color: Colors.redAccent, size: 30),
+                        ),
+                      )
+                    : Container(
+                        width: 120,
+                        height: 100,
+                        color: Colors.grey.shade300,
+                        child: Icon(Icons.local_offer, color: Colors.grey, size: 30),
+                      ),
               ),
               Expanded(
                 child: Padding(
@@ -216,8 +301,11 @@ class _ExchangePromotionScreenState extends State<ExchangePromotionScreen> {
                         ),
                       ),
                       SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      // Use Wrap to prevent overflow
+                      Wrap(
+                        spacing: 8, // Horizontal space between elements
+                        runSpacing: 4, // Vertical space if elements wrap
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           Text(
                             'Giảm ${promotion.promoDiscount.toStringAsFixed(0)}%',
@@ -228,22 +316,37 @@ class _ExchangePromotionScreenState extends State<ExchangePromotionScreen> {
                               fontFamily: 'Poppins',
                             ),
                           ),
-                          if (onClaim != null)
-                            ElevatedButton(
-                              onPressed: onClaim,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: accentColor,
-                                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                elevation: 0,
+                          if (isCustomerOwned && promoCount != null)
+                            Text(
+                              'Số lượng: $promoCount',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: accentColor,
+                                fontFamily: 'Poppins',
                               ),
-                              child: Text(
-                                'Lấy mã',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: textColor,
-                                  fontFamily: 'Poppins',
+                            ),
+                          if (onClaim != null)
+                            ConstrainedBox(
+                              constraints: BoxConstraints(
+                                minWidth: 80, // Minimum width for the button
+                              ),
+                              child: ElevatedButton(
+                                onPressed: onClaim,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: accentColor,
+                                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  elevation: 0,
+                                ),
+                                child: Text(
+                                  'Lấy mã',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: textColor,
+                                    fontFamily: 'Poppins',
+                                  ),
                                 ),
                               ),
                             ),

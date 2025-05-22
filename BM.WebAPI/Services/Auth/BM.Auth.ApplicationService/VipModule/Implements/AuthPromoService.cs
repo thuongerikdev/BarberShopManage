@@ -1,12 +1,14 @@
 ﻿using BM.Auth.ApplicationService.Common;
 using BM.Auth.ApplicationService.VipModule.Abtracts;
 using BM.Auth.Domain;
+using BM.Auth.Dtos;
 using BM.Auth.Dtos.User;
 using BM.Auth.Infrastructure;
 using BM.Constant;
 using BM.Shared.ApplicationService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,7 +20,7 @@ namespace BM.Auth.ApplicationService.VipModule.Implements
     public class AuthPromoService : AuthServiceBase, IAuthPromoService
     {
         protected readonly ICloudinaryService _cloudinaryService;
-        public AuthPromoService(ILogger<AuthPromoService> logger, AuthDbContext dbContext , ICloudinaryService cloudinaryService) : base(logger, dbContext)
+        public AuthPromoService(ILogger<AuthPromoService> logger, AuthDbContext dbContext, ICloudinaryService cloudinaryService) : base(logger, dbContext)
         {
             _cloudinaryService = cloudinaryService;
         }
@@ -155,5 +157,51 @@ namespace BM.Auth.ApplicationService.VipModule.Implements
                 return ErrorConst.Error(500, ex.Message);
             }
         }
+        public async Task<ResponeDto> AuthGetAllPromoByCustomer(int customerID)
+        {
+            _logger.LogInformation("AuthGetAllPromoByCustomer for customer {CustomerID}", customerID);
+            try
+            {
+                // Eagerly load promotions with their associated AuthCusPromos
+                var promos = await _dbContext.Promos
+                    .Include(p => p.AuthCusPromos)
+                    .Select(p => new PromoWithOwnershipDto
+                    {
+                        PromoID = p.promoID,
+                        PromoName = p.promoName,
+                        PromoDescription = p.promoDescription,
+                        PromoDiscount = p.promoDiscount,
+                        PointToGet = p.pointToGet,
+                        PromoStart = p.promoStart,
+                        PromoEnd = p.promoEnd,
+                        PromoStatus = p.promoStatus,
+                        PromoType = p.promoType,
+                        PromoImage = p.promoImage,
+                        IsAssociatedWithCustomer = p.AuthCusPromos.Any(cp => cp.customerID == customerID),
+                        CustomerPromos = p.AuthCusPromos
+                            .Where(cp => cp.customerID == customerID)
+                            .Select(cp => new AuthCusPromoDto
+                            {
+                                CusPromoID = cp.cusPromoID,
+                                CustomerID = cp.customerID,
+                                PromoID = cp.promoID,
+                                CusPromoStatus = cp.cusPromoStatus,
+                                PromoCount = cp.promoCount,
+                                CreateAt = cp.createAt,
+                                UpdateAt = cp.updateAt
+                            })
+                            .ToList()
+                    })
+                    .ToListAsync();
+
+                return ErrorConst.Success("Lấy danh sách khuyến mãi thành công", promos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving promotions for customer {CustomerID}", customerID);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+
     }
 }

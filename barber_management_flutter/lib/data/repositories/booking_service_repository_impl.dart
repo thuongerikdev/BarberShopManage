@@ -1,7 +1,8 @@
+
 import 'package:barbermanagemobile/data/datasources/booking_service_remote_data_source.dart';
 import 'package:barbermanagemobile/domain/entities/booking_create_order.dart';
-import 'package:barbermanagemobile/domain/repositories/booking_service_repository.dart';
 import 'package:barbermanagemobile/data/models/booking_create_order_request_model.dart';
+import 'package:barbermanagemobile/domain/repositories/booking_service_repository.dart';
 
 class BookingServiceRepositoryImpl implements BookingServiceRepository {
   final BookingServiceRemoteDataSource dataSource;
@@ -50,9 +51,9 @@ class BookingServiceRepositoryImpl implements BookingServiceRepository {
   }
 
   @override
-  // Future<Map<String, dynamic>> getEmployeeById(int empID) async {
-  //   return await dataSource.getEmployeeById(empID);
-  // }
+  Future<List<Map<String, dynamic>>> getBookingServiceDetailDescription(int serviceDetailID) async {
+    return await dataSource.getBookingServiceDetailDescription(serviceDetailID);
+  }
 
   BookingCreateOrderRequestModel _mapToRequestModel(BookingCreateOrder order) {
     return BookingCreateOrderRequestModel(

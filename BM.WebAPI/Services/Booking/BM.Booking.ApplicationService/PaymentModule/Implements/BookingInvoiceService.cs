@@ -4,6 +4,7 @@ using BM.Booking.Domain;
 using BM.Booking.Dtos.CRUDDtos;
 using BM.Booking.Infrastructure;
 using BM.Constant;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
@@ -157,6 +158,7 @@ namespace BM.Booking.ApplicationService.PaymentModule.Implements
                                     EmpID = y.empID,
                                     AppointmentStatus = y.appStatus,
                                     Service = y.serviceDetailID,
+                                    
 
 
 

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:barbermanagemobile/domain/usecases/get_booking_service_detail_use_case.dart';
-import 'package:barbermanagemobile/presentation/screens/BookingScreen.dart'; // Import BookingScreen
+import 'package:barbermanagemobile/presentation/screens/BookingScreen.dart';
+import 'package:barbermanagemobile/presentation/screens/ServiceDetailDescriptionScreen.dart'; // Import the new screen
 
 class BookingDetailScreen extends StatefulWidget {
   final int serviceID;
@@ -51,6 +52,17 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           onBack: () {
             Navigator.pop(context); // Pop BookingScreen to return to BookingDetailScreen
           },
+        ),
+      ),
+    );
+  }
+
+  void _navigateToServiceDetailDescription(int serviceDetailID) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ServiceDetailDescriptionScreen(
+          serviceDetailID: serviceDetailID,
         ),
       ),
     );
@@ -338,7 +350,25 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                                                                   ),
                                                                   GestureDetector(
                                                                     onTap: () {
-                                                                      // TODO: Thêm hành động chi tiết nếu cần
+                                                                      // Navigate to ServiceDetailDescriptionScreen
+                                                                      final serviceDetailID = int.tryParse(
+                                                                          serviceDetail['serviceDetailID']?.toString() ?? '0') ?? 0;
+                                                                      if (serviceDetailID != 0) {
+                                                                        _navigateToServiceDetailDescription(serviceDetailID);
+                                                                      } else {
+                                                                        ScaffoldMessenger.of(context).showSnackBar(
+                                                                          SnackBar(
+                                                                            content: Text(
+                                                                              'Không tìm thấy ID chi tiết dịch vụ',
+                                                                              style: TextStyle(
+                                                                                fontFamily: 'Poppins',
+                                                                                color: Color(0xFFEFEBE9),
+                                                                              ),
+                                                                            ),
+                                                                            backgroundColor: Color(0xFF4E342E),
+                                                                          ),
+                                                                        );
+                                                                      }
                                                                     },
                                                                     child: Row(
                                                                       children: [
@@ -346,8 +376,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                                                                           'Tìm hiểu thêm',
                                                                           style: TextStyle(
                                                                             fontSize: 12,
-                                                                            color:
-                                                                                Color(0xFFEFEBE9),
+                                                                            color: Color(0xFFEFEBE9),
                                                                             fontFamily: 'Poppins',
                                                                           ),
                                                                         ),
@@ -373,19 +402,24 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                                         // Nút "Tìm hiểu thêm" với hành động hiển thị SnackBar
                                         GestureDetector(
                                           onTap: () {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  'Đã chọn ${serviceDetail['servName'] ?? 'Dịch vụ không tên'}',
-                                                  style: TextStyle(
-                                                    fontFamily: 'Poppins',
-                                                    color: Color(0xFFEFEBE9),
+                                            final serviceDetailID = int.tryParse(
+                                                serviceDetail['serviceDetailID']?.toString() ?? '0') ?? 0;
+                                            if (serviceDetailID != 0) {
+                                              _navigateToServiceDetailDescription(serviceDetailID);
+                                            } else {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    'Không tìm thấy ID chi tiết dịch vụ',
+                                                    style: TextStyle(
+                                                      fontFamily: 'Poppins',
+                                                      color: Color(0xFFEFEBE9),
+                                                    ),
                                                   ),
+                                                  backgroundColor: Color(0xFF4E342E),
                                                 ),
-                                                backgroundColor: Color(0xFF4E342E),
-                                                duration: Duration(seconds: 2),
-                                              ),
-                                            );
+                                              );
+                                            }
                                           },
                                           child: Container(
                                             width: double.infinity,
@@ -423,7 +457,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                       child: SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _navigateToBookingScreen, // Navigate to BookingScreen
+                          onPressed: _navigateToBookingScreen,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Color(0xFF8D6E63),
                             padding: EdgeInsets.symmetric(vertical: 16),

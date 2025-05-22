@@ -90,7 +90,7 @@ class EmployeeRemoteDataSourceImpl implements EmployeeRemoteDataSource {
 
   @override
   Future<Map<String, dynamic>> getEmployeeById(int empID) async {
-    final url = Uri.parse('$baseUrl/AuthEmp/getEmployeeById/$empID');
+    final url = Uri.parse('$baseUrl/AuthEmp/get/$empID');
     final response = await http.get(url, headers: {'accept': '*/*'});
 
     // print('getEmployeeById/$empID API response: ${response.statusCode} ${response.body}');

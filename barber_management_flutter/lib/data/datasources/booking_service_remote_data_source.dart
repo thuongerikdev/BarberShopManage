@@ -11,8 +11,8 @@ abstract class BookingServiceRemoteDataSource {
   Future<List<Map<String, dynamic>>> getEmployeesByBranch(int branchID);
   Future<List<Map<String, dynamic>>> getEmployeesByDate(DateTime date, int branchID, String typeOfEmp);
   Future<void> createBookingOrder(BookingCreateOrderRequestModel request);
-  Future<Map<String, dynamic>> getInvoiceByOrderId(int orderID); // New method
-  Future<Map<String, dynamic>> getEmployeeById(int empID); // New method
+  Future<Map<String, dynamic>> getInvoiceByOrderId(int orderID);
+  Future<List<Map<String, dynamic>>> getBookingServiceDetailDescription(int serviceDetailID); // New method
 }
 
 class BookingServiceRemoteDataSourceImpl implements BookingServiceRemoteDataSource {
@@ -187,7 +187,7 @@ class BookingServiceRemoteDataSourceImpl implements BookingServiceRemoteDataSour
             'scheduleName': item['scheduleName']?.toString() ?? '',
             'startTime': item['startTime']?.toString() ?? '',
             'endTime': item['endTime']?.toString() ?? '',
-            'image' : item['image']?.toString() ??''
+            'image' : item['image']?.toString() ?? ''
           };
         }).toList().cast<Map<String, dynamic>>();
       } else {
@@ -266,34 +266,38 @@ class BookingServiceRemoteDataSourceImpl implements BookingServiceRemoteDataSour
     }
   }
 
+ 
   @override
-  Future<Map<String, dynamic>> getEmployeeById(int empID) async {
+  Future<List<Map<String, dynamic>>> getBookingServiceDetailDescription(int serviceDetailID) async {
     final response = await http.get(
-      Uri.parse('$baseUrl/AuthEmp/get/$empID'),
+      Uri.parse('$baseUrl/BookingServiceDetailDescription/GetByServiceDetailID/$serviceDetailID'),
       headers: {'accept': '*/*'},
     );
 
-    print('getEmployeeById API response: ${response.body}');
+    print('getBookingServiceDetailDescription API response: ${response.body}');
 
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(response.body);
       if (jsonResponse['errorCode'] == 200) {
-        final data = jsonResponse['data'] as Map<String, dynamic>;
-        return {
-          'empID': data['empID']?.toString() ?? '',
-          'empName': data['authUser']?['fullName']?.toString() ?? 'Unknown',
-          'positionID': data['positionID']?.toString() ?? '',
-          'specialtyID': data['specialtyID']?.toString() ?? '',
-          'empCode': data['empCode']?.toString() ?? '',
-          'salary': double.tryParse(data['salary']?.toString() ?? '0') ?? 0.0,
-          'bonusSalary': double.tryParse(data['bonusSalary']?.toString() ?? '0') ?? 0.0,
-          'rate': double.tryParse(data['rate']?.toString() ?? '0') ?? 0.0,
-          'status': data['status']?.toString() ?? 'Unknown',
-          'branchID': data['branchID']?.toString() ?? '',
-          'startDate': data['startDate']?.toString() ?? '',
-        };
+        final data = List<Map<String, dynamic>>.from(jsonResponse['data'] ?? []);
+        return data.map((item) {
+          final price = double.tryParse(item['servPrice']?.toString() ?? '0') ?? 0.0;
+          return {
+            'serviceDetailID': item['serviceDetailID']?.toString() ?? '',
+            'servID': item['servID']?.toString() ?? '',
+            'servPrice': price,
+            'servName': item['servName']?.toString() ?? 'Dịch vụ không tên',
+            'servDescription': item['servDescription']?.toString() ?? 'Không có mô tả',
+            'servStatus': item['servStatus']?.toString() ?? 'Unknown',
+            'serviceDetailDescriptionID': item['serviceDetailDescriptionID']?.toString() ?? '',
+            'servImage': item['servImage']?.toString() ?? '',
+            'servDesName': item['servDesName']?.toString() ?? 'Không có tên',
+            'servDesDescription': item['servDesDescription']?.toString() ?? 'Không có mô tả',
+            'servType': item['servType']?.toString() ?? 'Unknown',
+          };
+        }).toList();
       } else {
-        throw Exception(jsonResponse['errorMessager'] ?? 'Lấy thông tin nhân viên thất bại');
+        throw Exception(jsonResponse['errorMessager'] ?? 'Lấy mô tả chi tiết dịch vụ thất bại');
       }
     } else {
       throw Exception('Lỗi server: ${response.statusCode}');

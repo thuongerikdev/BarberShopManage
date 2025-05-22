@@ -198,7 +198,26 @@ namespace BM.Auth.ApplicationService.VipModule.Implements
                     .Where(x => x.customerID == customerID)
                     .Include(x => x.AuthCustomer)
                     .Include(x => x.AuthPromotion)
-                    .Select(x => x.AuthPromotion)
+                    .Select(x => new CuspromoDataGet
+                    {
+                        cusPromoID = x.cusPromoID ,
+                        customerID = x.customerID,
+                        promoID = x.promoID,
+                        cusPromoStatus = x.cusPromoStatus,
+                        promoCount = x.promoCount,
+                        promoName = x.AuthPromotion.promoName,
+                        promoDescription = x.AuthPromotion.promoDescription,
+                        promoDiscount = x.AuthPromotion.promoDiscount,
+                        pointToGet = x.AuthPromotion.pointToGet,
+                        promoStart = x.AuthPromotion.promoStart,
+                        promoEnd = x.AuthPromotion.promoEnd,
+                        promoStatus = x.AuthPromotion.promoStatus,
+                        promoType = x.AuthPromotion.promoType,
+                        promoImage = x.AuthPromotion.promoImage,
+                        userID = x.AuthCustomer.userID,
+                        vipID = x.AuthCustomer.vipID,
+                        loyaltyPoints = x.AuthCustomer.loyaltyPoints,
+                    })
                     .ToListAsync();
                 if (cusPromo == null || !cusPromo.Any())
                 {
@@ -325,13 +344,68 @@ namespace BM.Auth.ApplicationService.VipModule.Implements
                         promoID = authCreateCusPromo.promoID,
                         cusPromoStatus = authCreateCusPromo.cusPromoStatus,
                         createAt = DateTime.Now,
-                        promoCount = authCreateCusPromo.promoCount,
+                        promoCount = 1,
                         updateAt = DateTime.Now
                     };
                     _dbContext.CusPromos.Add(cusPromocreate);
 
                     // Cập nhật điểm thưởng
                     customer.loyaltyPoints -= promo.pointToGet;
+
+                    // Lưu tất cả thay đổi trong một lần
+                    await _dbContext.SaveChangesAsync();
+
+                    // Commit giao dịch
+                    await transaction.CommitAsync();
+
+                    var cusPromoResponse = new CusPromoResponseDto
+                    {
+                        CustomerID = cusPromocreate.customerID,
+                        PromoID = cusPromocreate.promoID,
+                        CusPromoStatus = cusPromocreate.cusPromoStatus,
+                        PromoCount = cusPromocreate.promoCount,
+                        CreateAt = cusPromocreate.createAt,
+                        UpdateAt = cusPromocreate.updateAt
+                    };
+                    return ErrorConst.Success("Khách hàng đã nhận khuyến mãi thành công", cusPromoResponse);
+                }
+                catch (Exception ex)
+                {
+                    // Rollback giao dịch nếu có lỗi
+                    await transaction.RollbackAsync();
+                    _logger.LogError(ex, "Lỗi khi cấp khuyến mãi");
+                    return ErrorConst.Error(500, ex.Message);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi xử lý AuthCustomerGetPromo");
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+        public async Task<ResponeDto> AuthCustomerGetVipPromo(AuthCreateCusPromo authCreateCusPromo)
+        {
+            _logger.LogInformation("AuthCustomerGetPromo");
+            try
+            {
+
+                // Sử dụng giao dịch để đảm bảo tính toàn vẹn
+                using var transaction = await _dbContext.Database.BeginTransactionAsync();
+                try
+                {
+                    // Thêm bản ghi CusPromos
+                    var cusPromocreate = new Domain.AuthCusPromo
+                    {
+                        customerID = authCreateCusPromo.customerID,
+                        promoID = authCreateCusPromo.promoID,
+                        cusPromoStatus = authCreateCusPromo.cusPromoStatus,
+                        createAt = DateTime.Now,
+                        promoCount = authCreateCusPromo.promoCount,
+                        updateAt = DateTime.Now
+                    };
+                    _dbContext.CusPromos.Add(cusPromocreate);
+
+
 
                     // Lưu tất cả thay đổi trong một lần
                     await _dbContext.SaveChangesAsync();
@@ -378,6 +452,58 @@ namespace BM.Auth.ApplicationService.VipModule.Implements
                     return ErrorConst.Error(500, "Không tìm thấy khuyến mãi khách hàng");
                 }
                 return ErrorConst.Success("Lấy thông tin khuyến mãi thành công", cusPromo.AuthPromotion);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+        public async Task<ResponeDto> AuthUpdateCusPromoCount(int cusPromoID)
+        {
+            _logger.LogInformation("AuthGetPromoByCusPromoID");
+            try
+            {
+                var cusPromo = await _dbContext.CusPromos.FindAsync(cusPromoID);
+                if (cusPromo == null)
+                {
+                    return ErrorConst.Error(500, "Không tìm thấy khuyến mãi khách hàng");
+                }
+                cusPromo.promoCount++;
+                return ErrorConst.Success("Lấy thông tin khuyến mãi thành công", cusPromo);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+        public async Task<ResponeDto> GetVipPromotion(string VipName)
+        {
+            _logger.LogInformation("GetVipPromotion");
+            try
+            {
+                var promoDescription = "Chúc mừng bạn trở thành ${VipName}";
+
+                var promo = await _dbContext.Promos
+                    .Where(x => x.promoDescription.Contains(VipName) && x.promoType == "VipPromotion")
+                    .FirstOrDefaultAsync();
+                if (promo == null)
+                {
+                    return ErrorConst.Error(500, "Không tìm thấy khuyến mãi VIP");
+                }
+                var promoData = new PromotionDto
+                {
+                    PromoID = promo.promoID,
+                    PromoName = promo.promoName,
+                    PromoDescription = promo.promoDescription,
+                    PromoDiscount = promo.promoDiscount,
+                    PromoStart = promo.promoStart,
+                    PromoEnd = promo.promoEnd,
+                    PromoStatus = promo.promoStatus
+                };
+                return ErrorConst.Success("Lấy thông tin khuyến mãi VIP thành công", promoData);
+
             }
             catch (Exception ex)
             {

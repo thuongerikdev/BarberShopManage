@@ -8,8 +8,7 @@ import 'package:barbermanagemobile/domain/usecases/get_booking_service_detail_us
 import 'package:barbermanagemobile/domain/usecases/get_employees_by_branch_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/get_employees_by_date_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/get_customer_by_user_id_use_case.dart';
-import 'package:barbermanagemobile/domain/usecases/get_promotions_use_case.dart';
-import 'package:barbermanagemobile/domain/usecases/get_customer_promotions_use_case.dart';
+import 'package:barbermanagemobile/domain/usecases/get_all_promo_by_customer_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/create_customer_promotion_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/get_service_by_id_use_case.dart';
 import 'package:barbermanagemobile/presentation/providers/auth_provider.dart';
@@ -39,10 +38,8 @@ class _BookingScreenState extends State<BookingScreen> {
       GetIt.instance<CreateBookingOrderUseCase>();
   final GetCustomerByUserIDUseCase _getCustomerByUserIDUseCase =
       GetIt.instance<GetCustomerByUserIDUseCase>();
-  final GetPromotionsUseCase _getPromotionsUseCase =
-      GetIt.instance<GetPromotionsUseCase>();
-  final GetCustomerPromotionsUseCase _getCustomerPromotionsUseCase =
-      GetIt.instance<GetCustomerPromotionsUseCase>();
+  final GetAllPromoByCustomerUseCase _getAllPromoByCustomerUseCase =
+      GetIt.instance<GetAllPromoByCustomerUseCase>();
   final CreateCustomerPromotionUseCase _createCustomerPromotionUseCase =
       GetIt.instance<CreateCustomerPromotionUseCase>();
   final GetServiceByIdUseCase _getServiceByIdUseCase =
@@ -50,23 +47,20 @@ class _BookingScreenState extends State<BookingScreen> {
 
   List<Map<String, dynamic>> branches = [];
   List<Map<String, dynamic>> employees = [];
-  List<Map<String, dynamic>> availableEmployeesByDate = [];
+  Map<String, List<Map<String, dynamic>>> availableEmployeesByDate = {};
   List<Map<String, dynamic>> serviceDetails = [];
   List<Promotion> promotions = [];
-  Set<int> customerPromoIds = {};
   Promotion? selectedPromotion;
 
-  // Updated state for multiple appointments
   List<String> selectedServiceDetails = [];
-  Map<String, String> serviceEmployeeMap = {}; // Maps serviceDetailID to empID
+  Map<String, String> serviceEmployeeMap = {};
+  Map<String, String> serviceTypeOfEmpMap = {};
   DateTime? selectedDateTime;
   String? selectedBranch;
-  String? selectedTypeOfEmp;
   int? custID;
   bool isLoading = false;
   String? customerErrorMessage;
   String? promotionErrorMessage;
-  bool hasNoPromotions = false;
 
   int customerPoints = 1000;
 
@@ -83,7 +77,6 @@ class _BookingScreenState extends State<BookingScreen> {
     super.initState();
     _loadCustomerID();
     _loadBranches();
-    _loadPromotions();
   }
 
   Future<void> _loadCustomerID() async {
@@ -127,7 +120,7 @@ class _BookingScreenState extends State<BookingScreen> {
           if (kDebugMode) print('Customer: $customer');
         }),
       );
-      await _loadCustomerPromotions();
+      await _loadPromotions();
     } catch (e) {
       setState(() {
         isLoading = false;
@@ -144,7 +137,7 @@ class _BookingScreenState extends State<BookingScreen> {
     }
   }
 
-  Future<void> _loadCustomerPromotions() async {
+  Future<void> _loadPromotions() async {
     if (custID == null) {
       setState(() {
         isLoading = false;
@@ -157,27 +150,39 @@ class _BookingScreenState extends State<BookingScreen> {
       if (kDebugMode) {
         print('Loading promotions for customer ID: $custID');
       }
-      final customerPromotions =
-          await _getCustomerPromotionsUseCase.call(custID!);
-      setState(() {
-        customerPromoIds = customerPromotions.map((p) => p.promoID).toSet();
-        hasNoPromotions = customerPromoIds.isEmpty;
-        isLoading = false;
-      });
+      final fetchedPromotions =
+          await _getAllPromoByCustomerUseCase.call(custID!);
+      promotions = [
+        Promotion(
+          promoID: 0,
+          promoName: 'Không áp dụng',
+          promoDescription: '',
+          promoDiscount: 0.0,
+          pointToGet: 0,
+          promoImage: '',
+          promoStart: DateTime.now(),
+          promoEnd: DateTime.now(),
+          promoStatus: 'OK',
+          promoType: 'none',
+          customerPromos: null,
+          isAssociatedWithCustomer: true,
+        ),
+        ...fetchedPromotions,
+      ];
       if (kDebugMode) {
-        print('Loaded customer promotion IDs: $customerPromoIds');
+        print(
+            'Loaded promotions: ${promotions.map((p) => p.promoName).toList()}');
       }
+      setState(() => isLoading = false);
     } catch (e) {
       setState(() {
         isLoading = false;
-        promotionErrorMessage =
-            'Lỗi khi lấy danh sách mã giảm giá của khách hàng: $e';
+        promotionErrorMessage = 'Lỗi khi lấy danh sách khuyến mãi: $e';
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content:
-                  Text('Lỗi khi lấy danh sách mã giảm giá của khách hàng: $e'),
+              content: Text('Lỗi khi lấy danh sách khuyến mãi: $e'),
               backgroundColor: primaryColor),
         );
       }
@@ -227,17 +232,24 @@ class _BookingScreenState extends State<BookingScreen> {
     }
   }
 
-  Future<void> _loadEmployeesByDate(
-      DateTime date, int branchID, String typeOfEmp) async {
+  Future<void> _loadEmployeesByDate(DateTime date, int branchID,
+      String typeOfEmp, String serviceDetailID) async {
+    if (kDebugMode) {
+      print(
+          'Loading employees for date: $date, branch: $branchID, type: $typeOfEmp, serviceDetailID: $serviceDetailID');
+    }
     setState(() => isLoading = true);
     try {
-      availableEmployeesByDate =
+      final employeesForService =
           await _getEmployeesByDateUseCase.call(date, branchID, typeOfEmp);
       if (kDebugMode) {
         print(
-            'Loaded employees by date $date, branch $branchID, typeOfEmp $typeOfEmp: $availableEmployeesByDate');
+            'Loaded employees for date $date, branch $branchID, typeOfEmp $typeOfEmp: $employeesForService');
       }
-      setState(() => isLoading = false);
+      setState(() {
+        availableEmployeesByDate[serviceDetailID] = employeesForService;
+        isLoading = false;
+      });
     } catch (e) {
       setState(() {
         isLoading = false;
@@ -256,13 +268,24 @@ class _BookingScreenState extends State<BookingScreen> {
   Future<void> _loadServiceDetails() async {
     setState(() => isLoading = true);
     try {
-      serviceDetails =
-          await _getBookingServiceDetailUseCase.call(defaultServiceID);
-      if (kDebugMode) {
-        print(
-            'Loaded service details for service $defaultServiceID: $serviceDetails');
+      List<Map<String, dynamic>> allServiceDetails = [];
+      // Broaden the range to include more serviceIDs (adjust based on your data)
+      for (int serviceID = 1; serviceID <= 5; serviceID++) {
+        final serviceDetailsForID =
+            await _getBookingServiceDetailUseCase.call(serviceID);
+        allServiceDetails.addAll(serviceDetailsForID);
       }
-      setState(() => isLoading = false);
+      if (kDebugMode) {
+        print('Loaded all service details:');
+        for (var detail in allServiceDetails) {
+          print(
+              'servName: ${detail['servName']}, serviceDetailID: ${detail['serviceDetailID']}');
+        }
+      }
+      setState(() {
+        serviceDetails = allServiceDetails;
+        isLoading = false;
+      });
     } catch (e) {
       setState(() {
         isLoading = false;
@@ -272,46 +295,6 @@ class _BookingScreenState extends State<BookingScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text('Lỗi khi lấy chi tiết dịch vụ: $e'),
-              backgroundColor: primaryColor),
-        );
-      }
-    }
-  }
-
-  Future<void> _loadPromotions() async {
-    setState(() => isLoading = true);
-    try {
-      final fetchedPromotions = await _getPromotionsUseCase.call();
-      promotions = [
-        Promotion(
-          promoID: 0,
-          promoName: 'Không áp dụng',
-          promoDescription: '',
-          promoDiscount: 0.0,
-          pointToGet: 0,
-          promoImage: '',
-          promoStart: DateTime.now(),
-          promoEnd: DateTime.now(),
-          promoStatus: 'OK',
-          promoType: 'none',
-          authCusPromos: null,
-        ),
-        ...fetchedPromotions,
-      ];
-      if (kDebugMode) {
-        print(
-            'Loaded promotions: ${promotions.map((p) => p.promoName).toList()}');
-      }
-      setState(() => isLoading = false);
-    } catch (e) {
-      setState(() {
-        isLoading = false;
-        promotionErrorMessage = 'Lỗi khi lấy danh sách khuyến mãi: $e';
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('Lỗi khi lấy danh sách khuyến mãi: $e'),
               backgroundColor: primaryColor),
         );
       }
@@ -350,7 +333,6 @@ class _BookingScreenState extends State<BookingScreen> {
     setState(() => isLoading = true);
     try {
       await _createCustomerPromotionUseCase.call(custID!, promoId, 'Active');
-      await _loadCustomerPromotions();
       await _loadPromotions();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -379,6 +361,26 @@ class _BookingScreenState extends State<BookingScreen> {
     } finally {
       setState(() => isLoading = false);
     }
+  }
+
+  // Method to reset the form state
+  void _resetForm() {
+    setState(() {
+      selectedBranch = null;
+      selectedServiceDetails.clear();
+      serviceEmployeeMap.clear();
+      serviceTypeOfEmpMap.clear();
+      selectedDateTime = null;
+      selectedPromotion = null;
+      availableEmployeesByDate.clear();
+      employees.clear();
+      customerErrorMessage = null;
+      promotionErrorMessage = null;
+      isLoading = false;
+    });
+    // Reload initial data
+    _loadCustomerID();
+    _loadBranches();
   }
 
   @override
@@ -476,9 +478,10 @@ class _BookingScreenState extends State<BookingScreen> {
                                             branch['branchID'].toString();
                                         selectedServiceDetails.clear();
                                         serviceEmployeeMap.clear();
+                                        serviceTypeOfEmpMap.clear();
                                         selectedDateTime = null;
                                         selectedPromotion = null;
-                                        selectedTypeOfEmp = null;
+                                        availableEmployeesByDate.clear();
                                         _loadEmployeesByBranch(
                                             int.parse(selectedBranch!));
                                       });
@@ -580,6 +583,13 @@ class _BookingScreenState extends State<BookingScreen> {
                                                               serviceDetail[
                                                                       'serviceDetailID']
                                                                   .toString());
+                                                          serviceTypeOfEmpMap
+                                                              .remove(serviceDetail[
+                                                                      'serviceDetailID']
+                                                                  .toString());
+                                                          availableEmployeesByDate
+                                                              .remove(serviceDetail[
+                                                                  'serviceDetailID']);
                                                         }
                                                       });
                                                       setState(() {});
@@ -610,16 +620,22 @@ class _BookingScreenState extends State<BookingScreen> {
                                                                       'servName']
                                                                   ?.toString() ??
                                                               '';
+                                                          // Set typeOfEmp based on servName
+                                                          final typeOfEmp =
+                                                              servName ==
+                                                                      'HairCutting'
+                                                                  ? 'HairCutting'
+                                                                  : 'Massage';
                                                           setState(() {
-                                                            selectedTypeOfEmp =
-                                                                servName.toLowerCase() ==
-                                                                        'massage'
-                                                                    ? 'Massage'
-                                                                    : 'HairCutting';
+                                                            serviceTypeOfEmpMap[
+                                                                    serviceDetail[
+                                                                            'serviceDetailID']
+                                                                        .toString()] =
+                                                                typeOfEmp;
                                                           });
                                                           if (kDebugMode) {
                                                             print(
-                                                                'Selected service: $servName, typeOfEmp: $selectedTypeOfEmp');
+                                                                'Selected service: $servName, typeOfEmp: $typeOfEmp for serviceDetailID: ${serviceDetail['serviceDetailID']}');
                                                           }
                                                         } catch (e) {
                                                           setState(() {
@@ -719,21 +735,37 @@ class _BookingScreenState extends State<BookingScreen> {
                     stepNumber: 3,
                     title: "Chọn ngày, giờ & stylist",
                     isActive: selectedServiceDetails.isNotEmpty,
-                    child: Column(
-                      children: [
-                        _buildSelectionButton(
-                          icon: Icons.calendar_today,
-                          text: selectedDateTime == null
-                              ? "Hôm nay, ${DateFormat('EEE (dd/MM)').format(DateTime.now())}"
-                              : _getDateDisplayText(selectedDateTime!),
-                          onTap: selectedServiceDetails.isNotEmpty
-                              ? () async {
-                                  final date = await showDatePicker(
+                    child: _buildSelectionButton(
+                      icon: Icons.calendar_today,
+                      text: selectedDateTime == null
+                          ? "Hôm nay, ${DateFormat('EEE (dd/MM)').format(DateTime.now())}"
+                          : _getDateDisplayText(selectedDateTime!),
+                      onTap: selectedServiceDetails.isNotEmpty
+                          ? () async {
+                              final date = await showDatePicker(
+                                context: context,
+                                initialDate: DateTime.now(),
+                                firstDate: DateTime.now(),
+                                lastDate:
+                                    DateTime.now().add(Duration(days: 30)),
+                                builder: (context, child) {
+                                  return Theme(
+                                    data: ThemeData.dark().copyWith(
+                                      colorScheme: ColorScheme.dark(
+                                        primary: accentColor,
+                                        onPrimary: textColor,
+                                        surface: primaryColor.withOpacity(0.9),
+                                        onSurface: dropdownTextColor,
+                                      ),
+                                    ),
+                                    child: child!,
+                                  );
+                                },
+                              );
+                              if (date != null) {
+                                final time = await showTimePicker(
                                     context: context,
-                                    initialDate: DateTime.now(),
-                                    firstDate: DateTime.now(),
-                                    lastDate:
-                                        DateTime.now().add(Duration(days: 30)),
+                                    initialTime: TimeOfDay.now(),
                                     builder: (context, child) {
                                       return Theme(
                                         data: ThemeData.dark().copyWith(
@@ -747,67 +779,57 @@ class _BookingScreenState extends State<BookingScreen> {
                                         ),
                                         child: child!,
                                       );
-                                    },
-                                  );
-                                  if (date != null) {
-                                    final time = await showTimePicker(
-                                        context: context,
-                                        initialTime: TimeOfDay.now(),
-                                        builder: (context, child) {
-                                          return Theme(
-                                            data: ThemeData.dark().copyWith(
-                                              colorScheme: ColorScheme.dark(
-                                                primary: accentColor,
-                                                onPrimary: textColor,
-                                                surface: primaryColor
-                                                    .withOpacity(0.9),
-                                                onSurface: dropdownTextColor,
-                                              ),
-                                            ),
-                                            child: child!,
-                                          );
-                                        });
-                                    if (time != null && mounted) {
-                                      setState(() {
-                                        selectedDateTime = DateTime(
-                                            date.year,
-                                            date.month,
-                                            date.day,
-                                            time.hour,
-                                            time.minute);
-                                      });
-                                      if (selectedBranch != null &&
-                                          selectedTypeOfEmp != null) {
+                                    });
+                                if (time != null && mounted) {
+                                  setState(() {
+                                    selectedDateTime = DateTime(
+                                        date.year,
+                                        date.month,
+                                        date.day,
+                                        time.hour,
+                                        time.minute);
+                                  });
+                                  if (selectedBranch != null) {
+                                    for (var serviceDetailID
+                                        in selectedServiceDetails) {
+                                      final typeOfEmp =
+                                          serviceTypeOfEmpMap[serviceDetailID];
+                                      if (typeOfEmp != null) {
                                         await _loadEmployeesByDate(
                                             selectedDateTime!,
                                             int.parse(selectedBranch!),
-                                            selectedTypeOfEmp!);
+                                            typeOfEmp,
+                                            serviceDetailID);
                                       }
                                     }
                                   }
                                 }
-                              : null,
-                          highlightText:
-                              selectedDateTime != null ? "Ngày thường" : null,
-                          highlightColor: Colors.green,
-                        ),
-                        if (selectedDateTime != null &&
-                            availableEmployeesByDate.isNotEmpty)
-                          ...selectedServiceDetails.map((serviceDetailID) {
-                            final service = serviceDetails.firstWhere((s) =>
-                                s['serviceDetailID'].toString() ==
-                                serviceDetailID);
-                            final empID = serviceEmployeeMap[serviceDetailID];
-                            return Padding(
+                              }
+                            }
+                          : null,
+                      highlightText:
+                          selectedDateTime != null ? "Ngày thường" : null,
+                      highlightColor: Colors.green,
+                    ),
+                  ),
+                  if (selectedDateTime != null)
+                    ...selectedServiceDetails.map((serviceDetailID) {
+                      final service = serviceDetails.firstWhere((s) =>
+                          s['serviceDetailID'].toString() == serviceDetailID);
+                      final empID = serviceEmployeeMap[serviceDetailID];
+                      final employeesForService =
+                          availableEmployeesByDate[serviceDetailID] ?? [];
+                      return employeesForService.isNotEmpty
+                          ? Padding(
                               padding: const EdgeInsets.only(top: 8),
                               child: _buildSelectionButton(
                                 icon: Icons.person,
                                 text: empID == null
                                     ? "Chọn stylist cho ${service['servName']}"
-                                    : availableEmployeesByDate.firstWhere(
+                                    : employeesForService.firstWhere(
                                         (e) => e['empID'] == empID)['empName'],
                                 imageUrl: empID != null
-                                    ? availableEmployeesByDate.firstWhere(
+                                    ? employeesForService.firstWhere(
                                         (e) => e['empID'] == empID)['image']
                                     : null,
                                 onTap: () async {
@@ -816,8 +838,44 @@ class _BookingScreenState extends State<BookingScreen> {
                                     builder: (context) => Container(
                                       color: primaryColor.withOpacity(0.9),
                                       child: ListView(
-                                        children: availableEmployeesByDate
-                                            .map((employee) {
+                                        children:
+                                            employeesForService.map((employee) {
+                                          final startTimeStr =
+                                              employee['startTime']
+                                                      ?.toString() ??
+                                                  '';
+                                          final endTimeStr =
+                                              employee['endTime']?.toString() ??
+                                                  '';
+                                          String formattedStartTime = 'N/A';
+                                          String formattedEndTime = 'N/A';
+
+                                          try {
+                                            if (startTimeStr.isNotEmpty) {
+                                              final startTime =
+                                                  DateTime.parse(startTimeStr);
+                                              formattedStartTime =
+                                                  DateFormat('HH:mm')
+                                                      .format(startTime);
+                                            }
+                                            if (endTimeStr.isNotEmpty) {
+                                              final endTime =
+                                                  DateTime.parse(endTimeStr);
+                                              formattedEndTime =
+                                                  DateFormat('HH:mm')
+                                                      .format(endTime);
+                                            }
+                                          } catch (e) {
+                                            if (kDebugMode) {
+                                              print(
+                                                  'Error parsing employee shift time: $e');
+                                              print(
+                                                  'startTimeStr: $startTimeStr, endTimeStr: $endTimeStr');
+                                            }
+                                            formattedStartTime = startTimeStr;
+                                            formattedEndTime = endTimeStr;
+                                          }
+
                                           return ListTile(
                                             leading: employee['image']
                                                     .isNotEmpty
@@ -852,7 +910,7 @@ class _BookingScreenState extends State<BookingScreen> {
                                                   color: dropdownTextColor),
                                             ),
                                             subtitle: Text(
-                                              "Ca: ${employee['startTime']} - ${employee['endTime']}",
+                                              "Ca: $formattedStartTime - $formattedEndTime",
                                               style: TextStyle(
                                                   color: dropdownTextColor
                                                       .withOpacity(0.7)),
@@ -872,24 +930,32 @@ class _BookingScreenState extends State<BookingScreen> {
                                   );
                                 },
                               ),
-                            );
-                          }).toList(),
-                      ],
-                    ),
-                  ),
+                            )
+                          : SizedBox.shrink();
+                    }).toList(),
                   _buildStep(
                     stepNumber: 4,
                     title: "Chọn mã giảm giá",
                     isActive: serviceEmployeeMap.length ==
-                        selectedServiceDetails.length,
+                            selectedServiceDetails.length &&
+                        promotions.length > 1,
                     child: _buildSelectionButton(
                       icon: Icons.local_offer,
                       text: selectedPromotion == null
                           ? "Chọn mã giảm giá"
                           : "${selectedPromotion!.promoName} (${selectedPromotion!.promoDiscount.toInt()}%)",
                       imageUrl: selectedPromotion?.promoImage,
+                      highlightText: selectedPromotion != null &&
+                              selectedPromotion!.isAssociatedWithCustomer &&
+                              selectedPromotion!.promoType != 'none' &&
+                              selectedPromotion!.customerPromos?.isNotEmpty ==
+                                  true
+                          ? 'Số lượng: ${selectedPromotion!.customerPromos![0]['promoCount'] ?? 0}'
+                          : null,
+                      highlightColor: accentColor,
                       onTap: serviceEmployeeMap.length ==
-                              selectedServiceDetails.length
+                                  selectedServiceDetails.length &&
+                              promotions.length > 1
                           ? () async {
                               showModalBottomSheet(
                                 context: context,
@@ -897,9 +963,20 @@ class _BookingScreenState extends State<BookingScreen> {
                                   color: primaryColor.withOpacity(0.9),
                                   child: ListView(
                                     children: promotions.map((promo) {
-                                      final isCustomerOwned = customerPromoIds
-                                              .contains(promo.promoID) ||
-                                          promo.promoID == 0;
+                                      final isCustomerOwned =
+                                          promo.isAssociatedWithCustomer;
+                                      final promoCount = isCustomerOwned &&
+                                              promo.customerPromos
+                                                      ?.isNotEmpty ==
+                                                  true &&
+                                              promo.promoType != 'none'
+                                          ? (promo.customerPromos![0]
+                                                  ['promoCount'] as int? ??
+                                              0)
+                                          : null;
+                                      final isDisabled = promoCount != null &&
+                                          promoCount <=
+                                              0; // Disable selection if promoCount <= 0
                                       return ListTile(
                                         leading: promo.promoImage.isNotEmpty
                                             ? ClipRRect(
@@ -918,21 +995,30 @@ class _BookingScreenState extends State<BookingScreen> {
                                                     }
                                                     return Icon(
                                                       Icons.local_offer,
-                                                      color: textColor,
+                                                      color: isDisabled
+                                                          ? Colors.grey
+                                                          : textColor,
                                                       size: 40,
                                                     );
                                                   },
                                                 ),
                                               )
-                                            : Icon(Icons.local_offer,
-                                                color: textColor, size: 40),
+                                            : Icon(
+                                                Icons.local_offer,
+                                                color: isDisabled
+                                                    ? Colors.grey
+                                                    : textColor,
+                                                size: 40,
+                                              ),
                                         title: Text(
                                           "${promo.promoName} (${promo.promoDiscount.toInt()}%)",
                                           style: TextStyle(
-                                            color: isCustomerOwned
-                                                ? dropdownTextColor
-                                                : dropdownTextColor
-                                                    .withOpacity(0.5),
+                                            color: isDisabled
+                                                ? Colors.grey
+                                                : (isCustomerOwned
+                                                    ? dropdownTextColor
+                                                    : dropdownTextColor
+                                                        .withOpacity(0.5)),
                                           ),
                                         ),
                                         subtitle: Column(
@@ -942,11 +1028,13 @@ class _BookingScreenState extends State<BookingScreen> {
                                             Text(
                                               promo.promoDescription,
                                               style: TextStyle(
-                                                color: isCustomerOwned
-                                                    ? dropdownTextColor
-                                                        .withOpacity(0.7)
-                                                    : dropdownTextColor
-                                                        .withOpacity(0.3),
+                                                color: isDisabled
+                                                    ? Colors.grey
+                                                    : (isCustomerOwned
+                                                        ? dropdownTextColor
+                                                            .withOpacity(0.7)
+                                                        : dropdownTextColor
+                                                            .withOpacity(0.3)),
                                               ),
                                             ),
                                             if (promo.promoType ==
@@ -954,20 +1042,35 @@ class _BookingScreenState extends State<BookingScreen> {
                                               Text(
                                                 'Điểm cần: ${promo.pointToGet}',
                                                 style: TextStyle(
-                                                  color: isCustomerOwned
-                                                      ? dropdownTextColor
-                                                          .withOpacity(0.7)
-                                                      : dropdownTextColor
-                                                          .withOpacity(0.3),
+                                                  color: isDisabled
+                                                      ? Colors.grey
+                                                      : (isCustomerOwned
+                                                          ? dropdownTextColor
+                                                              .withOpacity(0.7)
+                                                          : dropdownTextColor
+                                                              .withOpacity(
+                                                                  0.3)),
+                                                ),
+                                              ),
+                                            if (promoCount != null)
+                                              Text(
+                                                'Số lượng: $promoCount',
+                                                style: TextStyle(
+                                                  color: isDisabled
+                                                      ? Colors.grey
+                                                      : (isCustomerOwned
+                                                          ? dropdownTextColor
+                                                              .withOpacity(0.7)
+                                                          : dropdownTextColor
+                                                              .withOpacity(
+                                                                  0.3)),
                                                 ),
                                               ),
                                           ],
                                         ),
-                                        trailing: !isCustomerOwned &&
-                                                (promo.promoType ==
-                                                        'FreePromotion' ||
-                                                    promo.promoType ==
-                                                        'TransferPromotion')
+                                        trailing: promo.promoType !=
+                                                    'VipPromotion' &&
+                                                promo.promoType != 'none'
                                             ? ElevatedButton(
                                                 onPressed: () async {
                                                   Navigator.pop(context);
@@ -976,9 +1079,10 @@ class _BookingScreenState extends State<BookingScreen> {
                                                       promo.promoName,
                                                       promo.promoType,
                                                       promo.pointToGet);
-                                                },
+                                                }, // Always call _claimPromotion
                                                 style: ElevatedButton.styleFrom(
-                                                  backgroundColor: accentColor,
+                                                  backgroundColor:
+                                                      accentColor, // Consistent color
                                                   padding: EdgeInsets.symmetric(
                                                       horizontal: 12,
                                                       vertical: 8),
@@ -999,7 +1103,8 @@ class _BookingScreenState extends State<BookingScreen> {
                                                 ),
                                               )
                                             : null,
-                                        onTap: isCustomerOwned
+                                        onTap: isCustomerOwned &&
+                                                !isDisabled // Disable selection if promoCount <= 0
                                             ? () {
                                                 setState(() {
                                                   selectedPromotion = promo;
@@ -1070,7 +1175,7 @@ class _BookingScreenState extends State<BookingScreen> {
                         style: TextStyle(color: Colors.red, fontSize: 14),
                       ),
                     ),
-                  if (hasNoPromotions && promotionErrorMessage == null)
+                  if (promotions.length <= 1 && promotionErrorMessage == null)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
                       child: Text(
@@ -1107,7 +1212,7 @@ class _BookingScreenState extends State<BookingScreen> {
         selectedServiceDetails.isNotEmpty &&
         serviceEmployeeMap.length == selectedServiceDetails.length &&
         custID != null &&
-        selectedTypeOfEmp != null;
+        serviceTypeOfEmpMap.length == selectedServiceDetails.length;
   }
 
   void _showConfirmationDialog(BuildContext context) {
@@ -1138,16 +1243,20 @@ class _BookingScreenState extends State<BookingScreen> {
               ),
               _buildConfirmationRow("Thời gian",
                   DateFormat('dd/MM/yyyy - HH:mm').format(selectedDateTime!)),
-              _buildConfirmationRow("Loại nhân viên", selectedTypeOfEmp!),
               ...selectedServiceDetails.map((serviceDetailID) {
                 final serviceDetail = serviceDetails.firstWhere(
                     (s) => s['serviceDetailID'].toString() == serviceDetailID);
                 final empID = serviceEmployeeMap[serviceDetailID];
-                final employee = availableEmployeesByDate
-                    .firstWhere((e) => e['empID'] == empID);
+                final employee = availableEmployeesByDate[serviceDetailID]
+                    ?.firstWhere((e) => e['empID'] == empID);
+                final typeOfEmp = serviceTypeOfEmpMap[serviceDetailID];
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    _buildConfirmationRow(
+                      "Loại nhân viên",
+                      typeOfEmp ?? 'Không xác định',
+                    ),
                     _buildConfirmationRow(
                       "Dịch vụ chi tiết",
                       serviceDetail['servName'],
@@ -1155,8 +1264,8 @@ class _BookingScreenState extends State<BookingScreen> {
                     ),
                     _buildConfirmationRow(
                       "Stylist",
-                      employee['empName'],
-                      imageUrl: employee['image'],
+                      employee?['empName'] ?? 'Không xác định',
+                      imageUrl: employee?['image'],
                     ),
                   ],
                 );
@@ -1204,12 +1313,11 @@ class _BookingScreenState extends State<BookingScreen> {
                       setState(() {
                         isLoading = false;
                         customerErrorMessage = null;
-                        promotionErrorMessage = null; // Fixed here
-                        hasNoPromotions = false;
+                        promotionErrorMessage = null;
                       });
 
                       Navigator.pop(dialogContext);
-                      ScaffoldMessenger.of(dialogContext).showSnackBar(
+                      ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text("Đặt lịch thành công!",
                               style: TextStyle(color: textColor)),
@@ -1219,7 +1327,8 @@ class _BookingScreenState extends State<BookingScreen> {
                               borderRadius: BorderRadius.circular(12)),
                         ),
                       );
-                      widget.onBack();
+                      // Refresh the BookingScreen by resetting the form
+                      _resetForm();
                     },
                   );
                 } catch (e) {

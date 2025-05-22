@@ -8,7 +8,6 @@ import 'package:barbermanagemobile/domain/usecases/get_orders_by_customer_use_ca
 import 'package:barbermanagemobile/domain/usecases/pay_booking_order_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/get_invoice_by_order_id_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/get_booking_service_detail_use_case.dart';
-import 'package:barbermanagemobile/domain/usecases/get_employee_by_id_use_case.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class BookingHistoryScreen extends StatefulWidget {
@@ -17,7 +16,7 @@ class BookingHistoryScreen extends StatefulWidget {
   const BookingHistoryScreen({super.key, required this.custID});
 
   @override
-  _BookingHistoryScreenState createState() => _BookingHistoryScreenState();
+  State<BookingHistoryScreen> createState() => _BookingHistoryScreenState();
 }
 
 class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
@@ -31,12 +30,11 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
       GetIt.instance<GetInvoiceByOrderIdUseCase>();
   final GetBookingServiceDetailUseCase _getBookingServiceDetailUseCase =
       GetIt.instance<GetBookingServiceDetailUseCase>();
-  final GetEmployeeByIdUseCase _getEmployeeByIdUseCase =
-      GetIt.instance<GetEmployeeByIdUseCase>();
 
   List<BookingOrder> orders = [];
   bool isLoading = false;
   String? errorMessage;
+  DateTime? selectedDate;
 
   static const primaryColor = Color(0xFF4E342E);
   static const backgroundColor = Color(0xFF212121);
@@ -55,6 +53,12 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
     try {
       orders = await _getOrdersByCustomerUseCase.call(widget.custID);
       print('Loaded orders: ${orders.map((o) => o.orderID).toList()}');
+      if (orders.isNotEmpty) {
+        final datesWithOrders = _getDatesWithOrders();
+        if (datesWithOrders.isNotEmpty) {
+          selectedDate = datesWithOrders.first;
+        }
+      }
       setState(() => isLoading = false);
     } catch (e) {
       setState(() {
@@ -66,6 +70,19 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
             .showSnackBar(SnackBar(content: Text('Error loading orders: $e')));
       }
     }
+  }
+
+  List<DateTime> _getDatesWithOrders() {
+    final uniqueDates = <DateTime>{};
+    for (var order in orders) {
+      final orderDate = DateTime(
+        order.orderDate.year,
+        order.orderDate.month,
+        order.orderDate.day,
+      );
+      uniqueDates.add(orderDate);
+    }
+    return uniqueDates.toList()..sort((a, b) => b.compareTo(a));
   }
 
   Future<void> _deleteOrder(int orderID) async {
@@ -118,60 +135,51 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
   Future<void> _showInvoiceDetails(int orderID) async {
     setState(() => isLoading = true);
     try {
-      // Fetch invoice details
       final invoice = await _getInvoiceByOrderIdUseCase.call(orderID);
-      final appointments = invoice['order']?['appointments'] as List<dynamic>? ?? [];
+      final appointments =
+          invoice['order']?['appointments'] as List<dynamic>? ?? [];
 
       print('Fetching details for appointments: $appointments');
 
-      // Fetch service and employee details for each appointment
       final details = <Map<String, dynamic>>[];
       for (var appt in appointments) {
         final serviceID = int.tryParse(appt['service']?.toString() ?? '');
-        final empID = int.tryParse(appt['empID']?.toString() ?? '');
 
         Map<String, dynamic> serviceDetail = {};
-        Map<String, dynamic> employeeDetail = {};
 
         if (serviceID != null) {
           try {
-            final serviceDetails = await _getBookingServiceDetailUseCase.call(serviceID);
+            final serviceDetails =
+                await _getBookingServiceDetailUseCase.call(serviceID);
             serviceDetail = serviceDetails.isNotEmpty ? serviceDetails[0] : {};
           } catch (e) {
-            print('Error fetching service details for serviceID $serviceID: $e');
-            serviceDetail = {'servName': 'Không lấy được thông tin dịch vụ', 'servPrice': 0.0};
+            print(
+                'Error fetching service details for serviceID $serviceID: $e');
+            serviceDetail = {
+              'servName': 'Không lấy được thông tin dịch vụ',
+              'servPrice': 0.0
+            };
           }
         } else {
           serviceDetail = {'servName': 'Không có dịch vụ', 'servPrice': 0.0};
         }
 
-        if (empID != null) {
-          try {
-            employeeDetail = await _getEmployeeByIdUseCase.call(empID);
-          } catch (e) {
-            print('Error fetching employee details for empID $empID: $e');
-            employeeDetail = {'empName': 'Không lấy được thông tin nhân viên'};
-          }
-        } else {
-          employeeDetail = {'empName': 'Không có nhân viên'};
-        }
-
         details.add({
           'service': serviceDetail,
-          'employee': employeeDetail,
-          'appointmentStatus': appt['appointmentStatus']?.toString() ?? 'Unknown',
+          'appointmentStatus':
+              appt['appointmentStatus']?.toString() ?? 'Unknown',
         });
       }
 
       setState(() => isLoading = false);
 
-      // Show modal with invoice details
       if (mounted) {
         await showDialog(
           context: context,
           builder: (context) => AlertDialog(
             backgroundColor: primaryColor,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: Text(
               'Chi tiết hóa đơn #$orderID',
               style: TextStyle(
@@ -185,22 +193,28 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildDetailRow('Mã hóa đơn', invoice['invoiceID']?.toString() ?? 'N/A'),
+                  _buildDetailRow(
+                      'Mã hóa đơn', invoice['invoiceID']?.toString() ?? 'N/A'),
                   _buildDetailRow(
                     'Ngày lập hóa đơn',
                     DateFormat('dd/MM/yyyy HH:mm').format(
-                      DateTime.tryParse(invoice['invoiceDate']?.toString() ?? '') ?? DateTime.now(),
+                      DateTime.tryParse(
+                              invoice['invoiceDate']?.toString() ?? '') ??
+                          DateTime.now(),
                     ),
                   ),
-                  _buildDetailRow('Tình trạng', invoice['status']?.toString() ?? 'N/A'),
+                  _buildDetailRow(
+                      'Tình trạng', invoice['status']?.toString() ?? 'N/A'),
                   _buildDetailRow(
                     'Tổng tiền',
-                    NumberFormat.currency(locale: 'vi_VN', symbol: '₫').format(invoice['totalAmount'] ?? 0.0),
+                    NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
+                        .format(invoice['totalAmount']/100 ?? 0.0),
                   ),
-                  _buildDetailRow('Phương thức thanh toán', invoice['paymentMethod']?.toString() ?? 'N/A'),
+                  _buildDetailRow('Phương thức thanh toán',
+                      invoice['paymentMethod']?.toString() ?? 'N/A'),
                   SizedBox(height: 16),
                   Text(
-                    'Dịch vụ và Nhân viên',
+                    'Dịch vụ',
                     style: TextStyle(
                       color: textColor,
                       fontFamily: 'Poppins',
@@ -211,7 +225,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                   SizedBox(height: 8),
                   if (details.isEmpty)
                     Text(
-                      'Không có thông tin dịch vụ hoặc nhân viên',
+                      'Không có thông tin dịch vụ',
                       style: TextStyle(
                         color: dropdownTextColor,
                         fontFamily: 'Poppins',
@@ -222,14 +236,21 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                     ...details.map((detail) => Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildDetailRow('Dịch vụ', detail['service']?['servName']?.toString() ?? 'N/A'),
+                            _buildDetailRow(
+                                'Dịch vụ',
+                                detail['service']?['servName']?.toString() ??
+                                    'N/A'),
                             _buildDetailRow(
                               'Giá dịch vụ',
-                              NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
-                                  .format(detail['service']?['servPrice'] ?? 0.0),
+                              NumberFormat.currency(
+                                      locale: 'vi_VN', symbol: '₫')
+                                  .format(
+                                      detail['service']?['servPrice'] ?? 0.0),
                             ),
-                            _buildDetailRow('Nhân viên', detail['employee']?['empName']?.toString() ?? 'N/A'),
-                            _buildDetailRow('Trạng thái lịch hẹn', detail['appointmentStatus']?.toString() ?? 'N/A'),
+                            _buildDetailRow(
+                                'Trạng thái lịch hẹn',
+                                detail['appointmentStatus']?.toString() ??
+                                    'N/A'),
                             SizedBox(height: 8),
                           ],
                         )),
@@ -245,7 +266,8 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    invoice['paymentTerms']?.toString() ?? 'Không có điều khoản',
+                    invoice['paymentTerms']?.toString() ??
+                        'Không có điều khoản',
                     style: TextStyle(
                       color: dropdownTextColor,
                       fontFamily: 'Poppins',
@@ -412,14 +434,177 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                     ),
                   ),
                 )
-              : ListView.builder(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                  itemCount: orders.length,
-                  itemBuilder: (context, index) {
-                    final order = orders[index];
-                    return _buildOrderItem(order);
-                  },
+              : Column(
+                  children: [
+                    _buildDatePicker(),
+                    Expanded(child: _buildDailyGroupedOrders()),
+                  ],
                 ),
+    );
+  }
+
+  Widget _buildDatePicker() {
+    final datesWithOrders = _getDatesWithOrders();
+
+    if (datesWithOrders.isEmpty) {
+      return SizedBox.shrink();
+    }
+
+    return Container(
+      height: 80,
+      color: primaryColor.withOpacity(0.1),
+      padding: EdgeInsets.symmetric(vertical: 8),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: datesWithOrders.length,
+        itemBuilder: (context, index) {
+          final date = datesWithOrders[index];
+          final isSelected = selectedDate != null &&
+              selectedDate!.day == date.day &&
+              selectedDate!.month == date.month &&
+              selectedDate!.year == date.year;
+
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                selectedDate = date;
+              });
+            },
+            child: Container(
+              width: 60,
+              margin: EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(
+                color: isSelected ? accentColor : primaryColor.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isSelected ? accentColor : Colors.transparent,
+                  width: 2,
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    DateFormat('dd').format(date),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: isSelected ? textColor : dropdownTextColor,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                  Text(
+                    DateFormat('EEE').format(date),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isSelected ? textColor : dropdownTextColor,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildDailyGroupedOrders() {
+    if (selectedDate == null) {
+      return Center(
+        child: Text(
+          'Không có đơn hàng nào',
+          style: TextStyle(
+            fontSize: 16,
+            color: dropdownTextColor,
+            fontFamily: 'Poppins',
+          ),
+        ),
+      );
+    }
+
+    final dailyOrders = orders
+        .where((order) =>
+            order.orderDate.day == selectedDate!.day &&
+            order.orderDate.month == selectedDate!.month &&
+            order.orderDate.year == selectedDate!.year)
+        .toList();
+
+    final morningOrders = dailyOrders
+        .where(
+            (order) => order.orderDate.hour >= 7 && order.orderDate.hour < 12)
+        .toList()
+      ..sort((a, b) => a.orderDate.compareTo(b.orderDate));
+    final afternoonOrders = dailyOrders
+        .where(
+            (order) => order.orderDate.hour >= 12 && order.orderDate.hour < 17)
+        .toList()
+      ..sort((a, b) => a.orderDate.compareTo(b.orderDate));
+    final eveningOrders = dailyOrders
+        .where(
+            (order) => order.orderDate.hour >= 17 && order.orderDate.hour <= 21)
+        .toList()
+      ..sort((a, b) => a.orderDate.compareTo(b.orderDate));
+
+    return ListView(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      children: [
+        if (morningOrders.isNotEmpty)
+          _buildShiftSection(
+              'Ca Sáng (7h - 12h)', morningOrders, Icons.wb_sunny),
+        if (afternoonOrders.isNotEmpty)
+          _buildShiftSection(
+              'Ca Chiều (12h - 17h)', afternoonOrders, Icons.wb_twighlight),
+        if (eveningOrders.isNotEmpty)
+          _buildShiftSection(
+              'Ca Tối (17h - 21h)', eveningOrders, Icons.nightlight_round),
+        if (morningOrders.isEmpty &&
+            afternoonOrders.isEmpty &&
+            eveningOrders.isEmpty)
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              'Không có đơn hàng trong ngày này',
+              style: TextStyle(
+                fontSize: 16,
+                color: dropdownTextColor,
+                fontFamily: 'Poppins',
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildShiftSection(
+      String shiftTitle, List<BookingOrder> shiftOrders, IconData icon) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Row(
+            children: [
+              Icon(icon, color: accentColor, size: 24),
+              SizedBox(width: 8),
+              Text(
+                shiftTitle,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: textColor,
+                  fontFamily: 'Poppins',
+                ),
+              ),
+            ],
+          ),
+        ),
+        ...shiftOrders.map((order) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: _buildOrderItem(order),
+            )),
+      ],
     );
   }
 
@@ -427,12 +612,12 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
     final statusInfo = _getStatusInfo(order.orderStatus);
 
     return Card(
-      margin: EdgeInsets.symmetric(vertical: 10),
+      margin: EdgeInsets.symmetric(vertical: 0),
       color: primaryColor.withOpacity(0.3),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 4,
       child: Padding(
-        padding: EdgeInsets.all(20),
+        padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -440,28 +625,35 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Đơn hàng #${order.orderID}",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: textColor,
-                    fontFamily: 'Poppins',
+                Flexible(
+                  child: Text(
+                    "Đơn hàng #${order.orderID}",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: textColor,
+                      fontFamily: 'Poppins',
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: statusInfo['color'],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    statusInfo['text'],
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'Poppins',
+                Flexible(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: statusInfo['color'],
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      statusInfo['text'],
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: textColor,
+                        fontFamily: 'Poppins',
+                      ),
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),
@@ -470,7 +662,8 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
             SizedBox(height: 12),
             _buildOrderDetailRow(
               "Tổng tiền",
-              NumberFormat.currency(locale: 'vi_VN', symbol: '₫').format(order.orderTotal),
+              NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
+                  .format(order.orderTotal),
             ),
             _buildOrderDetailRow(
               "Ngày đặt",
@@ -494,25 +687,13 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
   Map<String, dynamic> _getStatusInfo(String status) {
     switch (status) {
       case 'Completed':
-        return {
-          'text': 'Hoàn thành',
-          'color': Colors.green,
-        };
+        return {'text': 'Hoàn thành', 'color': Colors.green};
       case 'UnConfirm':
-        return {
-          'text': 'Chưa xác nhận',
-          'color': Colors.orange,
-        };
+        return {'text': 'Chưa xác nhận', 'color': Colors.orange};
       case 'Cancelled':
-        return {
-          'text': 'Đã hủy',
-          'color': Colors.red,
-        };
+        return {'text': 'Đã hủy', 'color': Colors.red};
       default:
-        return {
-          'text': 'Không xác định',
-          'color': Colors.grey,
-        };
+        return {'text': 'Không xác định', 'color': Colors.grey};
     }
   }
 
@@ -526,7 +707,8 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
             color: Colors.red,
             isFilled: false,
             onPressed: () async {
-              final confirm = await _showDeleteConfirmationDialog(order.orderID);
+              final confirm =
+                  await _showDeleteConfirmationDialog(order.orderID);
               if (confirm == true) {
                 await _deleteOrder(order.orderID);
               }
@@ -541,7 +723,8 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
             color: Colors.green,
             isFilled: true,
             onPressed: () async {
-              final confirm = await _showPaymentConfirmationDialog(order.orderID);
+              final confirm =
+                  await _showPaymentConfirmationDialog(order.orderID);
               if (confirm == true) {
                 await _payOrder(order.orderID);
               }
@@ -585,7 +768,8 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: color,
               padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
               elevation: 0,
               minimumSize: Size(100, 40),
             ),
@@ -605,7 +789,8 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: color, width: 1.5),
               padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
               minimumSize: Size(100, 40),
             ),
             icon: Icon(icon, size: 18, color: color),

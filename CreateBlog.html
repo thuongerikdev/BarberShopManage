@@ -1,0 +1,273 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Blog</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 5px;
+            box-sizing: border-box;
+        }
+        .error {
+            color: red;
+            font-size: 0.9em;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .add-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+        }
+        .add-btn:hover {
+            background-color: #45a049;
+        }
+        .remove-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+        }
+        .remove-btn:hover {
+            background-color: #da190b;
+        }
+        .submit-btn {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+        }
+        .submit-btn:hover {
+            background-color: #0b7dda;
+        }
+    </style>
+</head>
+<body>
+    <h2>Create Blog</h2>
+    <div id="error-messages" class="error"></div>
+
+    <form id="createBlogForm" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="blogID">Blog ID</label>
+            <input type="number" name="blogID" value="1234" required />
+        </div>
+
+        <div id="topics-container">
+            <h3>Topics</h3>
+            <div class="form-group topic-group">
+                <label for="topics[0].position">Position</label>
+                <input type="number" name="topics[0].position" value="1" required />
+
+                <label for="topics[0].topicTitle">Topic Title</label>
+                <input type="text" name="topics[0].topicTitle" value="Title test tao neu du layer" required />
+
+                <label for="topics[0].topicContent">Topic Content</label>
+                <textarea name="topics[0].topicContent" required>
+Yếu tố kích dục này được phái nam yêu thích rất là nhiều, đặc biệt là ai thích nghe tự do là, mạng vẫn rất là tốt với nhu cầu vị trí trung, Kích tước phải hợp với mình không thì, đi tắm khuya vậy gap chủ tịch rủng khuyết đi đến...
+                </textarea>
+                <button type="button" class="remove-btn" onclick="removeField(this)">Remove Topic</button>
+            </div>
+        </div>
+        <button type="button" class="add-btn" onclick="addTopicField()">Add Topic</button>
+
+        <div id="contents-container">
+            <h3>Contents</h3>
+            <div class="form-group content-group">
+                <label for="contents[0].position">Position</label>
+                <input type="number" name="contents[0].position" value="2" required />
+
+                <label for="contents[0].contentTitle">Content Title</label>
+                <input type="text" name="contents[0].contentTitle" value="Phương cách" required />
+
+                <label for="contents[0].content">Content</label>
+                <textarea name="contents[0].content" required>
+Phương cách: Thích hợp với loi toudi, tư hợ kích, vịnh đêm vịnh vắng vẻ...
+                </textarea>
+                <button type="button" class="remove-btn" onclick="removeField(this)">Remove Content</button>
+            </div>
+        </div>
+        <button type="button" class="add-btn" onclick="addContentField()">Add Content</button>
+
+        <div id="images-container">
+            <h3>Images</h3>
+            <div class="form-group image-group">
+                <label for="images[0].position">Position</label>
+                <input type="number" name="images[0].position" value="3" required />
+
+                <label for="images[0].srcImage">Image</label>
+                <input type="file" name="images[0].srcImage" accept="image/*" required />
+                <button type="button" class="remove-btn" onclick="removeField(this)">Remove Image</button>
+            </div>
+        </div>
+        <button type="button" class="add-btn" onclick="addImageField()">Add Image</button>
+
+        <button type="submit" class="submit-btn">Create Blog</button>
+    </form>
+
+    <script>
+        let topicIndex = 1;
+        let contentIndex = 1;
+        let imageIndex = 1;
+
+        function addTopicField() {
+            const container = document.getElementById('topics-container');
+            const newField = document.createElement('div');
+            newField.className = 'form-group topic-group';
+            newField.innerHTML = `
+                <label for="topics[${topicIndex}].position">Position</label>
+                <input type="number" name="topics[${topicIndex}].position" required />
+                <label for="topics[${topicIndex}].topicTitle">Topic Title</label>
+                <input type="text" name="topics[${topicIndex}].topicTitle" required />
+                <label for="topics[${topicIndex}].topicContent">Topic Content</label>
+                <textarea name="topics[${topicIndex}].topicContent" required></textarea>
+                <button type="button" class="remove-btn" onclick="removeField(this)">Remove Topic</button>
+            `;
+            container.appendChild(newField);
+            topicIndex++;
+        }
+
+        function addContentField() {
+            const container = document.getElementById('contents-container');
+            const newField = document.createElement('div');
+            newField.className = 'form-group content-group';
+            newField.innerHTML = `
+                <label for="contents[${contentIndex}].position">Position</label>
+                <input type="number" name="contents[${contentIndex}].position" required />
+                <label for="contents[${contentIndex}].contentTitle">Content Title</label>
+                <input type="text" name="contents[${contentIndex}].contentTitle" required />
+                <label for="contents[${contentIndex}].content">Content</label>
+                <textarea name="contents[${contentIndex}].content" required></textarea>
+                <button type="button" class="remove-btn" onclick="removeField(this)">Remove Content</button>
+            `;
+            container.appendChild(newField);
+            contentIndex++;
+        }
+
+        function addImageField() {
+            const container = document.getElementById('images-container');
+            const newField = document.createElement('div');
+            newField.className = 'form-group image-group';
+            newField.innerHTML = `
+                <label for="images[${imageIndex}].position">Position</label>
+                <input type="number" name="images[${imageIndex}].position" required />
+                <label for="images[${imageIndex}].srcImage">Image</label>
+                <input type="file" name="images[${imageIndex}].srcImage" accept="image/*" required />
+                <button type="button" class="remove-btn" onclick="removeField(this)">Remove Image</button>
+            `;
+            container.appendChild(newField);
+            imageIndex++;
+        }
+
+        function removeField(button) {
+            const container = button.parentElement.parentElement;
+            const group = button.parentElement;
+            if (container.querySelectorAll('.form-group').length > 1) {
+                group.remove();
+                updateIndices(container);
+            }
+        }
+
+        function updateIndices(container) {
+            const type = container.id.replace('-container', '');
+            const groups = container.querySelectorAll(`.${type}-group`);
+            groups.forEach((group, index) => {
+                const inputs = group.querySelectorAll('input, textarea');
+                inputs.forEach(input => {
+                    const name = input.name.replace(/\[\d+\]/, `[${index}]`);
+                    input.name = name;
+                    input.id = name;
+                });
+                const labels = group.querySelectorAll('label');
+                labels.forEach(label => {
+                    const forAttr = label.getAttribute('for').replace(/\[\d+\]/, `[${index}]`);
+                    label.setAttribute('for', forAttr);
+                });
+            });
+            if (type === 'topics') topicIndex = groups.length;
+            if (type === 'contents') contentIndex = groups.length;
+            if (type === 'images') imageIndex = groups.length;
+        }
+
+        document.getElementById('createBlogForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const form = event.target;
+            const formData = new FormData(form);
+            const errorMessages = document.getElementById('error-messages');
+
+            try {
+                const response = await fetch('http://192.168.1.2:5072/api/SocialBlogBussiness/createBlog', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
+                }
+
+                window.location.href = 'success.html';
+            } catch (error) {
+                errorMessages.textContent = error.message;
+            }
+        });
+    </script>
+</body>
+</html>

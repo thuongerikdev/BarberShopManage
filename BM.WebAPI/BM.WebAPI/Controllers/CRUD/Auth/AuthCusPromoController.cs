@@ -184,5 +184,48 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
                 return BadRequest(ErrorConst.Error(500, ex.Message));
             }
         }
+        [HttpPut("updateCuspromoCount/{cusPromoID}")]
+        public async Task<IActionResult> UpdateCuspromoCount(int cusPromoID)
+        {
+            if (cusPromoID <= 0)
+            {
+                return BadRequest(ErrorConst.Error(400, "cusPromoID không hợp lệ"));
+            }
+            try
+            {
+                var result = await _authCusPromoService.AuthUpdateCusPromoCount(cusPromoID);
+                if (result == null)
+                {
+                    return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));
+                }
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ErrorConst.Error(500, ex.Message));
+            }
+        }
+        [HttpGet("GetVipPromotion/{vipName}")]
+        public async Task<IActionResult> GetVipPromotion(string vipName)
+        {
+            if (string.IsNullOrEmpty(vipName))
+            {
+                return BadRequest(ErrorConst.Error(400, "vipName không hợp lệ"));
+            }
+            try
+            {
+                var result = await _authCusPromoService.GetVipPromotion(vipName);
+                if (result == null)
+                {
+                    return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));
+                }
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ErrorConst.Error(500, ex.Message));
+            }
+        }
+
     }
 }

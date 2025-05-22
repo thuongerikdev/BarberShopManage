@@ -185,20 +185,21 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                 int currentVipIndex = Array.IndexOf(vipTypes, currentVip.vipType);
 
                 // Check if customer can upgrade to next VIP level
-                if (currentVipIndex < vipTypes.Length - 1) // Ensure we're not at the highest VIP level
+                if (currentVipIndex < vipTypes.Length - 1)
                 {
                     string nextVipType = vipTypes[currentVipIndex + 1];
                     var nextVip = await _dbContext.Vips
                         .FirstOrDefaultAsync(v => v.vipType == nextVipType);
 
-                    if (nextVip != null && customer.loyaltyPoints >= nextVip.vipCost)
+                    if (nextVip != null && customer.totalSpent >= nextVip.vipCost)
                     {
                         customer.vipID = nextVip.vipID;
+                        //var promoDescription = $"Chúc mừng bạn trở thành {nextVip.vipType}";
 
-                        // Find promotion for new VIP level
                         var promo = await _dbContext.Promos
-                            .Where(x => x.promoDescription == nextVip.vipType && x.promoType == "VipPromotion")
+                            .Where(x => x.promoDescription.Contains(nextVip.vipType) && x.promoType == "VipPromotion")
                             .FirstOrDefaultAsync();
+                        
 
                         if (promo != null)
                         {
@@ -209,13 +210,24 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                                 cusPromoStatus = "OK",
                                 promoCount = 2
                             };
-                            await _cusPromoService.AuthCustomerGetPromo(cusPromo);
+                            await _cusPromoService.AuthCustomerGetVipPromo(cusPromo);
                         }
                     }
                 }
 
                 await _dbContext.SaveChangesAsync();
-                return ErrorConst.Success("Cập nhật khách hàng VIP thành công", customer);
+
+                // Map to DTO
+                var responseDto = new CustomerVipResponseDto
+                {
+                    CustomerID = customer.customerID,
+                    TotalSpent = customer.totalSpent,
+                    LoyaltyPoints = customer.loyaltyPoints,
+                    VipID = customer.vipID,
+                    VipType = currentVip.vipType
+                };
+
+                return ErrorConst.Success("Cập nhật khách hàng VIP thành công", responseDto);
             }
             catch (Exception ex)
             {

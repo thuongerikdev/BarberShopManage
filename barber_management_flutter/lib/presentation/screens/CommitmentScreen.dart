@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:barbermanagemobile/domain/usecases/get_commitment_image_use_case.dart';
+import 'package:get_it/get_it.dart';
 
 class CommitmentScreen extends StatelessWidget {
-  const CommitmentScreen({super.key});
+   CommitmentScreen({super.key});
 
   static const primaryColor = Color(0xFF4E342E);
   static const backgroundColor = Color(0xFF212121);
   static const textColor = Color(0xFFEFEBE9);
   static const accentColor = Color(0xFF8D6E63);
   static const shadowColor = Color(0xFF3E2723);
+
+  // Inject the new use case
+  final GetCommitmentImageUseCase _getCommitmentImageUseCase = GetIt.instance<GetCommitmentImageUseCase>();
 
   @override
   Widget build(BuildContext context) {
@@ -48,24 +53,93 @@ class CommitmentScreen extends StatelessWidget {
               ),
               SizedBox(height: 16),
 
-              // Image placeholder (since the image is not provided, using a placeholder)
-              Container(
-                height: 200,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                  color: shadowColor.withOpacity(0.3),
-                ),
-                child: Center(
-                  child: Text(
-                    'Hình ảnh minh họa',
-                    style: TextStyle(
-                      color: textColor.withOpacity(0.5),
-                      fontSize: 16,
-                      fontFamily: 'Poppins',
-                    ),
-                  ),
-                ),
+              // Image from API using FutureBuilder
+              FutureBuilder<Map<String, String>>(
+                future: _getCommitmentImageUseCase.call(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Container(
+                      height: 200,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15),
+                        color: shadowColor.withOpacity(0.3),
+                      ),
+                      child: Center(
+                        child: CircularProgressIndicator(color: accentColor),
+                      ),
+                    );
+                  } else if (snapshot.hasError) {
+                    return Container(
+                      height: 200,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15),
+                        color: shadowColor.withOpacity(0.3),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Lỗi tải hình ảnh',
+                          style: TextStyle(
+                            color: textColor.withOpacity(0.5),
+                            fontSize: 16,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                      ),
+                    );
+                  } else if (snapshot.hasData) {
+                    final imageUrl = snapshot.data!['image'];
+                    return Container(
+                      height: 200,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(15),
+                        child: Image.network(
+                          imageUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: shadowColor.withOpacity(0.3),
+                              child: Center(
+                                child: Text(
+                                  'Lỗi tải hình ảnh',
+                                  style: TextStyle(
+                                    color: textColor.withOpacity(0.5),
+                                    fontSize: 16,
+                                    fontFamily: 'Poppins',
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  } else {
+                    return Container(
+                      height: 200,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15),
+                        color: shadowColor.withOpacity(0.3),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Không tìm thấy hình ảnh',
+                          style: TextStyle(
+                            color: textColor.withOpacity(0.5),
+                            fontSize: 16,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                },
               ),
               SizedBox(height: 16),
 
