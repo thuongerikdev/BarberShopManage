@@ -56,7 +56,7 @@ namespace BM.Booking.ApplicationService.StartUp
             builder.Services.AddScoped<IBookingReviewService, BookingReviewService>();
             //builder.Services.AddScoped<IBookingServProService, BookingServProService>();
 
-            builder.Services.AddScoped<IBookingBussinessService, BookingBussinessService>();
+            //builder.Services.AddScoped<IBookingBussinessService, BookingBussinessService>();
             builder.Services.AddScoped<IBookingInvoiceService , BookingInvoiceService>();
 
             builder.Services.AddScoped<ISendOrderData, BookingBussinessService>();

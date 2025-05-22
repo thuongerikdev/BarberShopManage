@@ -206,7 +206,7 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             }
         }
         [HttpPut("updateAvatar")]
-        public async Task <IActionResult> updateAvatar ( [FromForm ]AuthUpdateAvatarDto authUpdateAvatarDto)
+        public async Task<IActionResult> updateAvatar([FromForm] AuthUpdateAvatarDto authUpdateAvatarDto)
         {
             try
             {
@@ -226,11 +226,11 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             }
         }
         [HttpPut("updateFullName")]
-        public async Task<IActionResult> updateFullName( int userID , string FullName)
+        public async Task<IActionResult> updateFullName(int userID, string FullName)
         {
             try
             {
-                var result = await _authUserService.AuthChangeUserFullName(userID , FullName);
+                var result = await _authUserService.AuthChangeUserFullName(userID, FullName);
                 if (result.ErrorCode == 0)
                 {
                     return Ok(result);
@@ -245,6 +245,26 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
                 return BadRequest(ErrorConst.Error(500, ex.Message));
             }
         }
+        [HttpPut("updateBasicUserInfo")]
+        public async Task<IActionResult> updateBasicUserInfo([FromBody] UpdateBasicUserInfoDto updateBasicUserInfoDto)
+        {
+            try
+            {
+                var result = await _authUserService.AuthUpdateBasicUserInfor(updateBasicUserInfoDto);
+                if (result.ErrorCode == 0)
+                {
+                    return Ok(result);
+                }
+                else
+                {
+                    return BadRequest(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ErrorConst.Error(500, ex.Message));
+            }
 
+        }
     }
 }

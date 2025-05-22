@@ -1,4 +1,4 @@
-import 'package:barbermanagemobile/domain/entities/booking_product.dart';
+import 'package:barbermanagemobile/domain/entities/booking/booking_product.dart';
 
 abstract class BookingProductRepository {
   Future<List<BookingProduct>> getBookingProducts();

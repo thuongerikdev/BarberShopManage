@@ -1,4 +1,4 @@
-import 'package:barbermanagemobile/presentation/screens/CheckInScreen.dart';
+import 'package:barbermanagemobile/presentation/screens/vip/CheckInScreen.dart';
 import 'package:carousel_slider/carousel_slider.dart' as carousel;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -9,15 +9,15 @@ import 'package:barbermanagemobile/domain/usecases/get_employees_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/get_slider_images_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/get_booking_services_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/get_blogs_use_case.dart';
-import 'package:barbermanagemobile/domain/entities/blog.dart';
-import 'package:barbermanagemobile/presentation/screens/BookingDetailScreen.dart';
-import 'package:barbermanagemobile/presentation/screens/BookingHistoryScreen.dart';
-import 'package:barbermanagemobile/presentation/screens/PromotionScreen.dart';
-import 'package:barbermanagemobile/presentation/screens/VipScreen.dart';
-import 'package:barbermanagemobile/presentation/screens/CommitmentScreen.dart';
-import 'package:barbermanagemobile/presentation/screens/BranchScreen.dart';
-import 'package:barbermanagemobile/presentation/screens/EmployeeDetailScreen.dart';
-import 'package:barbermanagemobile/presentation/screens/BlogDetailScreen.dart';
+import 'package:barbermanagemobile/domain/entities/social/blog.dart';
+import 'package:barbermanagemobile/presentation/screens/booking/BookingDetailScreen.dart';
+import 'package:barbermanagemobile/presentation/screens/booking/BookingHistoryScreen.dart';
+import 'package:barbermanagemobile/presentation/screens/vip/PromotionScreen.dart';
+import 'package:barbermanagemobile/presentation/screens/vip/VipScreen.dart';
+import 'package:barbermanagemobile/presentation/screens/social/CommitmentScreen.dart';
+import 'package:barbermanagemobile/presentation/screens/social/BranchScreen.dart';
+import 'package:barbermanagemobile/presentation/screens/auth/EmployeeDetailScreen.dart';
+import 'package:barbermanagemobile/presentation/screens/social/BlogDetailScreen.dart';
 import 'package:barbermanagemobile/presentation/providers/auth_provider.dart';
 
 class HomeScreen extends StatefulWidget {

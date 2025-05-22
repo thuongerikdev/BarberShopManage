@@ -1,4 +1,4 @@
-import 'package:barbermanagemobile/domain/entities/vip.dart';
+import 'package:barbermanagemobile/domain/entities/vip/vip.dart';
 import 'package:barbermanagemobile/domain/repositories/vip_repository.dart';
 
 class GetVipsUseCase {

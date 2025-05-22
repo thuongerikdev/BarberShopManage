@@ -1,5 +1,5 @@
-import 'package:barbermanagemobile/domain/entities/booking_create_order.dart';
-import 'package:barbermanagemobile/domain/entities/booking_order.dart';
+import 'package:barbermanagemobile/domain/entities/booking/booking_create_order.dart';
+import 'package:barbermanagemobile/domain/entities/booking/booking_order.dart';
 
 abstract class BookingOrderRepository {
   Future<List<BookingOrder>> getOrdersByCustomer(int custID);

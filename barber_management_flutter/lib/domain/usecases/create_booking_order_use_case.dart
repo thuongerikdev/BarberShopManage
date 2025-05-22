@@ -1,4 +1,4 @@
-import 'package:barbermanagemobile/domain/entities/booking_create_order.dart';
+import 'package:barbermanagemobile/domain/entities/booking/booking_create_order.dart';
 import 'package:barbermanagemobile/domain/repositories/booking_order_repository.dart';
 import 'package:dartz/dartz.dart';
 

@@ -606,18 +606,18 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
             }
         }
 
-        public async Task<ResponeDto> AuthUpdateUserAvatar ( int userID , IFormFile file)
+        public async Task<ResponeDto> AuthUpdateUserAvatar(int userID, IFormFile file)
         {
             _logger.LogInformation("Update user avatar");
             try
             {
                 var user = await _dbContext.Users.FindAsync(userID);
-                if(user == null )
+                if (user == null)
                 {
                     return ErrorConst.Error(500, "khong tim thay user");
                 }
                 var result = await _cloudinaryService.UploadImageAsync(file);
-                if(result == null)
+                if (result == null)
                 {
                     return ErrorConst.Error(500, "khong the upload file");
                 }
@@ -633,7 +633,7 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                 return ErrorConst.Error(500, ex.Message);
             }
         }
-        public async Task<ResponeDto> AuthChangeUserFullName(int userID , string FullName)
+        public async Task<ResponeDto> AuthChangeUserFullName(int userID, string FullName)
         {
             _logger.LogInformation("Update user FullName");
             try
@@ -655,5 +655,34 @@ namespace BM.Auth.ApplicationService.UserModule.Implements
                 return ErrorConst.Error(500, ex.Message);
             }
         }
-       }
+       
+    public async Task<ResponeDto> AuthUpdateBasicUserInfor(UpdateBasicUserInfoDto updateBasicUserInfoDto)
+        {
+            _logger.LogInformation("AuthUpdateBasicUserInfor");
+            try
+            {
+                var user = await _dbContext.Users.FirstOrDefaultAsync(x => x.userID == updateBasicUserInfoDto.userID);
+                if (user == null)
+                {
+                    return ErrorConst.Error(500, "Không tìm thấy người dùng");
+                }
+                user.fullName = updateBasicUserInfoDto.fullName;
+                user.phoneNumber = updateBasicUserInfoDto.userPhone;
+                user.dateOfBirth = updateBasicUserInfoDto.dateOfBirth;
+                user.gender = updateBasicUserInfoDto.gender;
+                user.userName = updateBasicUserInfoDto.userName;
+                user.email = updateBasicUserInfoDto.userEmail;
+
+                await _dbContext.SaveChangesAsync();
+                return ErrorConst.Success("Cập nhật thông tin thành công", null);
+
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+    }
 }

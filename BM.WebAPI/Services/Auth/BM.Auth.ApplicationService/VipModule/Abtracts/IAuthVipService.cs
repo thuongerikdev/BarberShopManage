@@ -1,4 +1,5 @@
-﻿using BM.Auth.Dtos.User;
+﻿using BM.Auth.Dtos;
+using BM.Auth.Dtos.User;
 using BM.Constant;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,7 @@ namespace BM.Auth.ApplicationService.VipModule.Abtracts
         Task<ResponeDto> AuthGetAllVip();
         public Task<ResponeDto> AuthGetVipByUserID(int userID);
         Task<ResponeDto> AuthGetVipByType(string vipType);
+        Task<ResponeDto> UpdateVipImage(UpdateVipImageDto updateVipImageDto);
         //Task<ResponeDto> AuthGetVipByType(int vipType);
 
 

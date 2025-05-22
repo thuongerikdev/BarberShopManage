@@ -1,4 +1,4 @@
-import 'package:barbermanagemobile/domain/entities/branch.dart';
+import 'package:barbermanagemobile/domain/entities/social/branch.dart';
 import 'package:barbermanagemobile/domain/repositories/branch_repository.dart';
 
 class GetBranchesUseCase {

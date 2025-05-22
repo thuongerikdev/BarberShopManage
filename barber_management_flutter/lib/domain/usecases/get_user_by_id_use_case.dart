@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import '../../data/models/user_model.dart';
+import '../../data/models/auth/user_model.dart';
 import '../../domain/repositories/auth_repository.dart';
 
 class GetUserByIDUseCase {

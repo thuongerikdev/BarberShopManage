@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import 'package:barbermanagemobile/domain/entities/customer.dart';
+import 'package:barbermanagemobile/domain/entities/auth/customer.dart';
 import 'package:barbermanagemobile/domain/repositories/customer_repository.dart';
 
 class GetCustomerByUserIDUseCase {

@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import 'package:barbermanagemobile/data/models/user_model.dart';
+import 'package:barbermanagemobile/data/models/auth/user_model.dart';
 import 'package:barbermanagemobile/domain/repositories/auth_repository.dart';
 
 class LoginUseCase {

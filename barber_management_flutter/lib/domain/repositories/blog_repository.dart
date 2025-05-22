@@ -1,4 +1,4 @@
-import 'package:barbermanagemobile/domain/entities/blog.dart';
+import 'package:barbermanagemobile/domain/entities/social/blog.dart';
 
 abstract class BlogRepository {
   Future<List<Blog>> getAllBlogs();

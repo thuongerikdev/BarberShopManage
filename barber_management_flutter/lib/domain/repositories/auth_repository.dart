@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import 'package:barbermanagemobile/data/models/user_model.dart';
+import 'package:barbermanagemobile/data/models/auth/user_model.dart';
 import 'dart:io';
 
 abstract class AuthRepository {
@@ -16,4 +16,14 @@ abstract class AuthRepository {
     required String gender,
   });
   Future<Either<String, void>> updateAvatar(int userID, File image);
+  Future<Either<String, void>> updateUserInfo({
+    required int userID,
+    required String fullName,
+    String? userName,
+    String? userEmail,
+    String? userPhone,
+    String? dateOfBirth,
+    String? gender,
+  });
 }
+

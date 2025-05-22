@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace BM.Auth.Dtos
 {
@@ -98,4 +99,21 @@ namespace BM.Auth.Dtos
         public string VipType { get; set; }
         // Include other relevant properties, excluding navigation properties like AuthCustomers
     }
+    public class UpdateVipImageDto
+    {
+        public int VipID { get; set; }
+        public IFormFile ImageUrl { get; set; }
+    }
+    public class UpdateBasicUserInfoDto
+    {
+        public int userID { get; set; }
+        public string userName { get; set; }
+        public string userEmail { get; set; }
+        public string userPhone { get; set; }
+        public DateTime dateOfBirth { get; set; }
+        public string gender { get; set; }
+        public string fullName { get; set; }
+
+    }
+   
 }

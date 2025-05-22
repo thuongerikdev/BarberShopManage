@@ -1,4 +1,5 @@
 ﻿using BM.Auth.ApplicationService.VipModule.Abtracts;
+using BM.Auth.Dtos;
 using BM.Auth.Dtos.User;
 using BM.Constant;
 using Microsoft.AspNetCore.Mvc;
@@ -146,6 +147,27 @@ namespace BM.WebAPI.Controllers.CRUD.Auth
             try
             {
                 var result = await _authVipService.AuthGetVipByType(vipType);
+                if (result == null)
+                {
+                    return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));
+                }
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ErrorConst.Error(500, ex.Message));
+            }
+        }
+        [HttpPut("updatevipimage")]
+        public async Task<IActionResult> UpdateVipImage([FromForm] UpdateVipImageDto updateVipImageDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ErrorConst.Error(500, "Đầu vào không hợp lệ"));
+            }
+            try
+            {
+                var result = await _authVipService.UpdateVipImage(updateVipImageDto);
                 if (result == null)
                 {
                     return BadRequest(ErrorConst.Error(500, "thông tin xác thực được cung cấp không chính xác"));

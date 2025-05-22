@@ -1,4 +1,4 @@
-import 'package:barbermanagemobile/domain/entities/booking_create_order.dart';
+import 'package:barbermanagemobile/domain/entities/booking/booking_create_order.dart';
 
 abstract class BookingServiceRepository {
   Future<List<Map<String, dynamic>>> getAllBranches();

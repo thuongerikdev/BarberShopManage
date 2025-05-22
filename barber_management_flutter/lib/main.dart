@@ -3,7 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:barbermanagemobile/injection.dart';
 import 'package:barbermanagemobile/presentation/providers/auth_provider.dart';
-import 'package:barbermanagemobile/presentation/screens/LoginScreen.dart';
+import 'package:barbermanagemobile/presentation/screens/auth/LoginScreen.dart';
 
 
 Future<void> main() async {

@@ -1,31 +1,32 @@
 import 'package:barbermanagemobile/domain/usecases/get_commitment_image_use_case.dart';
+import 'package:barbermanagemobile/domain/usecases/update_user_info_use_case.dart';
 import 'package:get_it/get_it.dart';
-import 'package:barbermanagemobile/data/datasources/auth_remote_data_source.dart';
-import 'package:barbermanagemobile/data/datasources/booking_order_remote_data_source.dart';
-import 'package:barbermanagemobile/data/datasources/booking_service_remote_data_source.dart';
-import 'package:barbermanagemobile/data/datasources/branch_remote_data_source.dart';
-import 'package:barbermanagemobile/data/datasources/customer_remote_data_source.dart';
-import 'package:barbermanagemobile/data/datasources/employee_remote_data_source.dart';
-import 'package:barbermanagemobile/data/datasources/promotion_remote_data_source.dart';
-import 'package:barbermanagemobile/data/datasources/slider_remote_data_source.dart';
-import 'package:barbermanagemobile/data/datasources/booking_category_remote_data_source.dart';
-import 'package:barbermanagemobile/data/datasources/booking_product_remote_data_source.dart';
-import 'package:barbermanagemobile/data/datasources/vip_remote_data_source.dart';
-import 'package:barbermanagemobile/data/datasources/blog_remote_data_source.dart';
-import 'package:barbermanagemobile/data/datasources/check_in_remote_data_source.dart';
-import 'package:barbermanagemobile/data/repositories/auth_repository_impl.dart';
-import 'package:barbermanagemobile/data/repositories/booking_order_repository_impl.dart';
-import 'package:barbermanagemobile/data/repositories/booking_service_repository_impl.dart';
-import 'package:barbermanagemobile/data/repositories/branch_repository_impl.dart';
-import 'package:barbermanagemobile/data/repositories/customer_repository_impl.dart';
-import 'package:barbermanagemobile/data/repositories/employee_repository_impl.dart';
-import 'package:barbermanagemobile/data/repositories/promotion_repository_impl.dart';
-import 'package:barbermanagemobile/data/repositories/slider_repository_impl.dart';
-import 'package:barbermanagemobile/data/repositories/booking_category_repository_impl.dart';
-import 'package:barbermanagemobile/data/repositories/booking_product_repository_impl.dart';
-import 'package:barbermanagemobile/data/repositories/vip_repository_impl.dart';
-import 'package:barbermanagemobile/data/repositories/blog_repository_impl.dart';
-import 'package:barbermanagemobile/data/repositories/check_in_repository_impl.dart';
+import 'package:barbermanagemobile/data/datasources/auth/auth_remote_data_source.dart';
+import 'package:barbermanagemobile/data/datasources/booking/booking_order_remote_data_source.dart';
+import 'package:barbermanagemobile/data/datasources/booking/booking_service_remote_data_source.dart';
+import 'package:barbermanagemobile/data/datasources/social/branch_remote_data_source.dart';
+import 'package:barbermanagemobile/data/datasources/auth/customer_remote_data_source.dart';
+import 'package:barbermanagemobile/data/datasources/auth/employee_remote_data_source.dart';
+import 'package:barbermanagemobile/data/datasources/vip/promotion_remote_data_source.dart';
+import 'package:barbermanagemobile/data/datasources/social/slider_remote_data_source.dart';
+import 'package:barbermanagemobile/data/datasources/booking/booking_category_remote_data_source.dart';
+import 'package:barbermanagemobile/data/datasources/booking/booking_product_remote_data_source.dart';
+import 'package:barbermanagemobile/data/datasources/vip/vip_remote_data_source.dart';
+import 'package:barbermanagemobile/data/datasources/social/blog_remote_data_source.dart';
+import 'package:barbermanagemobile/data/datasources/vip/check_in_remote_data_source.dart';
+import 'package:barbermanagemobile/data/repositories/auth/auth_repository_impl.dart';
+import 'package:barbermanagemobile/data/repositories/booking/booking_order_repository_impl.dart';
+import 'package:barbermanagemobile/data/repositories/booking/booking_service_repository_impl.dart';
+import 'package:barbermanagemobile/data/repositories/social/branch_repository_impl.dart';
+import 'package:barbermanagemobile/data/repositories/auth/customer_repository_impl.dart';
+import 'package:barbermanagemobile/data/repositories/auth/employee_repository_impl.dart';
+import 'package:barbermanagemobile/data/repositories/vip/promotion_repository_impl.dart';
+import 'package:barbermanagemobile/data/repositories/social/slider_repository_impl.dart';
+import 'package:barbermanagemobile/data/repositories/booking/booking_category_repository_impl.dart';
+import 'package:barbermanagemobile/data/repositories/booking/booking_product_repository_impl.dart';
+import 'package:barbermanagemobile/data/repositories/vip/vip_repository_impl.dart';
+import 'package:barbermanagemobile/data/repositories/social/blog_repository_impl.dart';
+import 'package:barbermanagemobile/data/repositories/vip/check_in_repository_impl.dart';
 import 'package:barbermanagemobile/domain/repositories/auth_repository.dart';
 import 'package:barbermanagemobile/domain/repositories/booking_order_repository.dart';
 import 'package:barbermanagemobile/domain/repositories/booking_service_repository.dart';
@@ -100,6 +101,10 @@ void _registerAuthDependencies(GetIt sl) {
   );
   sl.registerLazySingleton<UpdateAvatarUseCase>(
     () => UpdateAvatarUseCase(sl<AuthRepository>()),
+    // Handles avatar updates
+  );
+  sl.registerLazySingleton<UpdateUserInfoUseCase>(
+    () => UpdateUserInfoUseCase(sl<AuthRepository>()),
     // Handles avatar updates
   );
   sl.registerFactory<AuthProvider>(
@@ -508,6 +513,9 @@ void verifyDependencies() {
     throw Exception('CreateCheckInUseCase is not registered');
   }
   if (!getIt.isRegistered<GetCheckInHistoryUseCase>()) {
+    throw Exception('GetCheckInHistoryUseCase is not registered');
+  }
+  if (!getIt.isRegistered<UpdateUserInfoUseCase>()) {
     throw Exception('GetCheckInHistoryUseCase is not registered');
   }
   if (!getIt.isRegistered<GetBookingServiceDetailDescriptionUseCase>()) {

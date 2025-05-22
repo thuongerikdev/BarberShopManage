@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:barbermanagemobile/data/models/user_model.dart';
+import 'package:barbermanagemobile/data/models/auth/user_model.dart';
 import 'package:barbermanagemobile/domain/usecases/login_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/register_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/get_user_by_id_use_case.dart';
 import 'package:barbermanagemobile/domain/usecases/update_avatar_use_case.dart';
+import 'package:barbermanagemobile/domain/usecases/update_user_info_use_case.dart'; // New import
 import 'package:get_it/get_it.dart';
 import 'dart:io';
 
@@ -12,6 +13,7 @@ class AuthProvider with ChangeNotifier {
   final RegisterUseCase registerUseCase;
   final GetUserByIDUseCase _getUserByIDUseCase = GetIt.instance<GetUserByIDUseCase>();
   final UpdateAvatarUseCase _updateAvatarUseCase = GetIt.instance<UpdateAvatarUseCase>();
+  final UpdateUserInfoUseCase _updateUserInfoUseCase = GetIt.instance<UpdateUserInfoUseCase>(); // New UseCase
 
   UserModel? _user;
   bool _isLoading = false;
@@ -124,6 +126,70 @@ class AuthProvider with ChangeNotifier {
         );
       },
     );
+  }
+
+  Future<void> updateUserInfo({
+    required int userID,
+    required String fullName,
+    String? userName,
+    String? userEmail,
+    String? userPhone,
+    String? dateOfBirth,
+    String? gender,
+  }) async {
+    if (_user?.userId == null || int.tryParse(_user!.userId) != userID) {
+      _errorMessage = 'Thông tin người dùng không khớp';
+      notifyListeners();
+      print('AuthProvider: User ID mismatch for update');
+      return;
+    }
+
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final result = await _updateUserInfoUseCase.call(
+      userID: userID,
+      fullName: fullName,
+      userName: userName,
+      userEmail: userEmail,
+      userPhone: userPhone,
+      dateOfBirth: dateOfBirth,
+      gender: gender,
+    );
+    result.fold(
+      (failure) {
+        _errorMessage = failure;
+        _isLoading = false;
+        notifyListeners();
+        print('AuthProvider: User info update failed: $failure');
+      },
+      (_) async {
+        final userResult = await _getUserByIDUseCase.call(userID);
+        userResult.fold(
+          (failure) {
+            _errorMessage = 'Cập nhật thông tin thành công nhưng không thể làm mới dữ liệu: $failure';
+            _isLoading = false;
+            notifyListeners();
+            print('AuthProvider: Failed to refresh user data: $failure');
+          },
+          (updatedUser) {
+            _user = updatedUser;
+            _isLoading = false;
+            notifyListeners();
+            print('AuthProvider: User info updated and refreshed: ${updatedUser.toJson()}');
+          },
+        );
+      },
+    );
+  }
+
+  void updateUser(UserModel user) {
+    _user = user;
+    _errorMessage = null;
+    _isLoading = false;
+    notifyListeners();
+    print('AuthProvider: User updated: ${user.toJson()}');
   }
 
   Future<void> logout() async {

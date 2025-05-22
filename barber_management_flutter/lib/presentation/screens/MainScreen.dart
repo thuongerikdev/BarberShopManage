@@ -1,11 +1,13 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:barbermanagemobile/presentation/providers/auth_provider.dart';
-import 'package:barbermanagemobile/presentation/screens/LoginScreen.dart';
+import 'package:barbermanagemobile/presentation/screens/auth/LoginScreen.dart';
 import 'package:barbermanagemobile/presentation/screens/HomeScreen.dart';
-import 'package:barbermanagemobile/presentation/screens/BlogScreen.dart';
-import 'package:barbermanagemobile/presentation/screens/ProfileScreen.dart';
-import 'package:barbermanagemobile/presentation/screens/BookingScreen.dart';
+import 'package:barbermanagemobile/presentation/screens/social/BlogScreen.dart';
+import 'package:barbermanagemobile/presentation/screens/auth/ProfileScreen.dart';
+import 'package:barbermanagemobile/presentation/screens/booking/BookingScreen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -16,7 +18,6 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
   int _selectedIndex = 0;
 
   @override
@@ -26,7 +27,6 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
       duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
-    _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
     _controller.forward();
   }
 
@@ -48,6 +48,91 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
   }
 
   final List<Widget> _pages = [];
+
+  // Function to show confirmation dialog before launching URL
+  Future<bool?> _showSupportConfirmationDialog() async {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: primaryColor,
+        title: Text(
+          'Liên hệ hỗ trợ',
+          style: TextStyle(
+            color: Colors.white,
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        content: Text(
+          'Bạn có muốn mở trang Facebook hỗ trợ không?',
+          style: TextStyle(
+            color: Colors.grey[300],
+            fontFamily: 'Poppins',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              'Hủy',
+              style: TextStyle(
+                color: accentColor,
+                fontFamily: 'Poppins',
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              'Mở',
+              style: TextStyle(
+                color: Colors.green,
+                fontFamily: 'Poppins',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Function to launch the Facebook URL
+  Future<void> _launchFacebookURL() async {
+    const String facebookUrl = 'https://www.facebook.com/share/15eArMEavv/';
+    final Uri uri = Uri.parse(facebookUrl);
+
+    // Show confirmation dialog
+    final confirm = await _showSupportConfirmationDialog();
+    if (confirm != true) return;
+
+    try {
+      print('Launching URL: $uri'); // Debug log
+      if (kIsWeb) {
+        if (!await launchUrl(uri, webOnlyWindowName: '_self')) {
+          throw Exception('Không thể mở liên kết Facebook trên web');
+        }
+      } else {
+        if (!await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+          webViewConfiguration: const WebViewConfiguration(
+            enableJavaScript: true,
+            enableDomStorage: true,
+          ),
+        )) {
+          throw Exception('Không thể mở liên kết Facebook trên thiết bị');
+        }
+        // Add delay to prevent immediate focus return
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi khi mở liên kết Facebook: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,20 +190,13 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
           ),
         ],
       ),
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: IndexedStack(
-          index: _selectedIndex,
-          children: _pages,
-        ),
+      body: IndexedStack( // Removed FadeTransition to avoid focus issues
+        index: _selectedIndex,
+        children: _pages,
       ),
       floatingActionButton: _selectedIndex == 0
           ? FloatingActionButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Đang liên hệ hỗ trợ...')),
-                );
-              },
+              onPressed: _launchFacebookURL, // Updated to launch Facebook URL
               backgroundColor: accentColor,
               elevation: 8,
               tooltip: 'Hỗ trợ',

@@ -1,4 +1,4 @@
-import 'package:barbermanagemobile/domain/entities/booking_order.dart';
+import 'package:barbermanagemobile/domain/entities/booking/booking_order.dart';
 import 'package:barbermanagemobile/domain/repositories/booking_order_repository.dart';
 
 class GetOrdersByCustomerUseCase {

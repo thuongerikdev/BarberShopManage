@@ -1,4 +1,4 @@
-import 'package:barbermanagemobile/domain/entities/branch.dart';
+import 'package:barbermanagemobile/domain/entities/social/branch.dart';
 
 abstract class BranchRepository {
   Future<List<Branch>> getBranches();

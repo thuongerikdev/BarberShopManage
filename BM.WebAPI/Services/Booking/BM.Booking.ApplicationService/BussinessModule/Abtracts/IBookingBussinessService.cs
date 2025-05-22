@@ -12,7 +12,8 @@ namespace BM.Booking.ApplicationService.BussinessModule.Abtracts
 {
     public interface IBookingBussinessService
     {
-        public Task<ResponeDto> CreateOrderAppoint(List<BookingCreateBussinessAppointDto> appoint , BookingCreateOrderBussinessDto order , int promoID);
+         //Task<ResponeDto> CreateOrderAppoint(List<BookingCreateBussinessAppointDto> appoint , BookingCreateOrderBussinessDto order , int promoID);
+        Task<ResponeDto> CreateOrderAppoint(List<BookingCreateBussinessAppointDto> appoint, BookingCreateOrderBussinessDto order, int? promoID);
 
         public  Task<string> CreatePaymentUrl(int TournamentID, HttpContext context);
 

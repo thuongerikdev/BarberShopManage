@@ -22,6 +22,7 @@ namespace BM.Auth.ApplicationService.UserModule.Abtracts
         public Task<ResponeDto> AuthGetAllUser();
         public Task<ResponeDto> AuthUpdateUserAvatar(int userID, IFormFile file);
         Task<ResponeDto> AuthChangeUserFullName(int userID, string FullName);
+        Task<ResponeDto> AuthUpdateBasicUserInfor(UpdateBasicUserInfoDto updateBasicUserInfoDto);
 
     }
     public interface IAuthCustomerService

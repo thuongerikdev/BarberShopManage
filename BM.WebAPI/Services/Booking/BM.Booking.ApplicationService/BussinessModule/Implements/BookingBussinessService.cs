@@ -56,32 +56,38 @@ namespace BM.Booking.ApplicationService.BussinessModule.Implements
             _getPromotionShared = getPromotionShared;
             _bookingOrderProductService = bookingOrderProductService;
         }
-        public async Task<ResponeDto> CreateOrderAppoint(List<BookingCreateBussinessAppointDto> appoint, BookingCreateOrderBussinessDto order, int promoID)
+        public async Task<ResponeDto> CreateOrderAppoint(List<BookingCreateBussinessAppointDto> appoint, BookingCreateOrderBussinessDto order, int? promoID)
         {
             try
             {
-                // Lấy thông tin khuyến mãi và khách hàng
-                var promo = await _getPromotionShared.GetCustomerAndPromotionAsync(order.custID, promoID);
-                if (promo == null || promo.ErrorCode != 200)
-                {
-                    _logger.LogWarning($"Failed to get promotion for customerID: {order.custID}, promoID: {promoID}");
-                    return ErrorConst.Error(404, "Không tìm thấy thông tin khuyến mãi hoặc khách hàng.");
-                }
+                double percentDiscount = 0;
+                CustomerPromotionDto promoData = null;
 
-                // Ép kiểu promo.Data sang CustomerPromotionDto
-                var promoData = promo.Data as CustomerPromotionDto;
-                if (promoData == null || promoData.CustomerData == null)
+                // Kiểm tra và lấy thông tin khuyến mãi nếu có promoID
+                if (promoID.HasValue && promoID > 0)
                 {
-                    _logger.LogError($"Invalid promo data structure. Data: {JsonSerializer.Serialize(promo.Data)}");
-                    return ErrorConst.Error(500, "Dữ liệu khuyến mãi không hợp lệ.");
-                }
+                    var promo = await _getPromotionShared.GetCustomerAndPromotionAsync(order.custID, promoID.Value);
+                    if (promo == null || promo.ErrorCode != 200)
+                    {
+                        _logger.LogWarning($"Failed to get promotion for customerID: {order.custID}, promoID: {promoID}");
+                        return ErrorConst.Error(404, "Không tìm thấy thông tin khuyến mãi hoặc khách hàng.");
+                    }
 
-                // Lấy phần trăm ưu đãi từ CustomerData
-                double percentDiscount = promoData.PromotionData.PromoDiscount;
-                if (percentDiscount < 0 || percentDiscount > 100)
-                {
-                    _logger.LogWarning($"Invalid percentDiscount value: {percentDiscount} for customerID: {order.custID}");
-                    return ErrorConst.Error(400, "Phần trăm ưu đãi không hợp lệ.");
+                    // Ép kiểu promo.Data sang CustomerPromotionDto
+                    promoData = promo.Data as CustomerPromotionDto;
+                    if (promoData == null || promoData.CustomerData == null)
+                    {
+                        _logger.LogError($"Invalid promo data structure. Data: {JsonSerializer.Serialize(promo.Data)}");
+                        return ErrorConst.Error(500, "Dữ liệu khuyến mãi không hợp lệ.");
+                    }
+
+                    // Lấy phần trăm ưu đãi từ CustomerData
+                    percentDiscount = promoData.PromotionData.PromoDiscount;
+                    if (percentDiscount < 0 || percentDiscount > 100)
+                    {
+                        _logger.LogWarning($"Invalid percentDiscount value: {percentDiscount} for customerID: {order.custID}");
+                        return ErrorConst.Error(400, "Phần trăm ưu đãi không hợp lệ.");
+                    }
                 }
 
                 // Lấy danh sách servID từ appoint
@@ -110,7 +116,7 @@ namespace BM.Booking.ApplicationService.BussinessModule.Implements
                     return ErrorConst.Error(400, "Tổng tiền dịch vụ không hợp lệ.");
                 }
 
-                // Tính tổng tiền sau khi áp dụng ưu đãi
+                // Tính tổng tiền sau khi áp dụng ưu đãi (nếu có)
                 double totalMoney = totalMoneyOfAppoint - (totalMoneyOfAppoint * percentDiscount / 100);
                 if (totalMoney < 0)
                 {
@@ -166,13 +172,16 @@ namespace BM.Booking.ApplicationService.BussinessModule.Implements
                         return appointCreate;
                     }
 
-                    // Cập nhật trạng thái khuyến mãi
-                    var cusPromo = await _getPromotionShared.AuthDecreasePromotion(promoData.cusPromoID);
-                    if (cusPromo == null || cusPromo.ErrorCode != 200)
+                    // Cập nhật trạng thái khuyến mãi nếu có sử dụng promo
+                    if (promoID.HasValue && promoID > 0)
                     {
-                        _logger.LogWarning($"Failed to decrease promotion for customerID: {order.custID}, promoID: {promoID}");
-                        await transaction.RollbackAsync();
-                        return ErrorConst.Error(404, "Không tìm thấy thông tin khuyến mãi hoặc khách hàng.");
+                        var cusPromo = await _getPromotionShared.AuthDecreasePromotion(promoData.cusPromoID);
+                        if (cusPromo == null || cusPromo.ErrorCode != 200)
+                        {
+                            _logger.LogWarning($"Failed to decrease promotion for customerID: {order.custID}, promoID: {promoID}");
+                            await transaction.RollbackAsync();
+                            return ErrorConst.Error(404, "Không tìm thấy thông tin khuyến mãi hoặc khách hàng.");
+                        }
                     }
 
                     // Lưu thay đổi vào database

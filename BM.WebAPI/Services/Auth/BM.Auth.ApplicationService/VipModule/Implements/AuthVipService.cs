@@ -1,6 +1,7 @@
 ﻿using BM.Auth.ApplicationService.Common;
 using BM.Auth.ApplicationService.VipModule.Abtracts;
 using BM.Auth.Domain;
+using BM.Auth.Dtos;
 using BM.Auth.Dtos.User;
 using BM.Auth.Infrastructure;
 using BM.Constant;
@@ -184,24 +185,33 @@ namespace BM.Auth.ApplicationService.VipModule.Implements
                 return ErrorConst.Error(500, ex.Message);
             }
         }
-        //public async Task<ResponeDto> AuthUpdateType(string vipType, int userID)
-        //{
-        //    _logger.LogInformation("AuthGetVipByType");
-        //    try
-        //    {
-        //        var vip = await _dbContext.Vips.Where(x => x.vipType == vipType).ToListAsync();
-        //        if (vip == null)
-        //        {
-        //            return ErrorConst.Error(500, "Không tìm thấy vip");
-        //        }
-        //        return ErrorConst.Success("Lấy vip thành công", vip);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex.Message);
-        //        return ErrorConst.Error(500, ex.Message);
-        //    }
-        //}
+        public async Task<ResponeDto> UpdateVipImage(UpdateVipImageDto updateVipImageDto)
+        {
+            _logger.LogInformation("UpdateVipImage");
+            try
+            {
+                var vip = await _dbContext.Vips.FindAsync(updateVipImageDto.VipID);
+                if (vip == null)
+                {
+                    return ErrorConst.Error(500, "Không tìm thấy vip");
+                }
+                var img = await _cloudinaryService.UploadImageAsync(updateVipImageDto.ImageUrl);
+                if (img == null)
+                {
+                    return ErrorConst.Error(500, "Tải ảnh lên thất bại");
+                }
+                vip.vipImage = img;
+                await _dbContext.SaveChangesAsync();
+                return ErrorConst.Success("Cập nhật ảnh vip thành công", vip);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ErrorConst.Error(500, ex.Message);
+            }
+        }
+
     }
 }
 

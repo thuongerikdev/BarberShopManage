@@ -1,4 +1,4 @@
-import 'package:barbermanagemobile/domain/entities/promotion.dart';
+import 'package:barbermanagemobile/domain/entities/vip/promotion.dart';
 
 abstract class PromotionRepository {
   Future<List<Promotion>> getAllPromoByCustomer(int customerId);

@@ -1,4 +1,4 @@
-import 'package:barbermanagemobile/domain/entities/blog.dart';
+import 'package:barbermanagemobile/domain/entities/social/blog.dart';
 import 'package:barbermanagemobile/domain/repositories/blog_repository.dart';
 
 class GetBlogsUseCase {
